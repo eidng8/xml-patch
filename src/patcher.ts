@@ -1,4 +1,9 @@
-import {DocumentImpl, DOMParserImpl as DOMParser, ElementImpl} from 'xmldom-ts';
+import {
+  DocumentImpl,
+  DOMParserImpl as DOMParser,
+  ElementImpl,
+  NodeImpl,
+} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 
 export class Patcher {
@@ -31,12 +36,88 @@ export class Patcher {
 
   protected processAction(elem: ElementImpl) {
     const action = elem.tagName;
-    console.log(action);
     const query = elem.getAttribute('sel');
-    console.log(query);
-    if (!query) return;
+    if (!query) {
+      throw Error('Attribute `sel` is missing.');
+    }
+    const target = select(query, this.target);
 
-    const targets = select(query, this.target);
-    console.log(targets);
+    switch (action) {
+      case 'add':
+        this.processAdd(
+          target as NodeImpl,
+          elem.getAttribute('type'),
+          elem.getAttribute('pos'),
+          elem,
+        );
+        break;
+
+      case 'remove':
+        this.processRemove(target as NodeImpl | NodeImpl[]);
+        break;
+
+      case 'replace':
+        this.processReplace(target as NodeImpl | NodeImpl[], elem);
+        break;
+
+      default:
+        throw Error(
+          `Invalid tag, expected one of 'add', 'remove', or 'replace'. Got ${action}`,
+        );
+    }
+  }
+
+  protected processAdd(
+    target: NodeImpl,
+    type: string | null,
+    pos: string | null,
+    action: NodeImpl,
+  ) {
+    this.addChildNode(target, action.children, pos);
+  }
+
+  protected processRemove(target: NodeImpl | NodeImpl[]) {
+    if (!target) return;
+    if (target instanceof NodeImpl) target.remove();
+    (target as NodeImpl[]).map(n => n.remove());
+  }
+
+  protected processReplace(target: NodeImpl | NodeImpl[], action: ElementImpl) {
+    if (!target) return;
+    let nodes: NodeImpl[];
+    if (target instanceof NodeImpl) {
+      nodes = [target];
+    } else {
+      nodes = target;
+    }
+    for (const node of nodes) {
+      this.addChildNode(node, action.childNodes, 'before');
+      node.parentNode!.removeChild(node);
+    }
+  }
+
+  protected addChildNode(
+    target: NodeImpl,
+    children: NodeImpl | NodeImpl[],
+    pos?: string | null,
+  ) {
+    switch (pos) {
+      case 'before':
+        for (const child of Array.isArray(children) ? children : [children]) {
+          target.insertBefore(child, target);
+        }
+        break;
+
+      case 'after':
+        for (const child of Array.isArray(children) ? children : [children]) {
+          target.after(child);
+        }
+        break;
+
+      default:
+        for (const child of Array.isArray(children) ? children : [children]) {
+          target.appendChild(child);
+        }
+    }
   }
 }
