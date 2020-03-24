@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/article/title/text()">A Contrived Test Document</replace>
+  <add sel="/article/para/emphasis" type="@role">bold</add>
+  <replace sel="/article/para[2]/text()[2]"> changed in it.</replace>
+  <replace sel="/article/para[3]/text()">This is
+    para 3.</replace>
+  <replace sel="/article/para[@id='p4']/text()">This is a different para 4.</replace>
+  <remove sel="/article/para[6]"/>
+  <remove sel="/article/para[6]"/>
+  <add sel="/article/para[2]" pos="after"><para>This is a new para 2b.</para></add>
+  <add sel="/article/para[@id='p4']" pos="after"><para>This is a new para 4b.</para></add>
+</diff>

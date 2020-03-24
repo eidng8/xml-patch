@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<diff>
+  <remove sel="/doc/foo[@file='1-redir.out']/bar"/>
+  <add sel="/doc/main/text()" pos="before"><bar>A foo subelement text node</bar></add>
+</diff>

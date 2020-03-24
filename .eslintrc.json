@@ -1,0 +1,59 @@
+{
+  "env": {
+    "es6": true,
+    "jest/globals": true,
+    "node": true
+  },
+  "extends": [
+    "standard"
+  ],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "@typescript-eslint",
+    "jest"
+  ],
+  "rules": {
+    "comma-dangle": [
+      "error",
+      "always-multiline"
+    ],
+    "eqeqeq": [
+      "error",
+      "smart"
+    ],
+    "space-before-function-paren": [
+      "error",
+      "never"
+    ],
+    "@typescript-eslint/space-before-function-paren": [
+      "error",
+      "never"
+    ],
+    "object-curly-spacing": [
+      "error",
+      "never"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "yoda": [
+      "error",
+      "always",
+      {
+        "exceptRange": true,
+        "onlyEquality": true
+      }
+    ],
+    "no-console": "off",
+    "no-debugger": "off"
+  }
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<diff>
+  <add sel="/mx.unam.fciencias.conexa.javatree.CollapsedCompilationUnit/children/mx.unam.fciencias.conexa.javatree.CollapsedClassDeclaration/children/mx.unam.fciencias.conexa.javatree.CollapsedMethodDeclaration/parameters">
+    <string>int h</string>
+  </add>
+</diff>

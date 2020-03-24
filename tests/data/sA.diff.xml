@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/bean/add/bean/add/bean[@class='java.awt.Button']">
+    <bean class="java.awt.Scrollbar" id="scale">
+      <property name="minimum" value="0"/>
+      <property name="maximum" value="100"/>
+      <property name="value" value="50"/>
+      <event-binding name="adjustment" targetObject="adjustmenthandler" />
+    </bean>
+  </replace>
+</diff>

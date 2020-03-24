@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/a/e/text()[1]">z</replace>
+</diff>

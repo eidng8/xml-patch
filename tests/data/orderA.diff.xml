@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/a/c"><b>6</b></replace>
+</diff>

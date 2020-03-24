@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/bean/add/bean/add[1]/bean[@class='java.awt.Button']">
+    <bean class="java.awt.Scrollbar" id="scale">
+      <property name="minimum" value="0"/>
+      <property name="maximum" value="100"/>
+      <property name="value" value="50"/>
+      <event-binding name="adjustment" targetObject="adjustmenthandler" />
+    </bean>
+  </replace>
+  <replace sel="/bean/add/bean/add[3]/bean[@class='Juggler'][@id='Juggler']">
+    <bean class="java.awt.Button">
+      <property name="label" value="Start"/>
+      <property name="actionCommand" value="start"/>
+      <event-binding name="action" targetObject="actionhandler"/>
+    </bean>
+  </replace>
+  <replace sel="/bean/add/bean/add[4]/bean[@class='java.awt.Scrollbar'][@id='scale']">
+    <bean class="Juggler" id="Juggler">
+      <args/>
+      <call-method name="start"/>
+      <string/>
+    </bean>
+  </replace>
+</diff>

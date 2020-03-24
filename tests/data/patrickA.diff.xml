@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/organization_settings/name/text()">NCI</replace>
+  <replace sel="/organization_settings/group_prefix/text()">__nci-</replace>
+  <replace sel="/organization_settings/contributor_group_prefix/text()">__nci__contributor-</replace>
+  <replace sel="/organization_settings/group/text()">__nci</replace>
+  <replace sel="/organization_settings/admin_group/text()">__nci-dba</replace>
+  <remove sel="/organization_settings/data-processing-plugins"/>
+  <remove sel="/organization_settings/plugin-application-profiles"/>
+  <remove sel="/organization_settings/publishing_pipes"/>
+  <remove sel="/organization_settings/document-status[@parent-path='prolog/metadata'][@status-node='othermeta'][@name-node='@name'][@value-node='@content'][@status-name-value='__status'][@default-value='draft']/option[@name='Obsoleted'][@value='obsoleted'][@color='#FF0000']"/>
+  <remove sel="/organization_settings/document-status[@parent-path='prolog/metadata'][@status-node='othermeta'][@name-node='@name'][@value-node='@content'][@status-name-value='__status'][@default-value='draft']/option[@name='Needs Reevaluation'][@value='needs_reevaluation'][@color='#4F1D1D']"/>
+  <remove sel="/organization_settings/document-status[@parent-path='prolog/metadata'][@status-node='othermeta'][@name-node='@name'][@value-node='@content'][@status-name-value='__status'][@default-value='draft']/@default-value"/>
+</diff>

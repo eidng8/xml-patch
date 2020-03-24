@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<diff>
+  <replace sel="/a/b/text()">3</replace>
+  <add sel="/a/b/text()" pos="before"><c>1</c></add>
+</diff>

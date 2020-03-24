@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<diff>
+  <replace sel="/parent/child/text()">
+    embedded text2
+  </replace>
+</diff>

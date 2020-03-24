@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<diff>
+  <remove sel="/a/b"/>
+  <add pos="after" sel="/a/c"><b/></add>
+</diff>
