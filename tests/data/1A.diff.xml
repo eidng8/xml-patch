@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <diff>
-  <replace sel="/a/b">
-    <c>y</c>
-  </replace>
+  <replace sel="/a/b"><c>y</c></replace>
 </diff>

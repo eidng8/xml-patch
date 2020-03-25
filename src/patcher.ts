@@ -3,6 +3,7 @@ import {
   DOMParserImpl as DOMParser,
   ElementImpl,
   NodeImpl,
+  XMLSerializerImpl,
 } from 'xmldom-ts';
 import {select} from 'xpath-ts';
 
@@ -101,21 +102,24 @@ export class Patcher {
     children: NodeImpl | NodeImpl[],
     pos?: string | null,
   ) {
+    const ser = new XMLSerializerImpl();
+    const chs = (Array.isArray(children) ? children : [children])
+      .map(e => this.target.importNode(e, true));
     switch (pos) {
       case 'before':
-        for (const child of Array.isArray(children) ? children : [children]) {
+        for (const child of chs) {
           target.insertBefore(child, target);
         }
         break;
 
       case 'after':
-        for (const child of Array.isArray(children) ? children : [children]) {
+        for (const child of chs) {
           target.after(child);
         }
         break;
 
       default:
-        for (const child of Array.isArray(children) ? children : [children]) {
+        for (const child of chs) {
           target.appendChild(child);
         }
     }
