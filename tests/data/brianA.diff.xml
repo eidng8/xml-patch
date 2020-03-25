@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <diff>
-  <add sel="/a">
-    <e><b/></e>
-  </add>
+  <add sel="/a"><e><b/></e></add>
 </diff>

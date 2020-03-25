@@ -3,5 +3,5 @@
   <replace sel="/gmr:Workbook/gmr:Sheets/gmr:Sheet/gmr:Selections/gmr:Selection/@startCol">1</replace>
   <replace sel="/gmr:Workbook/gmr:Sheets/gmr:Sheet/gmr:Selections/gmr:Selection/@endCol">1</replace>
   <replace sel="/gmr:Workbook/gmr:Sheets/gmr:Sheet/gmr:Selections/@CursorCol">1</replace>
-  <replace sel="/gmr:Workbook/gmr:Sheets/gmr:Sheet/gmr:Cells/gmr:Cell/gmr:Content/text()">3</replace>
+  <replace sel="/gmr:Workbook/gmr:Sheets/gmr:Sheet/gmr:Cells/gmr:Cell[@Col='1']/gmr:Content/text()">3</replace>
 </diff>

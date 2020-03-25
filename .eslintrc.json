@@ -38,6 +38,10 @@
       "error",
       "never"
     ],
+    "operator-linebreak": [
+      "error",
+      "before"
+    ],
     "semi": [
       "error",
       "always"

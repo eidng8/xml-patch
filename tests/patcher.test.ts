@@ -1,10 +1,11 @@
-import {existsSync, readdirSync, readFileSync} from 'fs';
+import {existsSync, readdirSync, readFileSync, writeFileSync} from 'fs';
 import {join} from 'path';
+import {XMLSerializerImpl} from 'xmldom-ts';
 import {Patcher} from '../src';
 import './helpers';
 
 describe('Sample XML', () => {
-  const [sources, fixtures, patches] = findSamples();
+  const [sources, fixtures, patches, patchedFiles] = findSamples();
   for (let idx = 0; idx < sources.length; idx++) {
     const source = sources[idx];
     const fixture = fixtures[idx];
@@ -13,8 +14,12 @@ describe('Sample XML', () => {
     test(`it patches ${source}`, () => {
       const xml = readFileSync(source, {encoding: 'utf-8'});
       const diff = readFileSync(patch, {encoding: 'utf-8'});
-      expect(new Patcher().load(diff).patch(xml))
-        .toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
+      const patched = new Patcher().load(diff).patch(xml);
+      expect(patched).toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
+      writeFileSync(
+        patchedFiles[idx],
+        new XMLSerializerImpl().serializeToString(patched as Node),
+      );
     });
   }
 });
@@ -24,6 +29,7 @@ function findSamples() {
   const sources = [];
   const fixtures = [];
   const patches = [];
+  const patched = [];
   const regex = /^.+A.xml$/;
   const files = readdirSync(dir, {withFileTypes: true});
   for (const file of files) {
@@ -38,6 +44,7 @@ function findSamples() {
     sources.push(join(dir, file.name));
     fixtures.push(join(dir, `${prefix}B.xml`));
     patches.push(patch);
+    patched.push(join(dir, `${prefix}A.js-patched.xml`));
   }
-  return [sources, fixtures, patches];
+  return [sources, fixtures, patches, patched];
 }

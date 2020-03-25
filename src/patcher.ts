@@ -4,7 +4,6 @@ import {
   DOMParserImpl as DOMParser,
   ElementImpl,
   NodeImpl,
-  XMLSerializerImpl,
 } from 'xmldom-ts';
 import {select} from 'xpath-ts';
 
@@ -73,7 +72,11 @@ export class Patcher {
     pos: string | null,
     action: NodeImpl,
   ) {
-    this.addChildNode(target, action.children, pos);
+    const nodes = this.warpNodes(target);
+    if (!nodes) return;
+    for (const node of nodes) {
+      this.addChildNode(node, action.childNodes, pos);
+    }
   }
 
   protected processRemove(target: NodeImpl | NodeImpl[]) {
@@ -83,19 +86,22 @@ export class Patcher {
   }
 
   protected processReplace(target: NodeImpl | NodeImpl[], action: ElementImpl) {
-    if (!target) return;
-    let nodes: NodeImpl[];
-    if (target instanceof NodeImpl) {
-      nodes = [target];
-    } else {
-      nodes = target;
-    }
+    const nodes = this.warpNodes(target);
+    if (!nodes) return;
     for (const node of nodes) {
       if (node instanceof AttrImpl) {
         node.value = action.textContent!;
       } else {
-        this.addChildNode(node, action.childNodes, 'before');
-        node.parentNode!.removeChild(node);
+        if (node.parentNode instanceof DocumentImpl
+          && node instanceof ElementImpl) {
+          this.removeAllChildren(this.target);
+          this.importNodes(action.childNodes)
+            .forEach(n => this.target.appendChild(n));
+        } else {
+          for (const n of this.importNodes(action.childNodes)) {
+            node.parentNode!.replaceChild(n, node);
+          }
+        }
       }
     }
   }
@@ -105,9 +111,7 @@ export class Patcher {
     children: NodeImpl | NodeImpl[],
     pos?: string | null,
   ) {
-    const ser = new XMLSerializerImpl();
-    const chs = (Array.isArray(children) ? children : [children])
-      .map(e => this.target.importNode(e, true));
+    const chs = this.importNodes(children);
     switch (pos) {
       case 'before':
         for (const child of chs) {
@@ -126,5 +130,25 @@ export class Patcher {
           target.appendChild(child);
         }
     }
+  }
+
+  protected warpNodes(node: NodeImpl | NodeImpl[]): NodeImpl[] | null {
+    if (!node) return null;
+    let wrapped: NodeImpl[];
+    if (node instanceof NodeImpl) {
+      wrapped = [node];
+    } else {
+      wrapped = node;
+    }
+    return wrapped;
+  }
+
+  protected importNodes(nodes: NodeImpl | NodeImpl[]): NodeImpl[] {
+    return (Array.isArray(nodes) ? nodes : [nodes])
+      .map(e => this.target.importNode(e, true));
+  }
+
+  protected removeAllChildren(target: NodeImpl) {
+    target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
   }
 }
