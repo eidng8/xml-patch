@@ -74,8 +74,14 @@ export class Patcher {
   ) {
     const nodes = this.wrapNodes(target);
     if (!nodes) return;
-    for (const node of nodes) {
-      this.addChildNode(node, action.childNodes, pos);
+    if (type) {
+      for (const node of nodes) {
+        this.addAttribute(node, type.substr(1), action.textContent);
+      }
+    } else {
+      for (const node of nodes) {
+        this.addChildNode(node, action.childNodes, pos);
+      }
     }
   }
 
@@ -156,5 +162,13 @@ export class Patcher {
 
   protected removeAllChildren(target: NodeImpl) {
     target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
+  }
+
+  protected addAttribute(target: NodeImpl, name: string, value: string) {
+    const nodes = this.wrapNodes(target);
+    if (!nodes) return;
+    for (const node of nodes as ElementImpl[]) {
+      node.setAttribute(name, value);
+    }
   }
 }
