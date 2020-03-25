@@ -72,7 +72,7 @@ export class Patcher {
     pos: string | null,
     action: NodeImpl,
   ) {
-    const nodes = this.warpNodes(target);
+    const nodes = this.wrapNodes(target);
     if (!nodes) return;
     for (const node of nodes) {
       this.addChildNode(node, action.childNodes, pos);
@@ -86,7 +86,7 @@ export class Patcher {
   }
 
   protected processReplace(target: NodeImpl | NodeImpl[], action: ElementImpl) {
-    const nodes = this.warpNodes(target);
+    const nodes = this.wrapNodes(target);
     if (!nodes) return;
     for (const node of nodes) {
       if (node instanceof AttrImpl) {
@@ -132,7 +132,7 @@ export class Patcher {
     }
   }
 
-  protected warpNodes(node: NodeImpl | NodeImpl[]): NodeImpl[] | null {
+  protected wrapNodes(node: NodeImpl | NodeImpl[]): NodeImpl[] | null {
     if (!node) return null;
     let wrapped: NodeImpl[];
     if (node instanceof NodeImpl) {
