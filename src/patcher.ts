@@ -80,9 +80,15 @@ export class Patcher {
   }
 
   protected processRemove(target: NodeImpl | NodeImpl[]) {
-    if (!target) return;
-    if (target instanceof NodeImpl) target.remove();
-    (target as NodeImpl[]).map(n => n.remove());
+    const nodes = this.wrapNodes(target);
+    if (!nodes) return;
+    for (const node of nodes) {
+      if (node instanceof AttrImpl) {
+        node.ownerElement.removeAttributeNode(node);
+      } else {
+        node.parentNode!.removeChild(node);
+      }
+    }
   }
 
   protected processReplace(target: NodeImpl | NodeImpl[], action: ElementImpl) {
@@ -111,22 +117,22 @@ export class Patcher {
     children: NodeImpl | NodeImpl[],
     pos?: string | null,
   ) {
-    const chs = this.importNodes(children);
+    const imported = this.importNodes(children);
     switch (pos) {
       case 'before':
-        for (const child of chs) {
-          target.insertBefore(child, target);
+        for (const child of imported) {
+          target.parentNode!.insertBefore(child, target);
         }
         break;
 
       case 'after':
-        for (const child of chs) {
-          target.insertBefore(child, target.nextSibling);
+        for (const child of imported) {
+          target.parentNode!.insertBefore(child, target.nextSibling);
         }
         break;
 
       default:
-        for (const child of chs) {
+        for (const child of imported) {
           target.appendChild(child);
         }
     }
