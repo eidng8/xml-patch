@@ -25,10 +25,7 @@
       "error",
       "always-multiline"
     ],
-    "eqeqeq": [
-      "error",
-      "smart"
-    ],
+    "eqeqeq": "off",
     "space-before-function-paren": [
       "error",
       "never"

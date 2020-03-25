@@ -1,7 +1,6 @@
 import {readFileSync} from 'fs';
-import format from 'xml-formatter';
 import {Patcher} from '../src';
-import {XMLSerializerImpl} from 'xmldom-ts';
+import './helpers';
 
 test('it', () => {
   const xml = readFileSync('tests/data/1A.xml', {encoding: 'utf-8'});
@@ -9,6 +8,6 @@ test('it', () => {
   const patcher = new Patcher();
   patcher.load(diff);
   const patched = patcher.patch(xml);
-  expect(format(new XMLSerializerImpl().serializeToString(patched!)))
-    .toEqual(format(readFileSync('tests/data/1B.xml', {encoding: 'utf-8'})));
+  expect(patched)
+    .toEqualXml(readFileSync('tests/data/1B.xml', {encoding: 'utf-8'}));
 });
