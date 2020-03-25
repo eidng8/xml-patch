@@ -1,4 +1,5 @@
 import {
+  AttrImpl,
   DocumentImpl,
   DOMParserImpl as DOMParser,
   ElementImpl,
@@ -62,9 +63,7 @@ export class Patcher {
         break;
 
       default:
-        throw Error(
-          `Invalid tag, expected one of 'add', 'remove', or 'replace'. Got ${action}`,
-        );
+        throw Error(`Invalid tag: ${action}`);
     }
   }
 
@@ -92,8 +91,12 @@ export class Patcher {
       nodes = target;
     }
     for (const node of nodes) {
-      this.addChildNode(node, action.childNodes, 'before');
-      node.parentNode!.removeChild(node);
+      if (node instanceof AttrImpl) {
+        node.value = action.textContent!;
+      } else {
+        this.addChildNode(node, action.childNodes, 'before');
+        node.parentNode!.removeChild(node);
+      }
     }
   }
 
@@ -114,7 +117,7 @@ export class Patcher {
 
       case 'after':
         for (const child of chs) {
-          target.after(child);
+          target.insertBefore(child, target.nextSibling);
         }
         break;
 
