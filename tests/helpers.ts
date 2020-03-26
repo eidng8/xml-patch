@@ -1,8 +1,7 @@
-// import format from 'xml-formatter';
-import {XMLSerializerImpl} from 'xmldom-ts';
+import {NodeImpl, XMLSerializerImpl} from 'xmldom-ts';
+import {XMLFile} from '../src';
 
 const pd = require('pretty-data').pd;
-const format = (xml: string) => pd.xml(xml);
 
 declare global {
   namespace jest {
@@ -14,35 +13,25 @@ declare global {
 
 expect.extend({
   toEqualXml(received: Node | string, expected: Node | string) {
-    let strReceived: string, strExpected: string;
-
-    if ('string' == typeof received) {
-      strReceived = received.trim();
-    } else {
-      const serializer = new XMLSerializerImpl();
-      strReceived = serializer.serializeToString(received).trim();
-    }
-    const fmtReceived = format(strReceived);
-
-    if ('string' == typeof expected) {
-      strExpected = expected.trim();
-    } else {
-      const serializer = new XMLSerializerImpl();
-      strExpected = serializer.serializeToString(expected).trim();
-    }
-    const fmtExpected = format(strExpected);
+    const fmtReceived = format(received);
+    const fmtExpected = format(expected);
 
     return {
       actual: fmtReceived,
       expected: fmtExpected,
       pass: fmtReceived == fmtExpected,
       message: () => {
-        const strDiff = this.utils.diff(fmtExpected, fmtReceived, {expand: this.expand});
+        const strDiff = this.utils.diff(
+          fmtExpected,
+          fmtReceived,
+          {expand: this.expand},
+        );
         let msg = this.utils.matcherHint(
           'toEqualXml',
           'received',
           'expected',
-          {promise: this.promise});
+          {promise: this.promise},
+        );
         if (strDiff && strDiff.includes('- Expect')) {
           msg += `\n\n${strDiff}`;
         } else {
@@ -52,26 +41,18 @@ expect.extend({
         return msg;
       },
     };
-
-    // return {
-    //   actual: strReceived,
-    //   expected: strExpected,
-    //   pass: strExpected == strReceived,
-    //   message: () => {
-    //     const strDiff = this.utils.diff(strExpected, strReceived, {expand: this.expand});
-    //     let msg = this.utils.matcherHint(
-    //       'toEqualXml',
-    //       'received',
-    //       'expected',
-    //       {promise: this.promise});
-    //     if (strDiff && strDiff.includes('- Expect')) {
-    //       msg += `\n\n${strDiff}`;
-    //     } else {
-    //       msg += `\nExpected: ${this.utils.printExpected(strExpected)}\n`;
-    //       msg += `\nReceived: ${this.utils.printReceived(strReceived)}`;
-    //     }
-    //     return msg;
-    //   },
-    // };
   },
 });
+
+export function format(txt: string | NodeImpl | Node) {
+  let xml = txt;
+  if ('string' != typeof xml) {
+    xml = new XMLSerializerImpl().serializeToString(xml);
+  }
+  xml = new XMLFile({warnError: true})
+    .fromString(xml)
+    .toString(true, true)
+    .trim()
+    .replace(/(?:(>)\s+|\s+(<))/g, '$1$2');
+  return pd.xml(xml);
+}

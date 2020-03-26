@@ -1,3 +1,4 @@
 import {Patcher} from './patcher';
+import {XMLFile} from './xml-file';
 
-export {Patcher};
+export {Patcher, XMLFile};

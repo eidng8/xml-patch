@@ -1,8 +1,7 @@
 import {existsSync, readdirSync, readFileSync, writeFileSync} from 'fs';
 import {join} from 'path';
-import {XMLSerializerImpl} from 'xmldom-ts';
 import {Patcher} from '../src';
-import './helpers';
+import {format} from './helpers';
 
 describe('Sample XML', () => {
   const [sources, fixtures, patches, patchedFiles] = findSamples();
@@ -12,14 +11,12 @@ describe('Sample XML', () => {
     const patch = patches[idx];
 
     test(`it patches ${source}`, () => {
+      expect.assertions(1);
       const xml = readFileSync(source, {encoding: 'utf-8'});
       const diff = readFileSync(patch, {encoding: 'utf-8'});
       const patched = new Patcher().load(diff).patch(xml);
+      writeFileSync(patchedFiles[idx], format(patched!));
       expect(patched).toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
-      writeFileSync(
-        patchedFiles[idx],
-        new XMLSerializerImpl().serializeToString(patched as Node),
-      );
     });
   }
 });

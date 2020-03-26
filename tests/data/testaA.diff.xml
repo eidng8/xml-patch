@@ -3,8 +3,7 @@
   <replace sel="/article/title/text()">A Contrived Test Document</replace>
   <add sel="/article/para/emphasis" type="@role">bold</add>
   <replace sel="/article/para[2]/text()[2]"> changed in it.</replace>
-  <replace sel="/article/para[3]/text()">This is
-    para 3.</replace>
+  <replace sel="/article/para[3]/text()">This is para 3.</replace>
   <replace sel="/article/para[@id='p4']/text()">This is a different para 4.</replace>
   <remove sel="/article/para[6]"/>
   <remove sel="/article/para[6]"/>

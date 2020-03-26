@@ -1,3 +1,4 @@
+*.bak
 tests/data/*.js-patched.xml
 
 # Created by .ignore support plugin (hsz.mobi)

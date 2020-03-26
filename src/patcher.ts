@@ -1,11 +1,6 @@
-import {
-  AttrImpl,
-  DocumentImpl,
-  DOMParserImpl as DOMParser,
-  ElementImpl,
-  NodeImpl,
-} from 'xmldom-ts';
+import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
+import {XMLFile} from './xml-file';
 
 export class Patcher {
   protected diff!: DocumentImpl;
@@ -13,21 +8,19 @@ export class Patcher {
   protected target!: DocumentImpl;
 
   public load(diff: string): Patcher {
-    const parser = new DOMParser();
-    this.diff = parser.parseFromString(diff) as DocumentImpl;
+    this.diff = new XMLFile().fromString(diff).doc;
     return this;
   }
 
   public patch(xml: string): DocumentImpl | null {
-    const parser = new DOMParser();
-    this.target = parser.parseFromString(xml) as DocumentImpl;
+    this.target = new XMLFile().fromString(xml).doc;
 
     const root = this.diff.documentElement;
     if (!root.hasChildNodes()) {
       return null;
     }
 
-    root.childNodes.forEach((node: Node) => {
+    root.childNodes.forEach((node: NodeImpl) => {
       if (node instanceof ElementImpl) {
         this.processAction(node as ElementImpl);
       }
@@ -41,12 +34,17 @@ export class Patcher {
     if (!query) {
       throw Error('Attribute `sel` is missing.');
     }
-    const target = select(query, this.target);
+    const target = select(query, this.target) as NodeImpl | NodeImpl[];
+
+    if (this.isQueryNamespace(query)) {
+      this.replaceNamespace(null, elem);
+      return;
+    }
 
     switch (action) {
       case 'add':
         this.processAdd(
-          target as NodeImpl,
+          this.wrapNodes(target),
           elem.getAttribute('type'),
           elem.getAttribute('pos'),
           elem,
@@ -54,11 +52,11 @@ export class Patcher {
         break;
 
       case 'remove':
-        this.processRemove(target as NodeImpl | NodeImpl[]);
+        this.processRemove(this.wrapNodes(target));
         break;
 
       case 'replace':
-        this.processReplace(target as NodeImpl | NodeImpl[], elem);
+        this.processReplace(this.wrapNodes(target), elem);
         break;
 
       default:
@@ -67,16 +65,15 @@ export class Patcher {
   }
 
   protected processAdd(
-    target: NodeImpl,
+    nodes: NodeImpl[] | null,
     type: string | null,
     pos: string | null,
     action: NodeImpl,
   ) {
-    const nodes = this.wrapNodes(target);
     if (!nodes) return;
     if (type) {
       for (const node of nodes) {
-        this.addAttribute(node, type.substr(1), action.textContent);
+        this.addAttribute(node, type.substr(1), action.textContent!);
       }
     } else {
       for (const node of nodes) {
@@ -85,27 +82,25 @@ export class Patcher {
     }
   }
 
-  protected processRemove(target: NodeImpl | NodeImpl[]) {
-    const nodes = this.wrapNodes(target);
+  protected processRemove(nodes: NodeImpl[] | null) {
     if (!nodes) return;
     for (const node of nodes) {
       if (node instanceof AttrImpl) {
-        node.ownerElement.removeAttributeNode(node);
+        (node.ownerElement! as ElementImpl).removeAttributeNode(node);
       } else {
         node.parentNode!.removeChild(node);
       }
     }
   }
 
-  protected processReplace(target: NodeImpl | NodeImpl[], action: ElementImpl) {
-    const nodes = this.wrapNodes(target);
+  protected processReplace(nodes: NodeImpl[] | null, action: ElementImpl) {
     if (!nodes) return;
     for (const node of nodes) {
       if (node instanceof AttrImpl) {
         node.value = action.textContent!;
       } else {
         if (node.parentNode instanceof DocumentImpl
-          && node instanceof ElementImpl) {
+            && node instanceof ElementImpl) {
           this.removeAllChildren(this.target);
           this.importNodes(action.childNodes)
             .forEach(n => this.target.appendChild(n));
@@ -116,6 +111,15 @@ export class Patcher {
         }
       }
     }
+  }
+
+  protected replaceNamespace(
+    nodes: NodeImpl[] | null,
+    action: ElementImpl,
+  ) {
+    console.log(this.target.names)
+    if (!nodes) return;
+    console.log(action);
   }
 
   protected addChildNode(
@@ -170,5 +174,9 @@ export class Patcher {
     for (const node of nodes as ElementImpl[]) {
       node.setAttribute(name, value);
     }
+  }
+
+  protected isQueryNamespace(query: string) {
+    return query.indexOf('namespace::') >= 0;
   }
 }
