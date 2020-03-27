@@ -100,9 +100,10 @@ export default class Diff {
     action: ElementImpl,
   ): string {
     if (!prefix && !action.namespaceURI) return name;
-    let compiled = '';
-    let idx = prefix.indexOf('[');
-    console.log(idx, action, compiled);
-    return compiled;
+    const ns = prefix ? action.lookupNamespaceURI(prefix) : action.namespaceURI;
+    if (!ns) {
+      return name;
+    }
+    return `*[namespace-uri()='${ns}'][local-name()='${name}']`;
   }
 }
