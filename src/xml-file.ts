@@ -1,5 +1,12 @@
 import {existsSync, readFile} from 'fs';
-import {DocumentImpl, DOMParserImpl, XMLSerializerImpl} from 'xmldom-ts';
+import {
+  DocumentImpl,
+  DOMParserImpl,
+  ElementImpl,
+  NodeImpl,
+  TextImpl,
+  XMLSerializerImpl,
+} from 'xmldom-ts';
 import iconv from 'iconv-lite';
 
 const pd = require('pretty-data').pd;
@@ -26,6 +33,22 @@ export class XMLFile {
   protected _warnError: boolean;
 
   protected _fsMock?: any;
+
+  /**
+   * Text node type guard
+   * @param node
+   */
+  static isText(node: NodeImpl | null): node is TextImpl {
+    return node instanceof TextImpl;
+  }
+
+  /**
+   * Element node type guard
+   * @param node
+   */
+  static isElement(node: NodeImpl | null): node is ElementImpl {
+    return node instanceof ElementImpl;
+  }
 
   get encoding(): string {
     return this._encoding;
@@ -91,6 +114,39 @@ export class XMLFile {
       return pd.xmlmin(xml, preserveComments);
     }
     return pd.xml(xml);
+  }
+
+  removeEmptyTextNodes(node: NodeImpl): XMLFile {
+    if (!node.hasChildNodes()) return this;
+    let idx = 0;
+    let child: NodeImpl;
+    while ((child = node.childNodes[idx])) {
+      if (XMLFile.isText(child)) {
+        if (child.textContent && child.textContent.trim()) {
+          idx++;
+          continue;
+        }
+        child.parentNode.removeChild(child);
+      } else if (XMLFile.isElement(child)) {
+        this.removeEmptyTextNodes(child);
+        idx++;
+      }
+    }
+    return this;
+  }
+
+  trimTextContents(node: NodeImpl): XMLFile {
+    if (!node.hasChildNodes()) return this;
+    for (const child of node.childNodes) {
+      if (XMLFile.isText(child)) {
+        const txt = child.textContent && child.textContent.trim();
+        child.textContent = txt;
+        child.data = txt!;
+      } else if (XMLFile.isElement(child)) {
+        this.trimTextContents(child);
+      }
+    }
+    return this;
   }
 
   protected async determineEncoding(path: string): Promise<[string, Buffer]> {

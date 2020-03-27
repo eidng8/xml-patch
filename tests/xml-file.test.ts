@@ -1,5 +1,5 @@
 import {XMLFile} from '../src';
-import {DocumentImpl} from 'xmldom-ts';
+import {DocumentImpl, XMLSerializerImpl} from 'xmldom-ts';
 
 describe('XMLFile', () => {
   it('reads XML file', async () => {
@@ -124,5 +124,23 @@ describe('XMLFile', () => {
     return xml.fromFile('tests/data/1A.xml').catch(e => {
       expect(e).toEqual(new Error('File is empty: tests/data/1A.xml'));
     });
+  });
+
+  it('removes empty text nodes', () => {
+    expect.assertions(1);
+    const xml = new XMLFile().fromString('<a>\n\n<b>\n</b> \n<c>a\n</c> </a>\n');
+    xml.removeEmptyTextNodes(xml.doc.firstChild);
+    // It seems the serializer automatically collapses empty tags.
+    expect(new XMLSerializerImpl().serializeToString(xml.doc))
+      .toBe('<a><b/><c>a\n</c></a>');
+  });
+
+  it('trims text nodes', () => {
+    expect.assertions(1);
+    const xml = new XMLFile().fromString('<a>\na a\n<b>\n b \n</b> c\n</a>\n');
+    xml.trimTextContents(xml.doc.firstChild);
+    // It seems the serializer automatically collapses empty tags.
+    expect(new XMLSerializerImpl().serializeToString(xml.doc))
+      .toBe('<a>a a<b>b</b>c</a>');
   });
 });
