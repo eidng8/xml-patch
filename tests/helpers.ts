@@ -1,4 +1,4 @@
-import {NodeImpl, XMLSerializerImpl} from 'xmldom-ts';
+import {NodeImpl} from 'xmldom-ts';
 import {XMLFile} from '../src';
 
 const pd = require('pretty-data').pd;
@@ -47,11 +47,11 @@ expect.extend({
 export function format(txt: string | NodeImpl | Node) {
   let xml = txt;
   if ('string' != typeof xml) {
-    xml = new XMLSerializerImpl().serializeToString(xml);
+    xml = xml.toString();
   }
   xml = new XMLFile({warnError: true})
     .fromString(xml)
-    .toString(true, true)
+    .toString({minify: true, preserveComments: true})
     .trim()
     .replace(/(?:(>)\s+|\s+(<))/g, '$1$2');
   return pd.xml(xml);

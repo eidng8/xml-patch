@@ -117,7 +117,6 @@ export class Patcher {
     nodes: NodeImpl[] | null,
     action: ElementImpl,
   ) {
-    console.log(this.target.names)
     if (!nodes) return;
     console.log(action);
   }

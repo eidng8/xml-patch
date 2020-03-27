@@ -1,4 +1,5 @@
 import {Patcher} from './patcher';
 import {XMLFile} from './xml-file';
+import Diff from './diff';
 
-export {Patcher, XMLFile};
+export {Diff, Patcher, XMLFile};

@@ -1,5 +1,5 @@
 import {XMLFile} from '../src';
-import {DocumentImpl, XMLSerializerImpl} from 'xmldom-ts';
+import {DocumentImpl} from 'xmldom-ts';
 
 describe('XMLFile', () => {
   it('reads XML file', async () => {
@@ -45,7 +45,8 @@ describe('XMLFile', () => {
       <a>x<b>y</b>z</a>`;
     const xml = new XMLFile().fromString(txt);
     const expected = '<?xml version="1.0"?><!-- test --><a>x<b>y</b>z</a>';
-    expect(xml.toString(true, true)).toBe(expected);
+    expect(xml.toString({minify: true, preserveComments: true}))
+      .toBe(expected);
   });
 
   it('minifies XML and removes comments', async () => {
@@ -55,7 +56,7 @@ describe('XMLFile', () => {
       <a>x<b>y</b>z</a>`;
     const xml = new XMLFile().fromString(txt);
     const expected = '<?xml version="1.0"?><a>x<b>y</b>z</a>';
-    expect(xml.toString(true)).toBe(expected);
+    expect(xml.toString({minify: true})).toBe(expected);
   });
 
   it('rejects if file not found', async () => {
@@ -131,7 +132,7 @@ describe('XMLFile', () => {
     const xml = new XMLFile().fromString('<a>\n\n<b>\n</b> \n<c>a\n</c> </a>\n');
     xml.removeEmptyTextNodes(xml.doc.firstChild);
     // It seems the serializer automatically collapses empty tags.
-    expect(new XMLSerializerImpl().serializeToString(xml.doc))
+    expect(xml.doc.toString())
       .toBe('<a><b/><c>a\n</c></a>');
   });
 
@@ -140,7 +141,6 @@ describe('XMLFile', () => {
     const xml = new XMLFile().fromString('<a>\na a\n<b>\n b \n</b> c\n</a>\n');
     xml.trimTextContents(xml.doc.firstChild);
     // It seems the serializer automatically collapses empty tags.
-    expect(new XMLSerializerImpl().serializeToString(xml.doc))
-      .toBe('<a>a a<b>b</b>c</a>');
+    expect(xml.doc.toString()).toBe('<a>a a<b>b</b>c</a>');
   });
 });

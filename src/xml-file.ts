@@ -5,7 +5,6 @@ import {
   ElementImpl,
   NodeImpl,
   TextImpl,
-  XMLSerializerImpl,
 } from 'xmldom-ts';
 import iconv from 'iconv-lite';
 
@@ -17,6 +16,14 @@ export interface XMLFileOptions {
   warnError?: boolean;
 
   fsMock?: any;
+}
+
+export interface FormatOptions {
+  pretty?: boolean,
+
+  minify?: boolean,
+
+  preserveComments?: boolean
 }
 
 export class XMLFile {
@@ -34,11 +41,15 @@ export class XMLFile {
 
   protected _fsMock?: any;
 
+  static isXMLFile(subject: any): subject is XMLFile {
+    return subject instanceof XMLFile;
+  }
+
   /**
    * Text node type guard
    * @param node
    */
-  static isText(node: NodeImpl | null): node is TextImpl {
+  static isText(node: any): node is TextImpl {
     return node instanceof TextImpl;
   }
 
@@ -46,7 +57,7 @@ export class XMLFile {
    * Element node type guard
    * @param node
    */
-  static isElement(node: NodeImpl | null): node is ElementImpl {
+  static isElement(node: any): node is ElementImpl {
     return node instanceof ElementImpl;
   }
 
@@ -56,6 +67,10 @@ export class XMLFile {
 
   get doc(): DocumentImpl {
     return this._doc;
+  }
+
+  get root(): ElementImpl | null {
+    return this.doc.documentElement as ElementImpl | null;
   }
 
   get warnings(): string[] {
@@ -108,10 +123,15 @@ export class XMLFile {
     return this;
   }
 
-  toString(minify = false, preserveComments = false): string {
-    const xml = new XMLSerializerImpl().serializeToString(this.doc);
-    if (minify) {
-      return pd.xmlmin(xml, preserveComments);
+  toString(options?: FormatOptions): string {
+    const xml = this.doc.toString();
+    const opts = Object.assign({
+      pretty: true,
+      minify: false,
+      preserveComments: false,
+    }, options);
+    if (opts.minify) {
+      return pd.xmlmin(xml, opts.preserveComments);
     }
     return pd.xml(xml);
   }
