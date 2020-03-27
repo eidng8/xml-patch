@@ -47,17 +47,30 @@ export default class Diff {
   }
 
   protected compileAction(exp: string, action: ElementImpl): string {
+    let idx = 0;
+    let depth = 0;
     let compiled = '';
     let part = '';
-    let idx = 0;
     let ch = '';
-    let depth = 0;
+    let prefix = '';
+
+    const advance = () => {
+      compiled += this.compileNamespace(prefix, part, action) + ch;
+      idx++;
+      part = '';
+      prefix = '';
+    };
+
     while ((ch = exp[idx])) {
       switch (ch) {
         case '/':
-          if (!depth) {
-            compiled += this.compilePart(part, action) + ch;
-            idx++;
+          advance();
+          continue;
+
+        case ':':
+          if (depth) break;
+          if (':' != exp[idx + 1]) {
+            prefix = part;
             part = '';
             continue;
           }
@@ -65,7 +78,8 @@ export default class Diff {
 
         case '[':
           depth++;
-          break;
+          advance();
+          continue;
 
         case ']':
           depth--;
@@ -75,16 +89,19 @@ export default class Diff {
       idx++;
     }
     if (part) {
-      compiled += this.compilePart(part, action);
+      compiled += this.compileNamespace(prefix, part, action);
     }
     return compiled;
   }
 
-  protected compilePart(part: string, action: ElementImpl): string {
-    if (!part) return '';
-    if (!action.namespaceURI) return part;
+  protected compileNamespace(
+    prefix: string,
+    name: string,
+    action: ElementImpl,
+  ): string {
+    if (!prefix && !action.namespaceURI) return name;
     let compiled = '';
-    let idx = part.indexOf('[');
+    let idx = prefix.indexOf('[');
     console.log(idx, action, compiled);
     return compiled;
   }
