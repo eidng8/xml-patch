@@ -26,12 +26,11 @@
       "always-multiline"
     ],
     "eqeqeq": "off",
-    "space-before-function-paren": [
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
       "error",
       {
-        "anonymous": "always",
-        "named": "never",
-        "asyncArrow": "always"
+        "args": "after-used"
       }
     ],
     "object-curly-spacing": [
@@ -45,6 +44,14 @@
     "semi": [
       "error",
       "always"
+    ],
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "always",
+        "named": "never",
+        "asyncArrow": "always"
+      }
     ],
     "yoda": [
       "error",

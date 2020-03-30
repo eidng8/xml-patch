@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc xmlns="urn:ietf:params:xml:ns:xxx"
+     xmlns:z="urn:ietf:params:xml:ns:yyy">
+  <note>This is a sample document</note>
+  <elem a="foo">
+    <child/>
+  </elem>
+  <elem a="bar">
+    <z:child/>
+  </elem>
+</doc>

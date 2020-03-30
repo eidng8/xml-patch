@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc xmlns="urn:ietf:params:xml:ns:xxx"
+     xmlns:z="urn:ietf:params:xml:ns:yyy">
+  <note>Patched doc</note>
+  <elem a="foo">
+    <child/>
+    <!-- This is a new child -->
+    <child id="ert4773">
+      <z:node/>
+    </child>
+  </elem>
+  <elem a="bar" b="new attr"/>
+</doc>
