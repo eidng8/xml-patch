@@ -1,62 +1,81 @@
 import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 import {XMLFile} from './xml-file';
+import Diff from './diff';
+import {arrayWrap} from './helpers';
+import {NotImplementedException, XPatchException} from './errors';
 
 export class Patcher {
-  protected diff!: DocumentImpl;
+  static readonly Add = 'add';
 
-  protected target!: DocumentImpl;
+  static readonly Replace = 'replace';
+
+  static readonly Remove = 'remove';
+
+  static readonly Selector = 'sel';
+
+  static readonly Type = 'type';
+
+  static readonly Pos = 'pos';
+
+  static readonly After = 'after';
+
+  static readonly Before = 'before';
+
+  static readonly Prepend = 'prepend';
+
+  static readonly AxisAttribute = 'attribute::';
+
+  static readonly AxisNamespace = 'namespace::';
+
+  protected diff!: Diff;
+
+  protected target!: XMLFile;
 
   public load(diff: string): Patcher {
-    this.diff = new XMLFile().fromString(diff).doc;
+    this.diff = new Diff(diff);
     return this;
   }
 
-  public patch(xml: string): DocumentImpl | null {
-    this.target = new XMLFile().fromString(xml).doc;
-
-    const root = this.diff.documentElement;
-    if (!root.hasChildNodes()) {
-      return null;
+  public patch(xml: string): XMLFile {
+    this.target = new XMLFile().fromString(xml);
+    for (const action of this.diff.actions) {
+      this.processAction(action);
     }
-
-    root.childNodes.forEach((node: NodeImpl) => {
-      if (node instanceof ElementImpl) {
-        this.processAction(node as ElementImpl);
-      }
-    });
     return this.target;
   }
 
   protected processAction(elem: ElementImpl) {
     const action = elem.tagName;
     const query = elem.getAttribute('sel');
-    if (!query) {
-      throw Error('Attribute `sel` is missing.');
-    }
-    const target = select(query, this.target) as NodeImpl | NodeImpl[];
+    let target = select(query!, this.target.doc) as NodeImpl | NodeImpl[];
 
-    if (this.isQueryNamespace(query)) {
-      this.replaceNamespace(null, elem);
-      return;
+    // RFC 4.1, first paragraph, last sentence: only one node is allowed.
+    if (Array.isArray(target)) {
+      if (target.length > 1) {
+        throw new XPatchException(
+          'Expected only one matching element, but multiple has been found.',
+        );
+      }
+      target = target[0];
     }
 
     switch (action) {
-      case 'add':
+      case Patcher.Add:
         this.processAdd(
-          this.wrapNodes(target),
+          target,
           elem.getAttribute('type'),
           elem.getAttribute('pos'),
           elem,
         );
         break;
 
-      case 'remove':
-        this.processRemove(this.wrapNodes(target));
+      case Patcher.Remove:
+        this.processRemove(target, elem.getAttribute('ws'));
         break;
 
-      case 'replace':
-        this.processReplace(this.wrapNodes(target), elem);
+      case Patcher.Replace:
+        this.processReplace(arrayWrap(target), elem);
         break;
 
       default:
@@ -64,79 +83,75 @@ export class Patcher {
     }
   }
 
+  // region Addition
   protected processAdd(
-    nodes: NodeImpl[] | null,
+    node: NodeImpl | null | undefined,
     type: string | null,
     pos: string | null,
     action: NodeImpl,
   ) {
-    if (!nodes) return;
-    if (type) {
-      for (const node of nodes) {
-        this.addAttribute(node, type.substr(1), action.textContent!);
+    if (!node || !action.hasChildNodes()) return;
+    const t = (type && type.trim()) || '';
+    if (t.length) {
+      if ('@' == t[0]) {
+        this.addAttribute(node, t.substr(1), action.textContent!);
+      } else if (t.startsWith(Patcher.AxisAttribute)) {
+        this.addAttribute(
+          node,
+          t.substr(Patcher.AxisAttribute.length).trim(),
+          action.textContent!,
+        );
+      } else {
+        this.addNamespace(
+          t.substr(Patcher.AxisNamespace.length).trim(),
+          action.textContent!,
+        );
       }
     } else {
-      for (const node of nodes) {
-        this.addChildNode(node, action.childNodes, pos);
-      }
+      this.addChildNode(node, action.childNodes, pos);
     }
   }
 
-  protected processRemove(nodes: NodeImpl[] | null) {
-    if (!nodes) return;
-    for (const node of nodes) {
-      if (node instanceof AttrImpl) {
-        (node.ownerElement! as ElementImpl).removeAttributeNode(node);
-      } else {
-        node.parentNode!.removeChild(node);
-      }
-    }
+  protected addAttribute(target: NodeImpl, name: string, value: string) {
+    if (!target || !XMLFile.isElement(target)) return;
+    target.setAttribute(name, value || '');
   }
 
-  protected processReplace(nodes: NodeImpl[] | null, action: ElementImpl) {
-    if (!nodes) return;
-    for (const node of nodes) {
-      if (node instanceof AttrImpl) {
-        node.value = action.textContent!;
-      } else {
-        if (node.parentNode instanceof DocumentImpl
-            && node instanceof ElementImpl) {
-          this.removeAllChildren(this.target);
-          this.importNodes(action.childNodes)
-            .forEach(n => this.target.appendChild(n));
-        } else {
-          for (const n of this.importNodes(action.childNodes)) {
-            node.parentNode!.replaceChild(n, node);
-          }
-        }
-      }
-    }
-  }
-
-  protected replaceNamespace(
-    nodes: NodeImpl[] | null,
-    action: ElementImpl,
-  ) {
-    if (!nodes) return;
-    console.log(action);
+  // noinspection JSMethodCanBeStatic
+  /**
+   * Haven't figured out how to implement this
+   * @param prefix
+   * @param uri
+   */
+  private addNamespace(prefix: string, uri: string) {
+    if (!prefix || !uri) return;
+    throw new NotImplementedException();
   }
 
   protected addChildNode(
     target: NodeImpl,
-    children: NodeImpl | NodeImpl[],
+    children: NodeImpl[],
     pos?: string | null,
   ) {
     const imported = this.importNodes(children);
+    let anchor = target;
     switch (pos) {
+      case 'after':
+        for (const child of imported) {
+          anchor = target.parentNode!.insertBefore(child, anchor.nextSibling);
+        }
+        break;
+
       case 'before':
         for (const child of imported) {
           target.parentNode!.insertBefore(child, target);
         }
         break;
 
-      case 'after':
+      case 'prepend':
+        anchor = target.firstChild;
         for (const child of imported) {
-          target.parentNode!.insertBefore(child, target.nextSibling);
+          target.insertBefore(child, anchor);
         }
         break;
 
@@ -147,32 +162,108 @@ export class Patcher {
     }
   }
 
-  protected wrapNodes(node: NodeImpl | NodeImpl[]): NodeImpl[] | null {
-    if (!node) return null;
-    let wrapped: NodeImpl[];
-    if (node instanceof NodeImpl) {
-      wrapped = [node];
+  // endregion
+
+  // region Removal
+  protected processRemove(
+    node: NodeImpl | null | undefined,
+    ws: string | null,
+  ) {
+    if (!node) return;
+    if (XMLFile.isAttribute(node)) {
+      (node.ownerElement! as ElementImpl).removeAttributeNode(node);
+    } else if (XMLFile.isText(node)) {
+      node.parentNode!.removeChild(node);
     } else {
-      wrapped = node;
+      const parent = node.parentNode!;
+      if (!ws) {
+        parent.removeChild(node);
+        return;
+      }
+      // RFC 4.5, 2nd paragraph: specifically prohibits removal of namespace
+      // nodes with `ws` attribute, but I haven't figured out the exact meaning,
+      // so it is ignored for now.
+      let sibling;
+      if ('after' == ws || 'both' == ws) {
+        sibling = node.nextSibling;
+        if (XMLFile.isText(sibling) && !sibling.textContent!.trim()) {
+          parent.removeChild(sibling);
+        }
+      }
+      if ('before' == ws || 'both' == ws) {
+        sibling = node.previousSibling;
+        if (XMLFile.isText(sibling) && !sibling.textContent!.trim()) {
+          parent.removeChild(node.previousSibling);
+        }
+      }
+      parent.removeChild(node);
     }
-    return wrapped;
   }
 
-  protected importNodes(nodes: NodeImpl | NodeImpl[]): NodeImpl[] {
-    return (Array.isArray(nodes) ? nodes : [nodes])
-      .map(e => this.target.importNode(e, true));
+  // endregion
+
+  protected importNodes(nodes: NodeImpl[]): NodeImpl[] {
+    return nodes.map(n =>
+      this.target.doc.importNode(this.mangleNS(n.cloneNode(true)), true));
+  }
+
+  protected processReplace(
+    nodes: NodeImpl[] | null | undefined,
+    action: ElementImpl,
+  ) {
+    if (!nodes) return;
+    for (const node of nodes) {
+      if (node instanceof AttrImpl) {
+        node.value = action.textContent!;
+      } else {
+        if (node.parentNode instanceof DocumentImpl
+            && node instanceof ElementImpl) {
+          this.removeAllChildren(this.target.doc);
+          this.importNodes(action.childNodes)
+            .forEach(n => this.target.doc.appendChild(n));
+        } else {
+          for (const n of this.importNodes(action.childNodes)) {
+            node.parentNode!.replaceChild(n, node);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Default namespace has been translated into the XPath expressions, we just
+   * need to handle prefixes here.
+   *
+   * @param node a node that will be put to target
+   */
+  protected mangleNS(node: NodeImpl | AttrImpl): NodeImpl {
+    if (node.hasChildNodes()) {
+      for (const child of node.childNodes) {
+        this.mangleNS(child);
+      }
+    }
+    if (!XMLFile.isElement(node) && !XMLFile.isAttribute(node)) return node;
+    if (node.prefix) {
+      const diffURI = this.target.lookupNamespaceURI(node.prefix, node);
+      if (diffURI) {
+        const targetPrefix = this.target.lookupPrefix(diffURI, node);
+        if (targetPrefix) {
+          node.prefix = targetPrefix;
+        }
+      }
+    }
+    if (XMLFile.isAttribute(node)) return node;
+    if (node.hasAttributes()) {
+      const attrs = node.getAttributeNames();
+      for (const attr of attrs) {
+        this.mangleNS(node.getAttributeNode(attr));
+      }
+    }
+    return node;
   }
 
   protected removeAllChildren(target: NodeImpl) {
     target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
-  }
-
-  protected addAttribute(target: NodeImpl, name: string, value: string) {
-    const nodes = this.wrapNodes(target);
-    if (!nodes) return;
-    for (const node of nodes as ElementImpl[]) {
-      node.setAttribute(name, value);
-    }
   }
 
   protected isQueryNamespace(query: string) {

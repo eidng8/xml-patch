@@ -1,5 +1,6 @@
 import {XMLFile} from './xml-file';
 import {ElementImpl} from 'xmldom-ts';
+import {XPathParser} from 'xpath-ts';
 
 export default class Diff {
   static readonly NamespaceRegistry = 'urn:ietf:params:xml:ns:patch-ops-error';
@@ -32,7 +33,7 @@ export default class Diff {
     const root = this.xml.root;
     if (!root) return this;
     for (const action of root.childNodes) {
-      if (!XMLFile.isElement(action)) continue;
+      if (!XMLFile.isElement(action) || !action.hasAttribute('sel')) continue;
       if (Diff.SupportedActions.indexOf(action.localName) < 0) continue;
       this._actions.push(action);
     }
@@ -43,7 +44,11 @@ export default class Diff {
     for (const action of this.actions) {
       const exp = action.getAttribute('sel');
       if (!exp) continue;
-      const cmp = this.compileAction(exp, action);
+      let cmp = this.mangleNamespace(exp, action);
+      // RFC 4.1, second paragraph: 'sel' attribute always start from root node
+      if (!cmp.startsWith('/')) {
+        cmp = `/${cmp}`;
+      }
       if (exp != cmp) {
         action.setAttribute('sel', cmp);
       }
@@ -52,112 +57,45 @@ export default class Diff {
   }
 
   /**
-   * Handles namespace mangling of the given expression. It processes the given
+   * Mangles namespace mangling of the given expression. It processes the given
    * expression segment by segment, delimited by forward slash character `'/'`.
-   * @param exp the XPath expression
+   * @param expression the XPath expression
    * @param action the action element
    */
-  protected compileAction(exp: string, action: ElementImpl): string {
-    let idx = 0;
-    let isAttr = false;
-    let squareDepth = 0;
-    let bracketDepth = 0;
-    let compiled = '';
-    let part = '';
-    let ch = '';
-    let prefix = '';
-
-    const mangle = () => {
-      compiled += this.mangleElementNamespace(
-        prefix.trim(),
-        part.trim(),
-        isAttr,
-        action,
-      ) + ch;
-      idx++;
-      part = '';
-      prefix = '';
-      isAttr = false;
-    };
-
-    const pack = () => {
-      compiled += prefix + part + ch;
-      prefix = '';
-      part = '';
-      ch = '';
-      isAttr = false;
-    };
-
-    while ((ch = exp[idx])) {
-      switch (ch) {
-        // a segment is about to start, send everything before it to mangle.
-        case '/':
-          mangle();
-          continue;
-
-        // start of attribute expression
-        case '@':
-          isAttr = true;
-          compiled += '@';
-          ch = '';
+  protected mangleNamespace(expression: string, action: ElementImpl): string {
+    let a;
+    let name;
+    let prefix;
+    const parser = new XPathParser();
+    const [types, tokens] = parser.tokenize(expression);
+    for (let idx = 0; idx < types.length; idx++) {
+      switch (types[idx]) {
+        case XPathParser.QNAME:
+          [prefix, name] = this.tokenizeQName(tokens[idx]);
+          a = XPathParser.AT == types[idx - 1];
+          tokens[idx] = this.mangleQName(prefix, name, a, action);
           break;
 
-        // if inside an attribute expression, mangle it
-        case '=':
-          if (isAttr) mangle();
-          break;
-
-        // stores current portion to prefix, if not in bracket or square bracket
-        case ':':
-          if (squareDepth || bracketDepth) break;
-          if (':' != exp[idx + 1]) {
-            prefix = part;
-            part = '';
-            idx++;
-            continue;
-          }
-          break;
-
-        // send everything to mangle if this is the 1st opening square bracket
-        case '[':
-          if (isAttr || !squareDepth) mangle();
-          squareDepth++;
-          continue;
-
-        // closes a square bracket pair, if there is no square bracket left open
-        // then pack everything to the compiled string, we don't mangle things
-        // inside square brackets
-        case ']':
-          squareDepth--;
-          if (!squareDepth) pack();
-          break;
-
-        // we don't do anything within brackets, just mark the its start
-        case '(':
-          bracketDepth++;
-          break;
-
-        // closes a bracket pair, if there is no bracket left open then pack
-        // everything to the compiled string, we don't mangle things inside
-        // brackets
-        case ')':
-          bracketDepth--;
-          if (!bracketDepth) pack();
-          break;
+        case XPathParser.LITERAL:
+          name = tokens[idx].replace('\\', '\\\\').replace('\'', '\\\'');
+          tokens[idx] = `'${name}'`;
       }
-      part += ch;
-      idx++;
     }
-    compiled += this.mangleElementNamespace(
-      prefix.trim(),
-      part.trim(),
-      isAttr,
-      action,
-    );
-    return compiled;
+    tokens.pop();
+    return tokens.join('');
   }
 
-  protected mangleElementNamespace(
+  protected tokenizeQName(qname: string): string[] {
+    let prefix = '';
+    const parts = qname.split(':');
+    let name = parts[0];
+    if (parts.length > 1) {
+      [prefix, name] = parts;
+    }
+    return [prefix, name];
+  }
+
+  protected mangleQName(
     prefix: string,
     name: string,
     isAttr: boolean,
@@ -173,7 +111,8 @@ export default class Diff {
 
     // find out the namespace URI for the diff document, so we can ignore it
     // later on encounter
-    const ns = isAttr && !prefix ? '' : action.lookupNamespaceURI(prefix || '');
+    const ns = isAttr && !prefix ? ''
+      : this.xml.lookupNamespaceURI(prefix || '', action);
 
     // expand the expression
     let exp = '*';

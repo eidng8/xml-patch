@@ -1,6 +1,13 @@
 import {Diff, XMLFile} from '../src';
 
 describe('Diff', () => {
+  test('it ignores actions without `sel` attribute', () => {
+    expect.assertions(2);
+    const diff = new Diff('<diff><add/><remove sel="v"/></diff>');
+    expect(diff.actions.length).toBe(1);
+    expect(diff.actions[0].getAttribute('sel')).toBe('/v');
+  });
+
   test('it will not change expression without namespace', async () => {
     expect.assertions(1);
     const xml = new XMLFile();
@@ -18,20 +25,20 @@ describe('Diff', () => {
     // * XPath query should be expanded using default namespace
     // * attribute should be left untouched
     expect(action.localName).toBe('add');
-    // @formatter:off
     expect(action.getAttribute('sel')).toBe(
-      "*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='doc']/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='elem'][@*[local-name()='a']='foo']",
+      // @formatter:off
+      "/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='doc']/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='elem'][@*[local-name()='a']='foo']",
+      // @formatter:on
     );
-    // @formatter:on
     action = diff.actions[1];
     // * XPath query should be expanded using default namespace
     // * function should be left untouched
     expect(action.localName).toBe('replace');
-    // @formatter:off
     expect(action.getAttribute('sel')).toBe(
-      "*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='doc']/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='note']/text()",
+      // @formatter:off
+      "/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='doc']/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='note']/text()",
+      // @formatter:on
     );
-    // @formatter:on
     action = diff.actions[2];
     // * XPath query should be expanded using default namespace
     // * XPath query should be expanded using namespace specified by prefix
@@ -39,20 +46,20 @@ describe('Diff', () => {
     // * attribute should be left untouched
     // * function should be left untouched
     expect(action.localName).toBe('remove');
-    // @formatter:off
     expect(action.getAttribute('sel')).toBe(
-      "*/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='elem'][@*[local-name()='a']='bar']/*[namespace-uri()='urn:ietf:params:xml:ns:yyy'][local-name()='child']",
+      // @formatter:off
+      "/*/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='elem'][@*[local-name()='a']='bar']/*[namespace-uri()='urn:ietf:params:xml:ns:yyy'][local-name()='child']",
+      // @formatter:on
     );
-    // @formatter:on
     action = diff.actions[3];
     // * XPath query should be expanded using default namespace
     // * asterisks should be left untouched
     // * attribute should be left untouched
     expect(action.localName).toBe('add');
-    // @formatter:off
     expect(action.getAttribute('sel')).toBe(
-      "*/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='elem'][@*[local-name()='a']='bar']",
+      // @formatter:off
+      "/*/*[namespace-uri()='urn:ietf:params:xml:ns:xxx'][local-name()='elem'][@*[local-name()='a']='bar']",
+      // @formatter:on
     );
-    // @formatter:on
   });
 });

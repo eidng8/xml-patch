@@ -1,5 +1,6 @@
 import {existsSync, readFile} from 'fs';
 import {
+  AttrImpl,
   DocumentImpl,
   DOMParserImpl,
   ElementImpl,
@@ -59,6 +60,14 @@ export class XMLFile {
    */
   static isElement(node: any): node is ElementImpl {
     return node instanceof ElementImpl;
+  }
+
+  /**
+   * Attribute node type guard
+   * @param node
+   */
+  static isAttribute(node: any): node is AttrImpl {
+    return node instanceof AttrImpl;
   }
 
   get encoding(): string {
@@ -167,6 +176,29 @@ export class XMLFile {
       }
     }
     return this;
+  }
+
+  lookupNamespaceURI(prefix: string | null, node?: NodeImpl): string | null {
+    if (!prefix) {
+      return node ? node.lookupNamespaceURI('')
+        : this.root!.lookupNamespaceURI('');
+    }
+    let anchor = node || this.root!;
+    do {
+      const uri = anchor.lookupNamespaceURI(prefix);
+      if (uri) return uri;
+    } while ((anchor = anchor.parentNode));
+    return null;
+  }
+
+  lookupPrefix(uri: string | null, node?: NodeImpl): string | null {
+    if (!uri) return null;
+    let anchor = node || this.root!;
+    do {
+      const prefix = anchor.lookupPrefix(uri);
+      if (prefix) return prefix;
+    } while ((anchor = anchor.parentNode));
+    return null;
   }
 
   protected async determineEncoding(path: string): Promise<[string, Buffer]> {
