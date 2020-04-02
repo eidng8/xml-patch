@@ -126,7 +126,7 @@ describe('Patcher <add>', () => {
     ).toEqual('<a>x<b>y</b><!-- a comment -->z</a>');
   });
 
-  test('does not implement add namespace', () => {
+  test('it adds namespace prefix declaration', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a" type="namespace::pref">urn:new</add></diff>')
@@ -191,5 +191,23 @@ describe('Patcher <add>', () => {
       .patch('<a>x<b>y</b>z</a>')
       .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y<n:c xmlns:n="urn:xxx"/></b>z</a>');
+  });
+
+  test('it adds new element with attribute', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff xmlns:n="urn:xxx"><add sel="a/b" type="@n:c">w</add></diff>')
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a>x<b xmlns:n="urn:xxx" n:c="w">y</b>z</a>');
+  });
+
+  test('it adds with default namespace', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff xmlns="urn:xxx"><add sel="a/b"><c/></add></diff>')
+      .patch('<a xmlns:n="urn:xxx">x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a>x<b>y<n:c/></b>z</a>');
   });
 });

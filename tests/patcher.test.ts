@@ -25,4 +25,12 @@ describe('Patcher', () => {
       .patch('<a>x<b>y</b><b>y</b>z</a>').toString(),
     ).toThrow(XPatchException);
   });
+
+  test('it throws if matched no target', () => {
+    expect.assertions(1);
+    expect(() => new Patcher()
+      .load('<diff><add sel="a/b/c"><c>y</c></add></diff>')
+      .patch('<a>x<b>y</b><b>y</b>z</a>').toString(),
+    ).toThrow();
+  });
 });
