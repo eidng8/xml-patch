@@ -27,7 +27,7 @@ export interface FormatOptions {
   preserveComments?: boolean
 }
 
-export class XMLFile {
+export class XML {
   protected _defaultEncoding: string;
 
   protected _doc!: DocumentImpl;
@@ -42,8 +42,8 @@ export class XMLFile {
 
   protected _fsMock?: any;
 
-  static isXMLFile(subject: any): subject is XMLFile {
-    return subject instanceof XMLFile;
+  static isXMLFile(subject: any): subject is XML {
+    return subject instanceof XML;
   }
 
   /**
@@ -117,7 +117,7 @@ export class XMLFile {
     this._fsMock = options.fsMock;
   }
 
-  async fromFile(path: string): Promise<XMLFile> {
+  async fromFile(path: string): Promise<XML> {
     return new Promise((resolve, reject) => {
       this._warnings = [];
       this._errors = [];
@@ -129,7 +129,7 @@ export class XMLFile {
     });
   }
 
-  fromString(xml: string, encoding = 'utf-8'): XMLFile {
+  fromString(xml: string, encoding = 'utf-8'): XML {
     this._warnings = [];
     this._errors = [];
     this._encoding = encoding;
@@ -154,18 +154,18 @@ export class XMLFile {
     return pd.xml(xml);
   }
 
-  removeEmptyTextNodes(node: NodeImpl): XMLFile {
+  removeEmptyTextNodes(node: NodeImpl): XML {
     if (!node.hasChildNodes()) return this;
     let idx = 0;
     let child: NodeImpl;
     while ((child = node.childNodes[idx])) {
-      if (XMLFile.isText(child)) {
+      if (XML.isText(child)) {
         if (child.textContent && child.textContent.trim()) {
           idx++;
           continue;
         }
         child.parentNode.removeChild(child);
-      } else if (XMLFile.isElement(child)) {
+      } else if (XML.isElement(child)) {
         this.removeEmptyTextNodes(child);
         idx++;
       }
@@ -173,14 +173,14 @@ export class XMLFile {
     return this;
   }
 
-  trimTextContents(node: NodeImpl): XMLFile {
+  trimTextContents(node: NodeImpl): XML {
     if (!node.hasChildNodes()) return this;
     for (const child of node.childNodes) {
-      if (XMLFile.isText(child)) {
+      if (XML.isText(child)) {
         const txt = child.textContent && child.textContent.trim();
         child.textContent = txt;
         child.data = txt!;
-      } else if (XMLFile.isElement(child)) {
+      } else if (XML.isElement(child)) {
         this.trimTextContents(child);
       }
     }

@@ -1,6 +1,6 @@
 import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
-import {XMLFile} from './xml-file';
+import {XML} from './xml';
 import Diff from './diff';
 import {XPatchException} from './errors';
 
@@ -29,15 +29,15 @@ export class Patcher {
 
   protected diff!: Diff;
 
-  protected target!: XMLFile;
+  protected target!: XML;
 
   public load(diff: string): Patcher {
     this.diff = new Diff(diff);
     return this;
   }
 
-  public patch(xml: string): XMLFile {
-    this.target = new XMLFile().fromString(xml);
+  public patch(xml: string): XML {
+    this.target = new XML().fromString(xml);
     for (const action of this.diff.actions) {
       this.processAction(action);
     }
@@ -120,7 +120,7 @@ export class Patcher {
     name: string,
     value: string,
   ) {
-    if (!target || !XMLFile.isElement(target)) return;
+    if (!target || !XML.isElement(target)) return;
     const [prefix, localName, targetPrefix, targetNS]
       = this.mapNamespace(name, target, node);
     if (targetNS) {
@@ -174,9 +174,9 @@ export class Patcher {
     ws: string | null,
   ) {
     if (!node) return;
-    if (XMLFile.isAttribute(node)) {
+    if (XML.isAttribute(node)) {
       (node.ownerElement! as ElementImpl).removeAttributeNode(node);
-    } else if (XMLFile.isText(node)) {
+    } else if (XML.isText(node)) {
       node.parentNode!.removeChild(node);
     } else {
       const parent = node.parentNode!;
@@ -190,13 +190,13 @@ export class Patcher {
       let sibling;
       if ('after' == ws || 'both' == ws) {
         sibling = node.nextSibling;
-        if (XMLFile.isText(sibling) && !sibling.textContent!.trim()) {
+        if (XML.isText(sibling) && !sibling.textContent!.trim()) {
           parent.removeChild(sibling);
         }
       }
       if ('before' == ws || 'both' == ws) {
         sibling = node.previousSibling;
-        if (XMLFile.isText(sibling) && !sibling.textContent!.trim()) {
+        if (XML.isText(sibling) && !sibling.textContent!.trim()) {
           parent.removeChild(node.previousSibling);
         }
       }
@@ -254,9 +254,9 @@ export class Patcher {
         this.mangleNS(child, target, anchor);
       }
     }
-    if (!XMLFile.isElement(node) && !XMLFile.isAttribute(node)) return node;
+    if (!XML.isElement(node) && !XML.isAttribute(node)) return node;
     const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
-      XMLFile.isElement(node) ? node.tagName : node.name,
+      XML.isElement(node) ? node.tagName : node.name,
       target,
       anchor,
     );
@@ -265,9 +265,9 @@ export class Patcher {
     } else if (targetNS) {
       this.setPrefix(node, prefix, targetNS);
     }
-    if (XMLFile.isAttribute(node)) return node;
+    if (XML.isAttribute(node)) return node;
     if (node.hasAttributes()) {
-      const attrs = XMLFile.allAttributes(node);
+      const attrs = XML.allAttributes(node);
       for (const attr of attrs) {
         this.mangleNS(attr, target, anchor);
       }
@@ -288,7 +288,7 @@ export class Patcher {
     if (ns) {
       node.namespaceURI = ns;
     }
-    if (XMLFile.isElement(node)) {
+    if (XML.isElement(node)) {
       if (prefix) {
         node.nodeName = `${prefix}:${node.localName}`;
         node.tagName = `${prefix}:${node.localName}`;
@@ -296,7 +296,7 @@ export class Patcher {
         node.nodeName = node.localName;
         node.tagName = node.localName;
       }
-    } else if (XMLFile.isAttribute(node)) {
+    } else if (XML.isAttribute(node)) {
       if (prefix) {
         node.nodeName = `${prefix}:${node.localName}`;
         node.name = `${prefix}:${node.localName}`;

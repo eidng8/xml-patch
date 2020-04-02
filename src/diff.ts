@@ -1,4 +1,4 @@
-import {XMLFile} from './xml-file';
+import {XML} from './xml';
 import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
 
@@ -7,7 +7,7 @@ export default class Diff {
 
   static readonly SupportedActions = ['add', 'remove', 'replace'];
 
-  protected xml!: XMLFile;
+  protected xml!: XML;
 
   protected _actions: ElementImpl[];
 
@@ -15,17 +15,17 @@ export default class Diff {
     return this._actions;
   }
 
-  constructor(diff: string | XMLFile) {
+  constructor(diff: string | XML) {
     this._actions = [];
     this.load(diff).loadActions().compileActions();
   }
 
-  load(diff: string | XMLFile): Diff {
-    if (XMLFile.isXMLFile(diff)) {
+  load(diff: string | XML): Diff {
+    if (XML.isXMLFile(diff)) {
       this.xml = diff;
       return this;
     }
-    this.xml = new XMLFile().fromString(diff);
+    this.xml = new XML().fromString(diff);
     return this;
   }
 
@@ -41,7 +41,7 @@ export default class Diff {
     const root = this.xml.root;
     if (!root) return this;
     for (const action of root.childNodes) {
-      if (!XMLFile.isElement(action)) continue;
+      if (!XML.isElement(action)) continue;
       if (!action.hasAttribute('sel')) throw new Error();
       if (Diff.SupportedActions.indexOf(action.localName) < 0) continue;
       this._actions.push(action);

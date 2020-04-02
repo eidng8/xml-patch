@@ -1,4 +1,4 @@
-import {Diff, XMLFile} from '../src';
+import {Diff, XML} from '../src';
 
 describe('Diff', () => {
   test('it throws if `sel` attribute is missing', () => {
@@ -9,7 +9,7 @@ describe('Diff', () => {
 
   test('it will not change expression without namespace', async () => {
     expect.assertions(1);
-    const xml = new XMLFile();
+    const xml = new XML();
     await xml.fromFile('tests/data/1A.diff.xml');
     const diff = new Diff(xml);
     expect(diff.actions[0].getAttribute('sel')).toBe('/a/b');
@@ -17,7 +17,7 @@ describe('Diff', () => {
 
   test('it mangles diff namespace', async () => {
     expect.assertions(8);
-    const xml = new XMLFile();
+    const xml = new XML();
     await xml.fromFile('tests/data/rfc-a18.diff.xml');
     const diff = new Diff(xml);
     let action = diff.actions[0];

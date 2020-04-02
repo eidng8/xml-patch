@@ -1,5 +1,5 @@
 import {NodeImpl} from 'xmldom-ts';
-import {XMLFile} from '../src';
+import {XML} from '../src';
 
 const pd = require('pretty-data').pd;
 
@@ -49,7 +49,7 @@ export function format(txt: string | NodeImpl | Node) {
   if ('string' != typeof xml) {
     xml = xml.toString();
   }
-  xml = new XMLFile({warnError: true})
+  xml = new XML({warnError: true})
     .fromString(xml)
     .toString({minify: true, preserveComments: true})
     .trim()
