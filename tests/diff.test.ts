@@ -1,11 +1,10 @@
 import {Diff, XMLFile} from '../src';
 
 describe('Diff', () => {
-  test('it ignores actions without `sel` attribute', () => {
-    expect.assertions(2);
-    const diff = new Diff('<diff><add/><remove sel="v"/></diff>');
-    expect(diff.actions.length).toBe(1);
-    expect(diff.actions[0].getAttribute('sel')).toBe('/v');
+  test('it throws if `sel` attribute is missing', () => {
+    expect.assertions(1);
+    expect(() => new Diff('<diff><add/><remove sel="v"/></diff>'))
+      .toThrow();
   });
 
   test('it will not change expression without namespace', async () => {

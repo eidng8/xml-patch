@@ -2,7 +2,7 @@ import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 import {XMLFile} from './xml-file';
 import Diff from './diff';
-import {NotImplementedException, XPatchException} from './errors';
+import {XPatchException} from './errors';
 
 export class Patcher {
   static readonly Add = 'add';
@@ -46,17 +46,16 @@ export class Patcher {
 
   protected processAction(elem: ElementImpl) {
     const action = elem.tagName;
-    const query = elem.getAttribute('sel');
-    let target = select(query!, this.target.doc) as NodeImpl | NodeImpl[];
+    const query = elem.getAttribute('sel')!;
+    let target = select(query, this.target.doc) as NodeImpl | NodeImpl[];
 
-    // RFC 4.1, first paragraph, last sentence: only one node is allowed.
-    if (Array.isArray(target)) {
-      if (target.length > 1) {
-        throw new XPatchException(
-          'Expected only one matching element, but multiple has been found.',
-        );
-      }
+    // RFC 4.1, first paragraph, last sentence: must match exactly one node.
+    if (Array.isArray(target) && 1 == target.length) {
       target = target[0];
+    } else {
+      throw new XPatchException(
+        'Expected only one matching element, but multiple has been found.',
+      );
     }
 
     switch (action) {
@@ -84,47 +83,53 @@ export class Patcher {
 
   // region Addition
   protected processAdd(
-    node: NodeImpl | null | undefined,
+    target: NodeImpl | null | undefined,
     type: string | null,
     pos: string | null,
     action: NodeImpl,
   ) {
-    if (!node || !action.hasChildNodes()) return;
+    if (!target || !action.hasChildNodes()) return;
     const t = (type && type.trim()) || '';
     if (t.length) {
       if ('@' == t[0]) {
-        this.addAttribute(node, t.substr(1), action.textContent!);
+        this.addAttribute(target, action, t.substr(1), action.textContent!);
       } else if (t.startsWith(Patcher.AxisAttribute)) {
         this.addAttribute(
-          node,
+          target,
+          action,
           t.substr(Patcher.AxisAttribute.length).trim(),
           action.textContent!,
         );
-      } else {
-        this.addNamespace(
+      } else if (t.startsWith(Patcher.AxisNamespace)) {
+        this.target.addNamespace(
           t.substr(Patcher.AxisNamespace.length).trim(),
           action.textContent!,
+          target as ElementImpl,
         );
+      } else {
+        throw new Error();
       }
     } else {
-      this.addChildNode(node, action.childNodes, pos);
+      this.addChildNode(target, action.childNodes, pos);
     }
   }
 
-  protected addAttribute(target: NodeImpl, name: string, value: string) {
+  protected addAttribute(
+    target: NodeImpl,
+    node: NodeImpl,
+    name: string,
+    value: string,
+  ) {
     if (!target || !XMLFile.isElement(target)) return;
-    target.setAttribute(name, value || '');
-  }
-
-  // noinspection JSMethodCanBeStatic
-  /**
-   * Haven't figured out how to implement this
-   * @param prefix
-   * @param uri
-   */
-  private addNamespace(prefix: string, uri: string) {
-    if (!prefix || !uri) return;
-    throw new NotImplementedException();
+    const [prefix, localName, targetPrefix, targetNS]
+      = this.mapNamespace(name, target, node);
+    if (targetNS) {
+      const p = targetPrefix || prefix;
+      const n = p ? `${p}:${localName}` : localName;
+      target.setAttributeNS(targetNS, n, value);
+    } else {
+      target.setAttribute(name, value || '');
+    }
   }
 
   protected addChildNode(
@@ -250,14 +255,15 @@ export class Patcher {
       }
     }
     if (!XMLFile.isElement(node) && !XMLFile.isAttribute(node)) return node;
-    if (node.prefix) {
-      const diffURI = this.diff.lookupNamespaceURI(node.prefix, anchor);
-      if (diffURI) {
-        const targetPrefix = this.target.lookupPrefix(diffURI, target);
-        if (targetPrefix) {
-          this.setPrefix(node, targetPrefix);
-        }
-      }
+    const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
+      XMLFile.isElement(node) ? node.tagName : node.name,
+      target,
+      anchor,
+    );
+    if (targetPrefix) {
+      this.setPrefix(node, targetPrefix);
+    } else if (targetNS) {
+      this.setPrefix(node, prefix, targetNS);
     }
     if (XMLFile.isAttribute(node)) return node;
     if (node.hasAttributes()) {
@@ -277,8 +283,11 @@ export class Patcher {
     return query.indexOf('namespace::') >= 0;
   }
 
-  protected setPrefix(node: NodeImpl, prefix: string): void {
+  protected setPrefix(node: NodeImpl, prefix: string, ns?: string): void {
     node.prefix = prefix;
+    if (ns) {
+      node.namespaceURI = ns;
+    }
     if (XMLFile.isElement(node)) {
       if (prefix) {
         node.nodeName = `${prefix}:${node.localName}`;
@@ -296,5 +305,22 @@ export class Patcher {
         node.name = node.localName;
       }
     }
+  }
+
+  protected mapNamespace(
+    name: string,
+    target: NodeImpl,
+    node?: NodeImpl,
+  ): string[] {
+    const parts = name.split(':');
+    if (parts.length < 2) {
+      return ['', name, '', ''];
+    }
+    const [prefix, local] = parts;
+    const uri = node
+      ? this.diff.lookupNamespaceURI(prefix, node)
+      : this.target.lookupNamespaceURI(prefix, target);
+    const targetPrefix = this.target.lookupPrefix(uri);
+    return [prefix, local, targetPrefix || '', uri || ''];
   }
 }

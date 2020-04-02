@@ -210,6 +210,13 @@ export class XMLFile {
     return null;
   }
 
+  addNamespace(prefix: string, uri: string, node?: ElementImpl) {
+    if (!prefix || !uri) return;
+    const n = node || this.root!;
+    n._nsMap[prefix] = uri;
+    n.setAttribute(`xmlns:${prefix}`, uri);
+  }
+
   protected async determineEncoding(path: string): Promise<[string, Buffer]> {
     return new Promise((resolve, reject) => {
       this.readFile(path)

@@ -41,7 +41,8 @@ export default class Diff {
     const root = this.xml.root;
     if (!root) return this;
     for (const action of root.childNodes) {
-      if (!XMLFile.isElement(action) || !action.hasAttribute('sel')) continue;
+      if (!XMLFile.isElement(action)) continue;
+      if (!action.hasAttribute('sel')) throw new Error();
       if (Diff.SupportedActions.indexOf(action.localName) < 0) continue;
       this._actions.push(action);
     }
@@ -50,8 +51,8 @@ export default class Diff {
 
   protected compileActions(): Diff {
     for (const action of this.actions) {
-      const exp = action.getAttribute('sel');
-      if (!exp) continue;
+      const exp = action.getAttribute('sel')!.trim();
+      if (!exp) throw new Error();
       let cmp = this.mangleNamespace(exp, action);
       // RFC 4.1, second paragraph: 'sel' attribute always start from root node
       if (!cmp.startsWith('/')) {
@@ -64,12 +65,6 @@ export default class Diff {
     return this;
   }
 
-  /**
-   * Mangles namespace mangling of the given expression. It processes the given
-   * expression segment by segment, delimited by forward slash character `'/'`.
-   * @param expression the XPath expression
-   * @param action the action element
-   */
   protected mangleNamespace(expression: string, action: ElementImpl): string {
     let a;
     let name;
@@ -111,18 +106,17 @@ export default class Diff {
   ): string {
     if (!name) return '';
 
-    // nothing needs done if the diff document is not namespaced
-    if (!prefix && !action.namespaceURI) return name;
-
     // if the expression is a single wildcard, we don't need to do anything
     if ('*' == name) return '*';
 
-    // find out the namespace URI for the diff document, so we can ignore it
-    // later on encounter
+    // RFC 4.2.1, paragraph 3: leave this unqualified.
+    if (!prefix && !action.namespaceURI) return name;
+
+    // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
     const ns = isAttr && !prefix ? ''
       : this.xml.lookupNamespaceURI(prefix || '', action);
 
-    // expand the expression
+    // use predicates for our convenience
     let exp = '*';
     if (ns) {
       exp += `[namespace-uri()='${ns}']`;

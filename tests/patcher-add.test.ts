@@ -1,12 +1,12 @@
 import {Patcher} from '../src';
-import {NotImplementedException} from '../src/errors';
 
 describe('Patcher <add>', () => {
   test('it appends new element', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b"><c>w</c></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y<c>w</c></b>z</a>');
   });
 
@@ -14,7 +14,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" pos="prepend"><c>w</c></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b><c>w</c>y</b>z</a>');
   });
 
@@ -22,7 +23,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" pos="before"><c>w</c></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<c>w</c><b>y</b>z</a>');
   });
 
@@ -30,7 +32,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" pos="after"><c>w</c></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y</b><c>w</c>z</a>');
   });
 
@@ -38,7 +41,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b"><c>w</c><d/></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y<c>w</c><d/></b>z</a>');
   });
 
@@ -46,7 +50,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" pos="prepend"><c>w</c><d/></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b><c>w</c><d/>y</b>z</a>');
   });
 
@@ -54,7 +59,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" pos="before"><c>w</c><d/></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<c>w</c><d/><b>y</b>z</a>');
   });
 
@@ -62,7 +68,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" pos="after"><c>w</c><d/></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y</b><c>w</c><d/>z</a>');
   });
 
@@ -70,11 +77,13 @@ describe('Patcher <add>', () => {
     expect.assertions(2);
     expect(new Patcher()
       .load('<diff><add sel="/a/b" type="@c">w</add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b c="w">y</b>z</a>');
     expect(new Patcher()
       .load('<diff><add sel="/a/b" type="attribute::c">w</add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b c="w">y</b>z</a>');
   });
 
@@ -82,7 +91,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><add sel="/a/b"><!-- a comment --></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y<!-- a comment --></b>z</a>');
   });
 
@@ -91,7 +101,8 @@ describe('Patcher <add>', () => {
     expect(new Patcher()
       .load(
         '<diff><add sel="/a/b" pos="prepend"><!-- a comment --></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b><!-- a comment -->y</b>z</a>');
   });
 
@@ -100,7 +111,8 @@ describe('Patcher <add>', () => {
     expect(new Patcher()
       .load(
         '<diff><add sel="/a/b" pos="before"><!-- a comment --></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<!-- a comment --><b>y</b>z</a>');
   });
 
@@ -109,16 +121,18 @@ describe('Patcher <add>', () => {
     expect(new Patcher()
       .load(
         '<diff><add sel="/a/b" pos="after"><!-- a comment --></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y</b><!-- a comment -->z</a>');
   });
 
   test('does not implement add namespace', () => {
     expect.assertions(1);
-    expect(() => new Patcher()
-      .load('<diff><add sel="/a" type="namespace::pref">w</add></diff>')
-      .patch('<a>x<b>y</b>z</a>'),
-    ).toThrow(NotImplementedException);
+    expect(new Patcher()
+      .load('<diff><add sel="/a" type="namespace::pref">urn:new</add></diff>')
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a xmlns:pref="urn:new">x<b>y</b>z</a>');
   });
 
   test('it ignores actions without `sel` attribute', () => {
@@ -129,14 +143,17 @@ describe('Patcher <add>', () => {
                  + '</diff>';
     const xml = '<?xml version="1.0"?><a>x<b>y</b>z</a>';
     const expected = '<?xml version="1.0"?><a>x<c>y</c>z</a>';
-    expect(new Patcher().load(diff).patch(xml).toString()).toEqual(expected);
+    expect(new Patcher().load(diff).patch(xml)
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual(expected);
   });
 
   test('it adds new element with prefix', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><n:c>w</n:c></add></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x<b>y<n:c xmlns:n="urn:xxx">w</n:c></b>z</a>');
   });
 
@@ -145,16 +162,34 @@ describe('Patcher <add>', () => {
     expect(new Patcher()
       .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><n:c>w</n:c></add></diff>')
       .patch('<a xmlns:m="urn:xxx">x<b>y</b>z</a>')
-      .toString({minify: true}),
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a xmlns:m="urn:xxx">x<b>y<m:c>w</m:c></b>z</a>');
+  });
+
+  test('it adds new element\'s attribute with mapped prefix', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><c n:v="w"/></add></diff>')
+      .patch('<a xmlns:m="urn:xxx">x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a xmlns:m="urn:xxx">x<b>y<c m:v="w"/></b>z</a>');
   });
 
   test('it adds new attribute with mapped prefix', () => {
     expect.assertions(1);
     expect(new Patcher()
-      .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><c n:v="w"/></add></diff>')
+      .load('<diff xmlns:n="urn:xxx"><add sel="a/b" type="@n:c">w</add></diff>')
       .patch('<a xmlns:m="urn:xxx">x<b>y</b>z</a>')
-      .toString({minify: true}),
-    ).toEqual('<a xmlns:m="urn:xxx">x<b>y<c m:v="w"/></b>z</a>');
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a xmlns:m="urn:xxx">x<b m:c="w">y</b>z</a>');
+  });
+
+  test('it adds new element with namespace', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><n:c/></add></diff>')
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a>x<b>y<n:c xmlns:n="urn:xxx"/></b>z</a>');
   });
 });
