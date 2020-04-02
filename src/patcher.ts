@@ -54,10 +54,16 @@ export class Patcher {
     let target = select(query, this.target.doc) as NodeImpl | NodeImpl[];
 
     // RFC 4.1, first paragraph, last sentence: must match exactly one node.
-    if (Array.isArray(target) && 1 == target.length) {
-      target = target[0];
-    } else {
-      throw new UnlocatedNode('There must be exactly one match.', elem);
+    if (Array.isArray(target)) {
+      if (1 == target.length) {
+        target = target[0];
+      } else if (!target.length) {
+        throw new UnlocatedNode('No match found.', elem);
+      } else {
+        throw new UnlocatedNode('Multiple matches found.', elem);
+      }
+    } else if (!target) {
+      throw new UnlocatedNode('No match found.', elem);
     }
 
     switch (action) {

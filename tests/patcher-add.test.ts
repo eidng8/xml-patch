@@ -206,8 +206,8 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff xmlns="urn:xxx"><add sel="a/b"><c/></add></diff>')
-      .patch('<a xmlns:n="urn:xxx">x<b>y</b>z</a>')
+      .patch('<n:a xmlns:n="urn:xxx">x<n:b>y</n:b>z</n:a>')
       .toString({minify: true, preserveComments: true}),
-    ).toEqual('<a>x<b>y<n:c/></b>z</a>');
+    ).toEqual('<n:a xmlns:n="urn:xxx">x<n:b>y<n:c/></n:b>z</n:a>');
   });
 });
