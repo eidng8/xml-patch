@@ -1,5 +1,5 @@
 import {XMLFile} from './xml-file';
-import {ElementImpl} from 'xmldom-ts';
+import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
 
 export default class Diff {
@@ -27,6 +27,14 @@ export default class Diff {
     }
     this.xml = new XMLFile().fromString(diff);
     return this;
+  }
+
+  lookupNamespaceURI(prefix: string | null, node?: NodeImpl): string | null {
+    return this.xml.lookupNamespaceURI(prefix, node);
+  }
+
+  lookupPrefix(uri: string | null, node?: NodeImpl): string | null {
+    return this.xml.lookupPrefix(uri, node);
   }
 
   protected loadActions(): Diff {

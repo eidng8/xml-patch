@@ -144,8 +144,17 @@ describe('Patcher <add>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><n:c>w</n:c></add></diff>')
-      .patch('<a xmlns:m="urn:xxx">x<b>y</b>z</a>').toString(),
-    ).toEqual(
-      '<a xmlns:m="urn:xxx">x<b>y<m:c>w</m:c></b>z</a>');
+      .patch('<a xmlns:m="urn:xxx">x<b>y</b>z</a>')
+      .toString({minify: true}),
+    ).toEqual('<a xmlns:m="urn:xxx">x<b>y<m:c>w</m:c></b>z</a>');
+  });
+
+  test('it adds new attribute with mapped prefix', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff xmlns:n="urn:xxx"><add sel="a/b"><c n:v="w"/></add></diff>')
+      .patch('<a xmlns:m="urn:xxx">x<b>y</b>z</a>')
+      .toString({minify: true}),
+    ).toEqual('<a xmlns:m="urn:xxx">x<b>y<c m:v="w"/></b>z</a>');
   });
 });

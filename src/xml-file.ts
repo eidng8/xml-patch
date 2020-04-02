@@ -70,6 +70,14 @@ export class XMLFile {
     return node instanceof AttrImpl;
   }
 
+  static allAttributes(node: ElementImpl) {
+    const attributes = [];
+    for (const a of node.attributes) {
+      attributes.push(a);
+    }
+    return attributes;
+  }
+
   get encoding(): string {
     return this._encoding;
   }
@@ -142,6 +150,7 @@ export class XMLFile {
     if (opts.minify) {
       return pd.xmlmin(xml, opts.preserveComments);
     }
+    // noinspection TypeScriptValidateJSTypes
     return pd.xml(xml);
   }
 

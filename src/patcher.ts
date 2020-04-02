@@ -2,7 +2,6 @@ import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 import {XMLFile} from './xml-file';
 import Diff from './diff';
-import {arrayWrap} from './helpers';
 import {NotImplementedException, XPatchException} from './errors';
 
 export class Patcher {
@@ -75,7 +74,7 @@ export class Patcher {
         break;
 
       case Patcher.Replace:
-        this.processReplace(arrayWrap(target), elem);
+        this.processReplace(target, elem);
         break;
 
       default:
@@ -133,7 +132,7 @@ export class Patcher {
     children: NodeImpl[],
     pos?: string | null,
   ) {
-    const imported = this.importNodes(children);
+    const imported = this.importNodes(children, target);
     let anchor = target;
     switch (pos) {
       case 'after':
@@ -202,29 +201,29 @@ export class Patcher {
 
   // endregion
 
-  protected importNodes(nodes: NodeImpl[]): NodeImpl[] {
-    return nodes.map(n =>
-      this.target.doc.importNode(this.mangleNS(n.cloneNode(true)), true));
+  protected importNodes(nodes: NodeImpl[], target: NodeImpl): NodeImpl[] {
+    return nodes.map(n => {
+      const c = this.mangleNS(n.cloneNode(true), target, n);
+      return this.target.doc.importNode(c, true);
+    });
   }
 
   protected processReplace(
-    nodes: NodeImpl[] | null | undefined,
+    node: NodeImpl | null | undefined,
     action: ElementImpl,
   ) {
-    if (!nodes) return;
-    for (const node of nodes) {
-      if (node instanceof AttrImpl) {
-        node.value = action.textContent!;
+    if (!node) return;
+    if (node instanceof AttrImpl) {
+      node.value = action.textContent!;
+    } else {
+      if (node.parentNode instanceof DocumentImpl
+          && node instanceof ElementImpl) {
+        this.removeAllChildren(this.target.doc);
+        this.importNodes(action.childNodes, node)
+          .forEach(n => this.target.doc.appendChild(n));
       } else {
-        if (node.parentNode instanceof DocumentImpl
-            && node instanceof ElementImpl) {
-          this.removeAllChildren(this.target.doc);
-          this.importNodes(action.childNodes)
-            .forEach(n => this.target.doc.appendChild(n));
-        } else {
-          for (const n of this.importNodes(action.childNodes)) {
-            node.parentNode!.replaceChild(n, node);
-          }
+        for (const n of this.importNodes(action.childNodes, node)) {
+          node.parentNode!.replaceChild(n, node);
         }
       }
     }
@@ -234,29 +233,37 @@ export class Patcher {
    * Default namespace has been translated into the XPath expressions, we just
    * need to handle prefixes here.
    *
-   * @param node a node that will be put to target
+   * @param node a imported node that will be put to target, please note that
+   * this node *may* not be in the diff document.
+   * @param target a node in the target document.
+   * @param anchor a node in the diff document, mostly likely the node being
+   * processed currently.
    */
-  protected mangleNS(node: NodeImpl | AttrImpl): NodeImpl {
+  protected mangleNS(
+    node: NodeImpl | AttrImpl,
+    target: NodeImpl,
+    anchor?: NodeImpl,
+  ): NodeImpl {
     if (node.hasChildNodes()) {
       for (const child of node.childNodes) {
-        this.mangleNS(child);
+        this.mangleNS(child, target, anchor);
       }
     }
     if (!XMLFile.isElement(node) && !XMLFile.isAttribute(node)) return node;
     if (node.prefix) {
-      const diffURI = this.target.lookupNamespaceURI(node.prefix, node);
+      const diffURI = this.diff.lookupNamespaceURI(node.prefix, anchor);
       if (diffURI) {
-        const targetPrefix = this.target.lookupPrefix(diffURI, node);
+        const targetPrefix = this.target.lookupPrefix(diffURI, target);
         if (targetPrefix) {
-          node.prefix = targetPrefix;
+          this.setPrefix(node, targetPrefix);
         }
       }
     }
     if (XMLFile.isAttribute(node)) return node;
     if (node.hasAttributes()) {
-      const attrs = node.getAttributeNames();
+      const attrs = XMLFile.allAttributes(node);
       for (const attr of attrs) {
-        this.mangleNS(node.getAttributeNode(attr));
+        this.mangleNS(attr, target, anchor);
       }
     }
     return node;
@@ -268,5 +275,26 @@ export class Patcher {
 
   protected isQueryNamespace(query: string) {
     return query.indexOf('namespace::') >= 0;
+  }
+
+  protected setPrefix(node: NodeImpl, prefix: string): void {
+    node.prefix = prefix;
+    if (XMLFile.isElement(node)) {
+      if (prefix) {
+        node.nodeName = `${prefix}:${node.localName}`;
+        node.tagName = `${prefix}:${node.localName}`;
+      } else {
+        node.nodeName = node.localName;
+        node.tagName = node.localName;
+      }
+    } else if (XMLFile.isAttribute(node)) {
+      if (prefix) {
+        node.nodeName = `${prefix}:${node.localName}`;
+        node.name = `${prefix}:${node.localName}`;
+      } else {
+        node.nodeName = node.localName;
+        node.name = node.localName;
+      }
+    }
   }
 }
