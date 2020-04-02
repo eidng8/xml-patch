@@ -1,10 +1,25 @@
 import {Diff, XML} from '../src';
+import {InvalidAttributeValue} from '../src/errors';
 
 describe('Diff', () => {
   test('it throws if `sel` attribute is missing', () => {
-    expect.assertions(1);
-    expect(() => new Diff('<diff><add/><remove sel="v"/></diff>'))
-      .toThrow();
+    expect.assertions(2);
+    try {
+      // eslint-disable-next-line
+      new Diff('<diff><add/><remove sel="v"/></diff>');
+    } catch (ex) {
+      expect(ex).toBeInstanceOf(InvalidAttributeValue);
+      expect(ex.toString()).toBe(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        + '<err:patch-ops-error \n'
+        + '  xmlns:err="urn:ietf:params:xml:ns:patch-ops-error" \n'
+        + '  xmlns="urn:ietf:params:xml:ns:pidf-diff">\n'
+        + '  <err:invalid-attribute-value phrase="Missing `sel` attribute.">\n'
+        + '    <add/>\n'
+        + '  </err:invalid-attribute-value>\n'
+        + '</err:patch-ops-error>',
+      );
+    }
   });
 
   test('it will not change expression without namespace', async () => {

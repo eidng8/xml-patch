@@ -1,9 +1,10 @@
 import {XML} from './xml';
 import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
+import {InvalidAttributeValue} from './errors';
 
 export default class Diff {
-  static readonly NamespaceRegistry = 'urn:ietf:params:xml:ns:patch-ops-error';
+  static readonly DiffNamespace = 'urn:ietf:params:xml:ns:pidf-diff';
 
   static readonly SupportedActions = ['add', 'remove', 'replace'];
 
@@ -42,7 +43,9 @@ export default class Diff {
     if (!root) return this;
     for (const action of root.childNodes) {
       if (!XML.isElement(action)) continue;
-      if (!action.hasAttribute('sel')) throw new Error();
+      if (!action.hasAttribute('sel')) {
+        throw new InvalidAttributeValue('Missing `sel` attribute.', action);
+      }
       if (Diff.SupportedActions.indexOf(action.localName) < 0) continue;
       this._actions.push(action);
     }
@@ -52,7 +55,9 @@ export default class Diff {
   protected compileActions(): Diff {
     for (const action of this.actions) {
       const exp = action.getAttribute('sel')!.trim();
-      if (!exp) throw new Error();
+      if (!exp) {
+        throw new InvalidAttributeValue('`sel` cannot be empty', action);
+      }
       let cmp = this.mangleNamespace(exp, action);
       // RFC 4.1, second paragraph: 'sel' attribute always start from root node
       if (!cmp.startsWith('/')) {

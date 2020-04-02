@@ -2,7 +2,11 @@ import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 import {XML} from './xml';
 import Diff from './diff';
-import {XPatchException} from './errors';
+import {
+  InvalidAttributeValue,
+  InvalidPatchDirective,
+  UnlocatedNode,
+} from './errors';
 
 export class Patcher {
   static readonly Add = 'add';
@@ -53,9 +57,7 @@ export class Patcher {
     if (Array.isArray(target) && 1 == target.length) {
       target = target[0];
     } else {
-      throw new XPatchException(
-        'Expected only one matching element, but multiple has been found.',
-      );
+      throw new UnlocatedNode('There must be exactly one match.', elem);
     }
 
     switch (action) {
@@ -77,7 +79,7 @@ export class Patcher {
         break;
 
       default:
-        throw Error(`Invalid tag: ${action}`);
+        throw new InvalidPatchDirective(elem);
     }
   }
 
@@ -107,7 +109,7 @@ export class Patcher {
           target as ElementImpl,
         );
       } else {
-        throw new Error();
+        throw new InvalidAttributeValue('Invalid type.', action);
       }
     } else {
       this.addChildNode(target, action.childNodes, pos);
