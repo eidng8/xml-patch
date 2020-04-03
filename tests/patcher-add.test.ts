@@ -202,12 +202,21 @@ describe('Patcher <add>', () => {
     ).toEqual('<a>x<b xmlns:n="urn:xxx" n:c="w">y</b>z</a>');
   });
 
-  test('it adds with default namespace', () => {
+  test('it adds element with default namespace', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff xmlns="urn:xxx"><add sel="a/b"><c/></add></diff>')
       .patch('<n:a xmlns:n="urn:xxx">x<n:b>y</n:b>z</n:a>')
       .toString({minify: true, preserveComments: true}),
     ).toEqual('<n:a xmlns:n="urn:xxx">x<n:b>y<n:c/></n:b>z</n:a>');
+  });
+
+  test('it adds attribute without mapping default namespace', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff xmlns="urn:xxx"><add sel="a/b" type="@c">w</add></diff>')
+      .patch('<n:a xmlns:n="urn:xxx">x<n:b>y</n:b>z</n:a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<n:a xmlns:n="urn:xxx">x<n:b c="w">y</n:b>z</n:a>');
   });
 });

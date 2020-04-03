@@ -130,7 +130,7 @@ export class Patcher {
   ) {
     if (!target || !XML.isElement(target)) return;
     const [prefix, localName, targetPrefix, targetNS]
-      = this.mapNamespace(name, target, node);
+      = this.mapNamespace(name, target, node, true);
     if (targetNS) {
       const p = targetPrefix || prefix;
       const n = p ? `${p}:${localName}` : localName;
@@ -264,7 +264,7 @@ export class Patcher {
     }
     if (!XML.isElement(node) && !XML.isAttribute(node)) return node;
     const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
-      XML.isElement(node) ? node.tagName : node.name,
+      (<ElementImpl>node).tagName || (<AttrImpl>node).name,
       target,
       anchor,
     );
@@ -285,10 +285,6 @@ export class Patcher {
 
   protected removeAllChildren(target: NodeImpl) {
     target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
-  }
-
-  protected isQueryNamespace(query: string) {
-    return query.indexOf('namespace::') >= 0;
   }
 
   protected setPrefix(node: NodeImpl, prefix: string, ns?: string): void {
@@ -319,9 +315,16 @@ export class Patcher {
     name: string,
     target: NodeImpl,
     node?: NodeImpl,
+    isAttr?: boolean,
   ): string[] {
     const parts = name.split(':');
     if (parts.length < 2) {
+      // RFC 4.2.3, last "For example" paragraph, last sentence:
+      // unprefixed attributes don't inherit the default namespace declaration
+      if (node && XML.isElement(node) && node.namespaceURI && !isAttr) {
+        const prefix = this.target.lookupPrefix(node.namespaceURI, target);
+        return ['', name, prefix || '', node.namespaceURI];
+      }
       return ['', name, '', ''];
     }
     const [prefix, local] = parts;
