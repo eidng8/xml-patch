@@ -55,6 +55,15 @@ describe('Patcher <add>', () => {
     ).toEqual('<a>x<b><c>w</c><d/>y</b>z</a>');
   });
 
+  test('it appends new processing instruction', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load('<diff><add sel="/a/b"><?xml-stylesheet href="a"?></add></diff>')
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a>x<b>y<?xml-stylesheet href="a"?></b>z</a>');
+  });
+
   test('it inserts multiple elements before target element', () => {
     expect.assertions(1);
     expect(new Patcher()
@@ -133,19 +142,6 @@ describe('Patcher <add>', () => {
       .patch('<a>x<b>y</b>z</a>')
       .toString({minify: true, preserveComments: true}),
     ).toEqual('<a xmlns:pref="urn:new">x<b>y</b>z</a>');
-  });
-
-  test('it ignores actions without `sel` attribute', () => {
-    expect.assertions(1);
-    const diff = '<?xml version="1.0" encoding="utf-8"?>\n'
-                 + '<diff>\n'
-                 + '  <replace sel="/a/b"><c>y</c></replace>\n'
-                 + '</diff>';
-    const xml = '<?xml version="1.0"?><a>x<b>y</b>z</a>';
-    const expected = '<?xml version="1.0"?><a>x<c>y</c>z</a>';
-    expect(new Patcher().load(diff).patch(xml)
-      .toString({minify: true, preserveComments: true}),
-    ).toEqual(expected);
   });
 
   test('it adds new element with prefix', () => {

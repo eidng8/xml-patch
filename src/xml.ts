@@ -42,8 +42,12 @@ export class XML {
 
   protected _fsMock?: any;
 
-  static isXMLFile(subject: any): subject is XML {
+  static isXML(subject: any): subject is XML {
     return subject instanceof XML;
+  }
+
+  static isDocument(subject: any): subject is DocumentImpl {
+    return subject instanceof DocumentImpl;
   }
 
   /**
@@ -68,6 +72,10 @@ export class XML {
    */
   static isAttribute(node: any): node is AttrImpl {
     return node instanceof AttrImpl;
+  }
+
+  static isRoot(subject: NodeImpl): boolean {
+    return XML.isDocument(subject.parentNode);
   }
 
   static allAttributes(node: ElementImpl) {

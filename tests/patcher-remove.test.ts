@@ -1,4 +1,5 @@
 import {Patcher} from '../src';
+import {InvalidWhitespaceDirective} from '../src/errors';
 
 describe('Patcher <remove>', () => {
   test('it removes target element', () => {
@@ -37,29 +38,47 @@ describe('Patcher <remove>', () => {
     ).toEqual('<a/>');
   });
 
-  test('it does not removes non white space text node', () => {
-    expect.assertions(1);
-    expect(new Patcher()
+  test('it throws exception if no white space text node', () => {
+    expect.assertions(3);
+    expect(() => new Patcher()
+      .load('<diff><remove sel="/a/b" ws="before"/></diff>')
+      .patch('<a>\nx\n<b>y</b>\nz\n</a>'),
+    ).toThrow(InvalidWhitespaceDirective);
+    expect(() => new Patcher()
+      .load('<diff><remove sel="/a/b" ws="after"/></diff>')
+      .patch('<a>\nx\n<b>y</b>\nz\n</a>'),
+    ).toThrow(InvalidWhitespaceDirective);
+    expect(() => new Patcher()
       .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a>\nx\n<b>y</b>\nz\n</a>')
-      .toString({minify: true, preserveComments: true}),
-    ).toEqual('<a>\nx\n\nz\n</a>');
+      .patch('<a><d/><b>y</b><c/></a>'),
+    ).toThrow(InvalidWhitespaceDirective);
   });
 
-  test('it does not removes other nodes', () => {
-    expect.assertions(1);
-    expect(new Patcher()
-      .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a><d/><b>y</b><c/></a>')
-      .toString({minify: true, preserveComments: true}),
-    ).toEqual('<a><d/><c/></a>');
-  });
-
-  test('it does not removes comment', () => {
+  test('it removes comment', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="a/comment()[1]"/></diff>')
       .patch('<a><!--d/--><b>y</b></a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a><b>y</b></a>');
+  });
+
+  test('it removes processing instruction', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load(
+        '<diff><remove sel="a/processing-instruction(\'xml-stylesheet\')"/></diff>')
+      .patch('<a><?xml-stylesheet href="a"?><b>y</b></a>')
+      .toString({minify: true, preserveComments: true}),
+    ).toEqual('<a><b>y</b></a>');
+  });
+
+  test('it removes namespace declaration', () => {
+    expect.assertions(1);
+    expect(new Patcher()
+      .load(
+        '<diff><remove sel="a/namespace::ns"/></diff>')
+      .patch('<a><b xml:ns="urn:xxx">y</b></a>')
       .toString({minify: true, preserveComments: true}),
     ).toEqual('<a><b>y</b></a>');
   });

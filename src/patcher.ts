@@ -1,16 +1,18 @@
-import {AttrImpl, DocumentImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
+import {AttrImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 import {XML} from './xml';
 import Diff from './diff';
 import {
   InvalidAttributeValue,
   InvalidPatchDirective,
+  InvalidRootElementOperation,
   InvalidWhitespaceDirective,
   throwException,
   UnlocatedNode,
 } from './errors';
 
 export class Patcher {
+  // region Constants
   static readonly Add = 'add';
 
   static readonly Replace = 'replace';
@@ -32,6 +34,21 @@ export class Patcher {
   static readonly AxisAttribute = 'attribute::';
 
   static readonly AxisNamespace = 'namespace::';
+  // endregion
+
+  // region Messages
+  static ErrWsAttribute = '`ws` is not allowed in attribute operation.';
+
+  static ErrWsTextNode = '`ws` is not allowed in text node operation.';
+
+  static ErrWsAfter = 'No whitespace node found after target';
+
+  static ErrWsBefore = 'No whitespace node found before target';
+
+  static ErrRoot = 'The root element of the document cannot be removed or'
+                   + ' another sibling element for the document root'
+                   + ' element cannot be added.';
+  // endregion
 
   protected diff!: Diff;
 
@@ -59,7 +76,6 @@ export class Patcher {
         this.processAdd(
           target,
           elem.getAttribute('type'),
-          elem.getAttribute('pos'),
           elem,
         );
         break;
@@ -81,8 +97,7 @@ export class Patcher {
   protected processAdd(
     target: NodeImpl,
     type: string | null,
-    pos: string | null,
-    action: NodeImpl,
+    action: ElementImpl,
   ) {
     if (!action.hasChildNodes()) return;
     const t = (type && type.trim()) || '';
@@ -106,7 +121,7 @@ export class Patcher {
         throw new InvalidAttributeValue('Invalid type.', action);
       }
     } else {
-      this.addChildNode(target, action.childNodes, pos);
+      this.addNode(target, action);
     }
   }
 
@@ -128,21 +143,22 @@ export class Patcher {
     }
   }
 
-  protected addChildNode(
+  protected addNode(
     target: NodeImpl,
-    children: NodeImpl[],
-    pos?: string | null,
+    action: ElementImpl,
   ) {
-    const imported = this.importNodes(children, target);
+    const imported = this.importNodes(action.childNodes, target);
     let anchor = target;
-    switch (pos) {
+    switch (action.getAttribute('pos')) {
       case 'after':
+        if (!this.assertNotRoot(target, action)) return;
         for (const child of imported) {
           anchor = target.parentNode!.insertBefore(child, anchor.nextSibling);
         }
         break;
 
       case 'before':
+        if (!this.assertNotRoot(target, action)) return;
         for (const child of imported) {
           target.parentNode!.insertBefore(child, target);
         }
@@ -165,57 +181,89 @@ export class Patcher {
   // endregion
 
   // region Removal
-  protected processRemove(node: NodeImpl, ws: string | null, action: NodeImpl) {
-    if (XML.isAttribute(node)) {
+  protected processRemove(
+    target: NodeImpl,
+    ws: string | null,
+    action: ElementImpl,
+  ) {
+    if (!this.assertNotRoot(target, action)) return;
+    if (XML.isAttribute(target)) {
       if (ws) {
-        throwException(new InvalidAttributeValue(
-          '`ws` is not allowed in attribute operation.',
-          action,
-        ));
+        throwException(
+          new InvalidAttributeValue(Patcher.ErrWsAttribute, action));
         return;
       }
-      (node.ownerElement! as ElementImpl).removeAttributeNode(node);
-    } else if (XML.isText(node)) {
+      (target.ownerElement! as ElementImpl).removeAttributeNode(target);
+    } else if (XML.isText(target)) {
       if (ws) {
-        throwException(new InvalidAttributeValue(
-          '`ws` is not allowed in text node operation.',
-          action,
-        ));
+        throwException(
+          new InvalidAttributeValue(Patcher.ErrWsTextNode, action));
       }
-      node.parentNode!.removeChild(node);
+      target.parentNode!.removeChild(target);
     } else {
-      const parent = node.parentNode!;
-      if (!ws) {
-        parent.removeChild(node);
+      if (ws) {
+        this.removeWhiteSpaceNode(ws, target, action);
+      }
+      target.parentNode!.removeChild(target);
+    }
+  }
+
+  protected removeWhiteSpaceNode(
+    ws: string,
+    target: NodeImpl,
+    action: NodeImpl,
+  ) {
+    // RFC 4.5, 2nd paragraph: specifically prohibits removal of namespace
+    // nodes with `ws` attribute, but I haven't figured out the exact meaning,
+    // so it is ignored for now.
+    let sibling;
+    const parent = target.parentNode!;
+    if ('after' == ws || 'both' == ws) {
+      sibling = target.nextSibling;
+      if (XML.isText(sibling) && !sibling.textContent!.trim()) {
+        parent.removeChild(sibling);
+      } else {
+        throwException(
+          new InvalidWhitespaceDirective(Patcher.ErrWsAfter, action));
         return;
       }
-      // RFC 4.5, 2nd paragraph: specifically prohibits removal of namespace
-      // nodes with `ws` attribute, but I haven't figured out the exact meaning,
-      // so it is ignored for now. TODO
-      let sibling;
-      if ('after' == ws || 'both' == ws) {
-        sibling = node.nextSibling;
-        if (XML.isText(sibling) && !sibling.textContent!.trim()) {
-          parent.removeChild(sibling);
-        } else {
-          throwException(new InvalidWhitespaceDirective(
-            'No whitespace node found before target',
-            action,
-          ));
-          return;
-        }
+    }
+    if ('before' == ws || 'both' == ws) {
+      sibling = target.previousSibling;
+      if (XML.isText(sibling) && !sibling.textContent!.trim()) {
+        parent.removeChild(target.previousSibling);
+      } else {
+        throwException(
+          new InvalidWhitespaceDirective(Patcher.ErrWsBefore, action));
+        // return;
       }
-      if ('before' == ws || 'both' == ws) {
-        sibling = node.previousSibling;
-        if (XML.isText(sibling) && !sibling.textContent!.trim()) {
-          parent.removeChild(node.previousSibling);
-        }
-      }
-      parent.removeChild(node);
     }
   }
 
   // endregion
+
+  // region Replacement
+  protected processReplace(target: NodeImpl, action: ElementImpl) {
+    if (target instanceof AttrImpl) {
+      target.value = action.textContent!;
+    } else {
+      if (!this.assertNotRoot(target, action)) return;
+      for (const n of this.importNodes(action.childNodes, target)) {
+        target.parentNode!.replaceChild(n, target);
+      }
+    }
+  }
+
+  // endregion
+
+  protected assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
+    // RFC 3, last paragraph: don't replace/remove root node, or add sibling
+    if (XML.isDocument(node) || XML.isRoot(node)) {
+      throwException(new InvalidRootElementOperation(Patcher.ErrRoot, action));
+      return false;
+    }
+    return true;
+  }
 
   protected select(
     expression: string,
@@ -239,27 +287,6 @@ export class Patcher {
       const c = this.mangleNS(n.cloneNode(true), target, n);
       return this.target.doc.importNode(c, true);
     });
-  }
-
-  protected processReplace(
-    node: NodeImpl | null | undefined,
-    action: ElementImpl,
-  ) {
-    if (!node) return;
-    if (node instanceof AttrImpl) {
-      node.value = action.textContent!;
-    } else {
-      if (node.parentNode instanceof DocumentImpl
-          && node instanceof ElementImpl) {
-        this.removeAllChildren(this.target.doc);
-        this.importNodes(action.childNodes, node)
-          .forEach(n => this.target.doc.appendChild(n));
-      } else {
-        for (const n of this.importNodes(action.childNodes, node)) {
-          node.parentNode!.replaceChild(n, node);
-        }
-      }
-    }
   }
 
   /**
@@ -301,10 +328,6 @@ export class Patcher {
       }
     }
     return node;
-  }
-
-  protected removeAllChildren(target: NodeImpl) {
-    target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
   }
 
   protected setPrefix(node: NodeImpl, prefix: string, ns?: string): void {
@@ -353,5 +376,9 @@ export class Patcher {
       : this.target.lookupNamespaceURI(prefix, target);
     const targetPrefix = this.target.lookupPrefix(uri);
     return [prefix, local, targetPrefix || '', uri || ''];
+  }
+
+  protected removeAllChildren(target: NodeImpl) {
+    target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
   }
 }

@@ -22,7 +22,7 @@ export default class Diff {
   }
 
   load(diff: string | XML): Diff {
-    if (XML.isXMLFile(diff)) {
+    if (XML.isXML(diff)) {
       this.xml = diff;
       return this;
     }
