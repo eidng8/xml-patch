@@ -6,6 +6,20 @@ export default abstract class Exception extends Error {
 
   static readonly ErrorPrefix = 'err';
 
+  // region Messages
+  static ErrWsAttribute = '`ws` is not allowed in attribute operation.';
+
+  static ErrWsTextNode = '`ws` is not allowed in text node operation.';
+
+  static ErrWsAfter = 'No whitespace node found after target';
+
+  static ErrWsBefore = 'No whitespace node found before target';
+
+  static ErrRoot = 'The root element of the document cannot be removed or'
+                   + ' another sibling element for the document root'
+                   + ' element cannot be added.';
+  // endregion
+
   action?: NodeImpl;
 
   protected xml!: XML;

@@ -3,13 +3,14 @@ import {select} from 'xpath-ts';
 import {XML} from './xml';
 import Diff from './diff';
 import {
+  assertNotRoot,
   InvalidAttributeValue,
   InvalidPatchDirective,
-  InvalidRootElementOperation,
   InvalidWhitespaceDirective,
   throwException,
   UnlocatedNode,
 } from './errors';
+import Exception from './errors/Exception';
 
 export class Patcher {
   // region Constants
@@ -34,20 +35,6 @@ export class Patcher {
   static readonly AxisAttribute = 'attribute::';
 
   static readonly AxisNamespace = 'namespace::';
-  // endregion
-
-  // region Messages
-  static ErrWsAttribute = '`ws` is not allowed in attribute operation.';
-
-  static ErrWsTextNode = '`ws` is not allowed in text node operation.';
-
-  static ErrWsAfter = 'No whitespace node found after target';
-
-  static ErrWsBefore = 'No whitespace node found before target';
-
-  static ErrRoot = 'The root element of the document cannot be removed or'
-                   + ' another sibling element for the document root'
-                   + ' element cannot be added.';
   // endregion
 
   protected diff!: Diff;
@@ -151,14 +138,14 @@ export class Patcher {
     let anchor = target;
     switch (action.getAttribute('pos')) {
       case 'after':
-        if (!this.assertNotRoot(target, action)) return;
+        if (!assertNotRoot(target, action)) return;
         for (const child of imported) {
           anchor = target.parentNode!.insertBefore(child, anchor.nextSibling);
         }
         break;
 
       case 'before':
-        if (!this.assertNotRoot(target, action)) return;
+        if (!assertNotRoot(target, action)) return;
         for (const child of imported) {
           target.parentNode!.insertBefore(child, target);
         }
@@ -186,18 +173,18 @@ export class Patcher {
     ws: string | null,
     action: ElementImpl,
   ) {
-    if (!this.assertNotRoot(target, action)) return;
+    if (!assertNotRoot(target, action)) return;
     if (XML.isAttribute(target)) {
       if (ws) {
         throwException(
-          new InvalidAttributeValue(Patcher.ErrWsAttribute, action));
+          new InvalidAttributeValue(Exception.ErrWsAttribute, action));
         return;
       }
       (target.ownerElement! as ElementImpl).removeAttributeNode(target);
     } else if (XML.isText(target)) {
       if (ws) {
         throwException(
-          new InvalidAttributeValue(Patcher.ErrWsTextNode, action));
+          new InvalidAttributeValue(Exception.ErrWsTextNode, action));
       }
       target.parentNode!.removeChild(target);
     } else {
@@ -224,7 +211,7 @@ export class Patcher {
         parent.removeChild(sibling);
       } else {
         throwException(
-          new InvalidWhitespaceDirective(Patcher.ErrWsAfter, action));
+          new InvalidWhitespaceDirective(Exception.ErrWsAfter, action));
         return;
       }
     }
@@ -234,7 +221,7 @@ export class Patcher {
         parent.removeChild(target.previousSibling);
       } else {
         throwException(
-          new InvalidWhitespaceDirective(Patcher.ErrWsBefore, action));
+          new InvalidWhitespaceDirective(Exception.ErrWsBefore, action));
         // return;
       }
     }
@@ -247,7 +234,7 @@ export class Patcher {
     if (target instanceof AttrImpl) {
       target.value = action.textContent!;
     } else {
-      if (!this.assertNotRoot(target, action)) return;
+      if (!assertNotRoot(target, action)) return;
       for (const n of this.importNodes(action.childNodes, target)) {
         target.parentNode!.replaceChild(n, target);
       }
@@ -256,15 +243,7 @@ export class Patcher {
 
   // endregion
 
-  protected assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
-    // RFC 3, last paragraph: don't replace/remove root node, or add sibling
-    if (XML.isDocument(node) || XML.isRoot(node)) {
-      throwException(new InvalidRootElementOperation(Patcher.ErrRoot, action));
-      return false;
-    }
-    return true;
-  }
-
+  // region Utilities
   protected select(
     expression: string,
     doc: NodeImpl,
@@ -378,7 +357,5 @@ export class Patcher {
     return [prefix, local, targetPrefix || '', uri || ''];
   }
 
-  protected removeAllChildren(target: NodeImpl) {
-    target.childNodes.forEach((n: NodeImpl) => target.removeChild(n));
-  }
+  // endregion
 }
