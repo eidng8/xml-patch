@@ -4,6 +4,7 @@ import {XML} from './xml';
 import Diff from './diff';
 import {
   assertNotRoot,
+  assertTextChild,
   InvalidAttributeValue,
   InvalidPatchDirective,
   InvalidWhitespaceDirective,
@@ -90,6 +91,7 @@ export class Patcher {
     const t = (type && type.trim()) || '';
     if (t.length) {
       if ('@' == t[0]) {
+        if (!assertTextChild(action)) return;
         this.addAttribute(target, action, t.substr(1), action.textContent!);
       } else if (t.startsWith(Patcher.AxisAttribute)) {
         this.addAttribute(

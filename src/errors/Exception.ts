@@ -15,6 +15,8 @@ export default abstract class Exception extends Error {
 
   static ErrWsBefore = 'No whitespace node found before target';
 
+  static ErrNodeType = 'Invalid node type';
+
   static ErrRoot = 'The root element of the document cannot be removed or'
                    + ' another sibling element for the document root'
                    + ' element cannot be added.';

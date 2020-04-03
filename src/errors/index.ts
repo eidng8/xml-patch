@@ -29,9 +29,18 @@ function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
   return true;
 }
 
+function assertTextChild(action: NodeImpl): boolean {
+  if (action.childNodes.length > 1 || !XML.isText(action.firstChild)) {
+    throwException(new InvalidNodeTypes(Exception.ErrNodeType, action));
+    return false;
+  }
+  return true;
+}
+
 export {
   throwException,
   assertNotRoot,
+  assertTextChild,
   InvalidWhitespaceDirective,
   InvalidRootElementOperation,
   InvalidPrologOperation,
