@@ -5,7 +5,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="/a/b"/></diff>')
-      .patch('<a>x<b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b>z</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>xz</a>');
   });
 
@@ -13,7 +14,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="/a/b" ws="before"/></diff>')
-      .patch('<a>\n   \n<b>y</b>\nz</a>').toString(),
+      .patch('<a>\n   \n<b>y</b>\nz</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>\nz</a>');
   });
 
@@ -21,7 +23,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="/a/b" ws="after"/></diff>')
-      .patch('<a>x\n<b>y</b>\n   \n</a>').toString(),
+      .patch('<a>x\n<b>y</b>\n   \n</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>x\n</a>');
   });
 
@@ -29,7 +32,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a>\n   \n<b>y</b>\n   \n</a>').toString(),
+      .patch('<a>\n   \n<b>y</b>\n   \n</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a/>');
   });
 
@@ -37,7 +41,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a>\nx\n<b>y</b>\nz\n</a>').toString(),
+      .patch('<a>\nx\n<b>y</b>\nz\n</a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a>\nx\n\nz\n</a>');
   });
 
@@ -45,7 +50,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a><d/><b>y</b><c/></a>').toString(),
+      .patch('<a><d/><b>y</b><c/></a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a><d/><c/></a>');
   });
 
@@ -53,7 +59,8 @@ describe('Patcher <remove>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load('<diff><remove sel="a/comment()[1]"/></diff>')
-      .patch('<a><!--d/--><b>y</b></a>').toString(),
+      .patch('<a><!--d/--><b>y</b></a>')
+      .toString({minify: true, preserveComments: true}),
     ).toEqual('<a><b>y</b></a>');
   });
 });

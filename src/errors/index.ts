@@ -12,8 +12,14 @@ import InvalidWhitespaceDirective from './InvalidWhitespaceDirective';
 import UnlocatedNode from './UnlocatedNode';
 import UnsupportedIdFunction from './UnsupportedIdFunction';
 import UnsupportedXmlId from './UnsupportedXmlId';
+import Exception from './Exception';
+
+function throwException(exception: Exception): void {
+  throw exception;
+}
 
 export {
+  throwException,
   InvalidWhitespaceDirective,
   InvalidRootElementOperation,
   InvalidPrologOperation,

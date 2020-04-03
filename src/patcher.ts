@@ -5,6 +5,8 @@ import Diff from './diff';
 import {
   InvalidAttributeValue,
   InvalidPatchDirective,
+  InvalidWhitespaceDirective,
+  throwException,
   UnlocatedNode,
 } from './errors';
 
@@ -51,21 +53,7 @@ export class Patcher {
   protected processAction(elem: ElementImpl) {
     const action = elem.tagName;
     const query = elem.getAttribute('sel')!;
-    let target = select(query, this.target.doc) as NodeImpl | NodeImpl[];
-
-    // RFC 4.1, first paragraph, last sentence: must match exactly one node.
-    if (Array.isArray(target)) {
-      if (1 == target.length) {
-        target = target[0];
-      } else if (!target.length) {
-        throw new UnlocatedNode('No match found.', elem);
-      } else {
-        throw new UnlocatedNode('Multiple matches found.', elem);
-      }
-    } else if (!target) {
-      throw new UnlocatedNode('No match found.', elem);
-    }
-
+    const target = this.select(query, this.target.doc, elem);
     switch (action) {
       case Patcher.Add:
         this.processAdd(
@@ -77,7 +65,7 @@ export class Patcher {
         break;
 
       case Patcher.Remove:
-        this.processRemove(target, elem.getAttribute('ws'));
+        this.processRemove(target, elem.getAttribute('ws'), elem);
         break;
 
       case Patcher.Replace:
@@ -91,12 +79,12 @@ export class Patcher {
 
   // region Addition
   protected processAdd(
-    target: NodeImpl | null | undefined,
+    target: NodeImpl,
     type: string | null,
     pos: string | null,
     action: NodeImpl,
   ) {
-    if (!target || !action.hasChildNodes()) return;
+    if (!action.hasChildNodes()) return;
     const t = (type && type.trim()) || '';
     if (t.length) {
       if ('@' == t[0]) {
@@ -177,14 +165,23 @@ export class Patcher {
   // endregion
 
   // region Removal
-  protected processRemove(
-    node: NodeImpl | null | undefined,
-    ws: string | null,
-  ) {
-    if (!node) return;
+  protected processRemove(node: NodeImpl, ws: string | null, action: NodeImpl) {
     if (XML.isAttribute(node)) {
+      if (ws) {
+        throwException(new InvalidAttributeValue(
+          '`ws` is not allowed in attribute operation.',
+          action,
+        ));
+        return;
+      }
       (node.ownerElement! as ElementImpl).removeAttributeNode(node);
     } else if (XML.isText(node)) {
+      if (ws) {
+        throwException(new InvalidAttributeValue(
+          '`ws` is not allowed in text node operation.',
+          action,
+        ));
+      }
       node.parentNode!.removeChild(node);
     } else {
       const parent = node.parentNode!;
@@ -194,12 +191,18 @@ export class Patcher {
       }
       // RFC 4.5, 2nd paragraph: specifically prohibits removal of namespace
       // nodes with `ws` attribute, but I haven't figured out the exact meaning,
-      // so it is ignored for now.
+      // so it is ignored for now. TODO
       let sibling;
       if ('after' == ws || 'both' == ws) {
         sibling = node.nextSibling;
         if (XML.isText(sibling) && !sibling.textContent!.trim()) {
           parent.removeChild(sibling);
+        } else {
+          throwException(new InvalidWhitespaceDirective(
+            'No whitespace node found before target',
+            action,
+          ));
+          return;
         }
       }
       if ('before' == ws || 'both' == ws) {
@@ -213,6 +216,23 @@ export class Patcher {
   }
 
   // endregion
+
+  protected select(
+    expression: string,
+    doc: NodeImpl,
+    action: NodeImpl,
+  ): NodeImpl {
+    const target = select(expression, doc) as NodeImpl | NodeImpl[];
+    // RFC 4.1, first paragraph, last sentence: must match exactly one node.
+    if (Array.isArray(target)) {
+      if (1 == target.length) {
+        return target[0];
+      } else if (target.length > 1) {
+        throw new UnlocatedNode('Multiple matches found.', action);
+      }
+    }
+    throw new UnlocatedNode('No match found.', action);
+  }
 
   protected importNodes(nodes: NodeImpl[], target: NodeImpl): NodeImpl[] {
     return nodes.map(n => {
