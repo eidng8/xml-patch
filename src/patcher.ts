@@ -61,15 +61,11 @@ export class Patcher {
     const target = this.select(query, this.target.doc, elem);
     switch (action) {
       case Patcher.Add:
-        this.processAdd(
-          target,
-          elem.getAttribute('type'),
-          elem,
-        );
+        this.processAdd(target, elem);
         break;
 
       case Patcher.Remove:
-        this.processRemove(target, elem.getAttribute('ws'), elem);
+        this.processRemove(target, elem);
         break;
 
       case Patcher.Replace:
@@ -82,28 +78,31 @@ export class Patcher {
   }
 
   // region Addition
-  protected processAdd(
-    target: NodeImpl,
-    type: string | null,
-    action: ElementImpl,
-  ) {
+  protected processAdd(target: NodeImpl, action: ElementImpl): void {
     if (!action.hasChildNodes()) return;
-    const t = (type && type.trim()) || '';
+    const t = (action.getAttribute('type') || '').trim() || '';
     if (t.length) {
       if ('@' == t[0]) {
         if (!assertTextChild(action)) return;
-        this.addAttribute(target, action, t.substr(1), action.textContent!);
+        this.addAttribute(
+          target,
+          action,
+          t.substr(1),
+          action.textContent!.trim(),
+        );
       } else if (t.startsWith(Patcher.AxisAttribute)) {
+        if (!assertTextChild(action)) return;
         this.addAttribute(
           target,
           action,
           t.substr(Patcher.AxisAttribute.length).trim(),
-          action.textContent!,
+          action.textContent!.trim(),
         );
       } else if (t.startsWith(Patcher.AxisNamespace)) {
+        if (!assertTextChild(action)) return;
         this.target.addNamespace(
           t.substr(Patcher.AxisNamespace.length).trim(),
-          action.textContent!,
+          action.textContent!.trim(),
           target as ElementImpl,
         );
       } else {
@@ -119,7 +118,7 @@ export class Patcher {
     node: NodeImpl,
     name: string,
     value: string,
-  ) {
+  ): void {
     if (!target || !XML.isElement(target)) return;
     const [prefix, localName, targetPrefix, targetNS]
       = this.mapNamespace(name, target, node, true);
@@ -132,10 +131,7 @@ export class Patcher {
     }
   }
 
-  protected addNode(
-    target: NodeImpl,
-    action: ElementImpl,
-  ) {
+  protected addNode(target: NodeImpl, action: ElementImpl): void {
     const imported = this.importNodes(action.childNodes, target);
     let anchor = target;
     switch (action.getAttribute('pos')) {
@@ -170,12 +166,9 @@ export class Patcher {
   // endregion
 
   // region Removal
-  protected processRemove(
-    target: NodeImpl,
-    ws: string | null,
-    action: ElementImpl,
-  ) {
+  protected processRemove(target: NodeImpl, action: ElementImpl): void {
     if (!assertNotRoot(target, action)) return;
+    const ws = action.getAttribute('ws');
     if (XML.isAttribute(target)) {
       if (ws) {
         throwException(

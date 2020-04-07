@@ -71,9 +71,9 @@ describe('Patcher <replace>', () => {
     expect.assertions(1);
     expect(new Patcher()
       .load(
-        '<diff><replace sel="/a/namespace::ns">urn:new</replace></diff>')
-      .patch('<a xml:ns="urn:old">xz</a>')
+        '<diff><replace sel="/a/namespace::pref">urn:new</replace></diff>')
+      .patch('<a xmlns:pref="urn:old">xz</a>')
       .toString({minify: true, preserveComments: true}),
-    ).toEqual('<a xml:ns="urn:new">xz</a>');
+    ).toEqual('<a xmlns:pref="urn:new">xz</a>');
   });
 });
