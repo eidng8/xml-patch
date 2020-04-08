@@ -13,8 +13,8 @@
        http://www.w3.org/Consortium/Legal/copyright-documents-19990405
 -->
   </replace>
-  <replace sel="/html/body/div/ul[1]/li[4]/text()[1]">An unfilled circle, </replace>
-  <replace sel="/html/body/div/ul[1]/li[4]/*[namespace-uri()='http://www.w3.org/2000/svg'][local-name()='svg']/*[namespace-uri()='http://www.w3.org/2000/svg'][local-name()='circle']/@style">
-    stroke: #FF0000; stroke-width: 2px
+  <replace sel="/html/body/div/ul[1]/li[4]/text()[1]">An unfilled circle,
   </replace>
+  <replace sel="/html/body/div/ul[1]/li[4]/*[namespace-uri()='http://www.w3.org/2000/svg'][local-name()='svg']/*[namespace-uri()='http://www.w3.org/2000/svg'][local-name()='circle']/@style"
+  >stroke: #FF0000; stroke-width: 2px</replace>
 </diff>
