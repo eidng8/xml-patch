@@ -53,6 +53,7 @@ export function format(txt: string | NodeImpl | Node) {
     .fromString(xml)
     .toString({minify: true, preserveComments: true})
     .trim()
-    .replace(/(?:(>)\s+|\s+(<))/g, '$1$2');
+    .replace(/(?:(>)\s+|\s+(<))/g, '$1$2')
+    .replace(/\r/g, '');
   return pd.xml(xml);
 }

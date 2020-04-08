@@ -14,19 +14,23 @@ describe('Sample XML', () => {
       expect.assertions(1);
       const xml = readFileSync(source, {encoding: 'utf-8'});
       const diff = readFileSync(patch, {encoding: 'utf-8'});
-      const patched = new Patcher().load(diff).patch(xml);
-      writeFileSync(patchedFiles[idx], format(patched!));
-      expect(patched).toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
+      try {
+        const patched = new Patcher().load(diff).patch(xml);
+        writeFileSync(patchedFiles[idx], format(patched.toString()));
+        expect(patched).toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
+      } catch (ex) {
+        throw new Error(ex.toString());
+      }
     });
   }
 });
 
 function findSamples() {
   const dir = 'tests/data';
-  const sources = [];
-  const fixtures = [];
-  const patches = [];
-  const patched = [];
+  const sources = [] as string[];
+  const fixtures = [] as string[];
+  const patches = [] as string[];
+  const patched = [] as string[];
   const regex = /^.+A.xml$/;
   const files = readdirSync(dir, {withFileTypes: true});
   for (const file of files) {

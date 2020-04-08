@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diff>
+  <replace sel="doc/foo/text()[1]"
+  >This is the new text content
+  </replace>
+</diff>

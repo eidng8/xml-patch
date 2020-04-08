@@ -5,6 +5,6 @@ export default class InvalidPatchDirective extends Exception {
   protected tag: string = 'invalid-patch-directive';
 
   constructor(action?: NodeImpl) {
-    super(undefined, action);
+    super(Exception.ErrDirective, action);
   }
 }

@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<diff>
-  <remove sel="/sp1:element/namespace::sp1"/>
-  <add sel="/element" type="namespace::sp2">urn:ns:http://diffxml.sf.net</add>
-</diff>

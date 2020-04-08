@@ -1,2 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<a><b><c>1</c>3</b></a>
+<doc>
+  <bar a="2" />
+</doc>

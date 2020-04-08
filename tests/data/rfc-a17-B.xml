@@ -1,2 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<a>x<c>y</c>z</a>
+<doc>
+  <foo a="1" />
+</doc>

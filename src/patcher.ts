@@ -6,6 +6,7 @@ import {
   assertNotRoot,
   assertTextChild,
   InvalidAttributeValue,
+  InvalidNamespacePrefix,
   InvalidPatchDirective,
   InvalidWhitespaceDirective,
   throwException,
@@ -56,24 +57,40 @@ export class Patcher {
   }
 
   protected processAction(elem: ElementImpl) {
-    const action = elem.tagName;
+    const action = elem.localName;
     const query = elem.getAttribute('sel')!;
-    const target = this.select(query, this.target.doc, elem);
+    const [target, prefix] = this.select(query, elem);
+    const process = (target, cb) => {
+      if (!target) return;
+      if (Array.isArray(target)) {
+        target.forEach(t => t && cb(t));
+      } else {
+        cb(target, elem);
+      }
+    };
     switch (action) {
       case Patcher.Add:
-        this.processAdd(target, elem);
+        process(target, t => this.processAdd(t, elem));
         break;
 
       case Patcher.Remove:
-        this.processRemove(target, elem);
+        if (prefix) {
+          process(target, t => this.removeNamespace(t, prefix, elem));
+        } else {
+          process(target, t => this.processRemove(t, elem));
+        }
         break;
 
       case Patcher.Replace:
-        this.processReplace(target, elem);
+        if (prefix) {
+          process(target, t => this.replaceNamespace(t, prefix, elem));
+        } else {
+          process(target, t => this.processReplace(t, elem));
+        }
         break;
 
       default:
-        throw new InvalidPatchDirective(elem);
+        throwException(new InvalidPatchDirective(elem));
     }
   }
 
@@ -106,7 +123,7 @@ export class Patcher {
           target as ElementImpl,
         );
       } else {
-        throw new InvalidAttributeValue('Invalid type.', action);
+        throwException(new InvalidAttributeValue(Exception.ErrType, action));
       }
     } else {
       this.addNode(target, action);
@@ -167,7 +184,6 @@ export class Patcher {
 
   // region Removal
   protected processRemove(target: NodeImpl, action: ElementImpl): void {
-    if (!assertNotRoot(target, action)) return;
     const ws = action.getAttribute('ws');
     if (XML.isAttribute(target)) {
       if (ws) {
@@ -180,9 +196,11 @@ export class Patcher {
       if (ws) {
         throwException(
           new InvalidAttributeValue(Exception.ErrWsTextNode, action));
+        return;
       }
       target.parentNode!.removeChild(target);
     } else {
+      if (XML.isElement(target) && !assertNotRoot(target, action)) return;
       if (ws) {
         this.removeWhiteSpaceNode(ws, target, action);
       }
@@ -194,7 +212,7 @@ export class Patcher {
     ws: string,
     target: NodeImpl,
     action: NodeImpl,
-  ) {
+  ): void {
     // RFC 4.5, 2nd paragraph: specifically prohibits removal of namespace
     // nodes with `ws` attribute, but I haven't figured out the exact meaning,
     // so it is ignored for now.
@@ -222,6 +240,31 @@ export class Patcher {
     }
   }
 
+  protected removeNamespace(
+    target: ElementImpl,
+    prefix: string,
+    action: ElementImpl,
+  ): void {
+    const uri = target.lookupNamespaceURI(prefix);
+    if (!uri) {
+      throwException(new InvalidNamespacePrefix(Exception.ErrPrefix, action));
+      return;
+    }
+    if (this.hasPrefixChildren(target, prefix)) {
+      throwException(
+        new InvalidNamespacePrefix(Exception.ErrPrefixUsed, action));
+      return;
+    }
+    target.nodeName = target.localName;
+    target.tagName = target.localName;
+    target.prefix = null;
+    delete (target._nsMap[prefix]);
+    target.removeAttributeNode(target.getAttributeNode(`xmlns:${prefix}`));
+    if (target.namespaceURI == uri) {
+      target.namespaceURI = null;
+    }
+  }
+
   // endregion
 
   // region Replacement
@@ -229,31 +272,64 @@ export class Patcher {
     if (target instanceof AttrImpl) {
       target.value = action.textContent!;
     } else {
-      if (!assertNotRoot(target, action)) return;
+      if (XML.isElement(target) && !assertNotRoot(target, action)) return;
       for (const n of this.importNodes(action.childNodes, target)) {
         target.parentNode!.replaceChild(n, target);
       }
     }
   }
 
+  protected replaceNamespace(
+    target: any,
+    prefix: string,
+    action: ElementImpl,
+  ): void {
+    let uri = '';
+    if (action.hasChildNodes() && assertTextChild(action)) {
+      uri = (action.textContent || '').trim();
+    }
+    if (!target.lookupNamespaceURI(prefix)) {
+      throwException(new InvalidNamespacePrefix(Exception.ErrPrefix, action));
+      return;
+    }
+    target.setAttribute(`xmlns:${prefix}`, uri);
+    target._nsMap[prefix] = uri;
+  }
+
   // endregion
 
   // region Utilities
+  /**
+   * Perform the XPath query on target document. If the expression denotes a
+   * namespace prefix operation, the prefix will be returned in the second
+   * element of the returned array. In this case, the query will be performed
+   * without the namespace axis.
+   * @param expression
+   * @param action
+   */
   protected select(
     expression: string,
-    doc: NodeImpl,
     action: NodeImpl,
-  ): NodeImpl {
-    const target = select(expression, doc) as NodeImpl | NodeImpl[];
+  ): [NodeImpl | NodeImpl[] | null, string] {
+    const parts = /^(.+?)(?:\/namespace::(.+))?$/i.exec(expression);
+    if (!parts || parts.length < 2) {
+      throwException(
+        new InvalidAttributeValue(Exception.ErrSelAttribute, action));
+      return [null, ''];
+    }
+    const target = select(parts[1], this.target.doc) as NodeImpl | NodeImpl[];
     // RFC 4.1, first paragraph, last sentence: must match exactly one node.
     if (Array.isArray(target)) {
       if (1 == target.length) {
-        return target[0];
+        return [target[0], parts[2] || ''];
       } else if (target.length > 1) {
-        throw new UnlocatedNode('Multiple matches found.', action);
+        throwException(
+          new UnlocatedNode(Exception.ErrMultipleMatches, action));
+        return [target, ''];
       }
     }
-    throw new UnlocatedNode('No match found.', action);
+    throwException(new UnlocatedNode(Exception.ErrNoMatch, action));
+    return [null, ''];
   }
 
   protected importNodes(nodes: NodeImpl[], target: NodeImpl): NodeImpl[] {
@@ -350,6 +426,22 @@ export class Patcher {
       : this.target.lookupNamespaceURI(prefix, target);
     const targetPrefix = this.target.lookupPrefix(uri);
     return [prefix, local, targetPrefix || '', uri || ''];
+  }
+
+  protected hasPrefixChildren(anchor: ElementImpl, prefix: string): boolean {
+    let child = XML.firstElementChild(anchor);
+    let found = false;
+    while (child && !found) {
+      if (prefix == child.prefix) {
+        return true;
+      }
+      if (child.hasChildNodes()) {
+        found = this.hasPrefixChildren(child, prefix);
+        if (found) return true;
+      }
+      child = child.nextSibling;
+    }
+    return found;
   }
 
   // endregion

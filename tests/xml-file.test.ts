@@ -1,5 +1,6 @@
 import {XML} from '../src';
 import {DocumentImpl} from 'xmldom-ts';
+import {InvalidDiffFormat} from '../src/errors';
 
 describe('XMLFile', () => {
   it('reads XML file', async () => {
@@ -27,15 +28,13 @@ describe('XMLFile', () => {
       });
   });
 
-  it('pretty prints XML', async () => {
+  it('pretty prints XML', () => {
     expect.assertions(1);
-    return new XML().fromFile('tests/data/cA.xml').then(xml => {
-      const expected = '<p>\n'
-                       + '  <b>xxx</b>yyy\n'
-                       + '  <br/>\n'
-                       + '</p>';
-      expect(xml.toString()).toBe(expected);
-    });
+    expect(new XML().fromString('<p><b>xxx</b>yyy<br/></p>\n').toString())
+      .toBe('<p>\n'
+            + '  <b>xxx</b>yyy\n'
+            + '  <br/>\n'
+            + '</p>');
   });
 
   it('minifies XML', async () => {
@@ -56,7 +55,8 @@ describe('XMLFile', () => {
       <a>x<b>y</b>z</a>`;
     const xml = new XML().fromString(txt);
     const expected = '<?xml version="1.0"?><a>x<b>y</b>z</a>';
-    expect(xml.toString({minify: true})).toBe(expected);
+    expect(xml.toString({minify: true, preserveComments: false}))
+      .toBe(expected);
   });
 
   it('rejects if file not found', async () => {
@@ -77,7 +77,7 @@ describe('XMLFile', () => {
     expect.assertions(1);
     const xml = new XML({warnError: true});
     expect(() => xml.fromString('<a>'))
-      .toThrowError('Failed to parse the given XML');
+      .toThrow(InvalidDiffFormat);
   });
 
   it('rejects XML warning in file if requested', async () => {

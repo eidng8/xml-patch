@@ -27,13 +27,14 @@ describe('Diff', () => {
     const xml = new XML();
     await xml.fromFile('tests/data/1A.diff.xml');
     const diff = new Diff(xml);
-    expect(diff.actions[0].getAttribute('sel')).toBe('/a/b');
+    expect(diff.actions[0].getAttribute('sel')).toBe(
+      '/*[local-name()=\'a\']/*[local-name()=\'b\']');
   });
 
   test('it mangles diff namespace', async () => {
     expect.assertions(8);
     const xml = new XML();
-    await xml.fromFile('tests/data/rfc-a18.diff.xml');
+    await xml.fromFile('tests/data/rfc-a18-A.diff.xml');
     const diff = new Diff(xml);
     let action = diff.actions[0];
     // * XPath query should be expanded using default namespace

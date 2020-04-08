@@ -1,4 +1,6 @@
 import {Patcher} from '../src';
+import {InvalidNamespacePrefix} from '../src/errors';
+import InvalidNodeTypes from '../src/errors/InvalidNodeTypes';
 
 describe('Patcher <replace>', () => {
   test('it replaces target element', () => {
@@ -75,5 +77,23 @@ describe('Patcher <replace>', () => {
       .patch('<a xmlns:pref="urn:old">xz</a>')
       .toString({minify: true, preserveComments: true}),
     ).toEqual('<a xmlns:pref="urn:new">xz</a>');
+  });
+
+  test('it throws if prefix is not defined', () => {
+    expect.assertions(1);
+    expect(() => new Patcher()
+      .load(
+        '<diff><replace sel="/a/namespace::pref">urn:new</replace></diff>')
+      .patch('<a><b xmlns:pref="urn:old"/>xz</a>'),
+    ).toThrow(InvalidNamespacePrefix);
+  });
+
+  test('it throws if action has no text child', () => {
+    expect.assertions(1);
+    expect(() => new Patcher()
+      .load(
+        '<diff><replace sel="/a/namespace::pref"><a/></replace></diff>')
+      .patch('<a><b xmlns:pref="urn:old"/>xz</a>'),
+    ).toThrow(InvalidNodeTypes);
   });
 });

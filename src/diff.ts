@@ -1,7 +1,8 @@
 import {XML} from './xml';
 import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
-import {InvalidAttributeValue} from './errors';
+import {InvalidAttributeValue, throwException} from './errors';
+import Exception from './errors/Exception';
 
 export default class Diff {
   static readonly DiffNamespace = 'urn:ietf:params:xml:ns:pidf-diff';
@@ -40,14 +41,17 @@ export default class Diff {
 
   protected loadActions(): Diff {
     const root = this.xml.root;
-    if (!root) return this;
-    for (const action of root.childNodes) {
-      if (!XML.isElement(action)) continue;
+    if (!root || !root.hasChildNodes()) return this;
+    let action = XML.firstElementChild(root);
+    while (action) {
       if (!action.hasAttribute('sel')) {
-        throw new InvalidAttributeValue('Missing `sel` attribute.', action);
+        throwException(
+          new InvalidAttributeValue(Exception.ErrSelMissing, action));
+        return this;
       }
       if (Diff.SupportedActions.indexOf(action.localName) < 0) continue;
       this._actions.push(action);
+      action = XML.nextElementSibling(action);
     }
     return this;
   }
@@ -56,7 +60,9 @@ export default class Diff {
     for (const action of this.actions) {
       const exp = action.getAttribute('sel')!.trim();
       if (!exp) {
-        throw new InvalidAttributeValue('`sel` cannot be empty', action);
+        throwException(
+          new InvalidAttributeValue(Exception.ErrSelEmpty, action));
+        return this;
       }
       let cmp = this.mangleNamespace(exp, action);
       // RFC 4.1, second paragraph: 'sel' attribute always start from root node
@@ -87,6 +93,11 @@ export default class Diff {
         case XPathParser.LITERAL:
           name = tokens[idx].replace('\\', '\\\\').replace('\'', '\\\'');
           tokens[idx] = `'${name}'`;
+          break;
+
+        case XPathParser.DOUBLECOLON:
+          idx++;
+          break;
       }
     }
     tokens.pop();
@@ -115,7 +126,7 @@ export default class Diff {
     if ('*' == name) return '*';
 
     // RFC 4.2.1, paragraph 3: leave this unqualified.
-    if (!prefix && !action.namespaceURI) return name;
+    if (!prefix && !action.namespaceURI) return `*[local-name()='${name}']`;
 
     // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
     const ns = isAttr && !prefix ? ''

@@ -8,6 +8,7 @@ import {
   TextImpl,
 } from 'xmldom-ts';
 import iconv from 'iconv-lite';
+import {InvalidDiffFormat, throwException} from './errors';
 
 const pd = require('pretty-data').pd;
 
@@ -79,11 +80,29 @@ export class XML {
   }
 
   static allAttributes(node: ElementImpl) {
-    const attributes = [];
+    const attributes = [] as AttrImpl[];
     for (const a of node.attributes) {
       attributes.push(a);
     }
     return attributes;
+  }
+
+  static firstElementChild(node: NodeImpl): ElementImpl | null {
+    let child = node.firstChild;
+    while (child) {
+      if (XML.isElement(child)) return child;
+      child = child.nextSibling;
+    }
+    return null;
+  }
+
+  static nextElementSibling(node: NodeImpl): ElementImpl | null {
+    let sibling = node.nextSibling;
+    while (sibling) {
+      if (XML.isElement(sibling)) return sibling;
+      sibling = sibling.nextSibling;
+    }
+    return null;
   }
 
   get encoding(): string {
@@ -143,7 +162,7 @@ export class XML {
     this._encoding = encoding;
     this._doc = this.parser.parseFromString(xml) as DocumentImpl;
     if (this.errors.length || (this._warnError && this.warnings.length)) {
-      throw new Error('Failed to parse the given XML');
+      throwException(new InvalidDiffFormat());
     }
     return this;
   }
@@ -153,7 +172,7 @@ export class XML {
     const opts = Object.assign({
       pretty: true,
       minify: false,
-      preserveComments: false,
+      preserveComments: true,
     }, options);
     if (opts.minify) {
       return pd.xmlmin(xml, opts.preserveComments);

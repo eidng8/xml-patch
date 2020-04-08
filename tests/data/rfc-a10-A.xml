@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+  <foo a="1">This is a sample document</foo>
+  <?test foo="bar"?>
+</doc>
