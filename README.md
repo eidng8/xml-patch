@@ -1,1 +1,1 @@
-An emtpy TypeScript project template.
+side effects of ignoring errors

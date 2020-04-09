@@ -1,3 +1,9 @@
+/*
+ * GPLv3 https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Author: eidng8
+ */
+
 import {NodeImpl} from 'xmldom-ts';
 import XML from '../xml';
 import InvalidAttributeValue from './InvalidAttributeValue';
@@ -36,8 +42,10 @@ function dontIgnoreExceptions(): void {
  * invoked with the actual exception.
  * @param exceptions
  */
-function ignoreExceptions(exceptions: { new(): Exception }[]): void {
-  ignoredExceptions = exceptions;
+function ignoreExceptions(
+  ...exceptions: { new(): Exception }[] | { new(): Exception }[][]
+): void {
+  ignoredExceptions = exceptions.flat();
 }
 
 /**

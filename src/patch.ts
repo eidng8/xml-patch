@@ -1,3 +1,9 @@
+/*
+ * GPLv3 https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Author: eidng8
+ */
+
 import {AttrImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
 import XML from './xml';

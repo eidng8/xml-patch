@@ -1,3 +1,9 @@
+/*
+ * GPLv3 https://www.gnu.org/licenses/gpl-3.0.en.html
+ *
+ * Author: eidng8
+ */
+
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
