@@ -1,27 +1,58 @@
 import {XML} from './xml';
 import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
-import {InvalidAttributeValue, throwException} from './errors';
+import {
+  InvalidAttributeValue,
+  InvalidPatchDirective,
+  throwException,
+} from './errors';
 import Exception from './errors/Exception';
+import {Patch} from './patch';
 
+/**
+ * Parse the given XML patch document, according to
+ * {@link https://tools.ietf.org/html/rfc5261|RFC 5261}.
+ */
 export default class Diff {
+  /**
+   * XML namespace of XML patch
+   */
   static readonly DiffNamespace = 'urn:ietf:params:xml:ns:pidf-diff';
 
+  /**
+   * List of defined patch directives (actions).
+   */
   static readonly SupportedActions = ['add', 'remove', 'replace'];
 
+  /**
+   * The loaded XML document
+   */
   protected xml!: XML;
 
+  /**
+   * List of actions to be performed.
+   */
   protected _actions: ElementImpl[];
 
+  /**
+   * List of actions to be performed.
+   */
   get actions(): ElementImpl[] {
     return this._actions;
   }
 
+  /**
+   * @param diff This can be an XML string, of a {@link XML} instance.
+   */
   constructor(diff: string | XML) {
     this._actions = [];
     this.load(diff).loadActions().compileActions();
   }
 
+  /**
+   * @param diff can be an XML string, of a {@link XML} instance.
+   * @return this instance
+   */
   load(diff: string | XML): Diff {
     if (XML.isXML(diff)) {
       this.xml = diff;
@@ -31,35 +62,66 @@ export default class Diff {
     return this;
   }
 
+  /**
+   * Pass through to underlining XML document's {@link XML.lookupNamespaceURI}
+   * @param prefix
+   * @param node the node to be looked up
+   */
   lookupNamespaceURI(prefix: string | null, node?: NodeImpl): string | null {
     return this.xml.lookupNamespaceURI(prefix, node);
   }
 
+  /**
+   * Pass through to underlining XML document's {@link XML.lookupPrefix}
+   * @param uri
+   * @param node the node to be looked up
+   */
   lookupPrefix(uri: string | null, node?: NodeImpl): string | null {
     return this.xml.lookupPrefix(uri, node);
   }
 
+  /**
+   * Parses the XML patch document and extracts all its actions.
+   * Please note that this method *doesn't* check the action, which is done by
+   * {@link compileActions}
+   * @return this instance
+   */
   protected loadActions(): Diff {
     const root = this.xml.root;
-    if (!root || !root.hasChildNodes()) return this;
+    if (!root || !root.hasChildNodes()) {
+      // RFC doesn't define what to do with empty patch document.
+      // Just ignore it for now.
+      return this;
+    }
     let action = XML.firstElementChild(root);
     while (action) {
-      if (!action.hasAttribute('sel')) {
+      if (!action.hasAttribute(Patch.Selector)) {
+        // Although RFC doesn't explicitly define how to deal with empty 'sel'.
+        // Judging by the description of <invalid-attribute-value> error,
+        // I think this should be an error.
         throwException(
           new InvalidAttributeValue(Exception.ErrSelMissing, action));
         return this;
       }
-      if (Diff.SupportedActions.indexOf(action.localName) < 0) continue;
+      if (Diff.SupportedActions.indexOf(action.localName) < 0) {
+        throwException(new InvalidPatchDirective(action));
+        continue;
+      }
       this._actions.push(action);
       action = XML.nextElementSibling(action);
     }
     return this;
   }
 
+  /**
+   * Goes through all extracted actions, performs checking and namespace
+   * mangling.
+   */
   protected compileActions(): Diff {
     for (const action of this.actions) {
-      const exp = action.getAttribute('sel')!.trim();
+      const exp = action.getAttribute(Patch.Selector)!.trim();
       if (!exp) {
+        // As mentioned in `loadActions()`, I think this is an error.
         throwException(
           new InvalidAttributeValue(Exception.ErrSelEmpty, action));
         return this;
@@ -70,12 +132,21 @@ export default class Diff {
         cmp = `/${cmp}`;
       }
       if (exp != cmp) {
-        action.setAttribute('sel', cmp);
+        action.setAttribute(Patch.Predicated, cmp);
       }
     }
     return this;
   }
 
+  /**
+   * This is a *simple* process. It's not supposed to work on complex XPath
+   * expressions. Currently it expands *qualified names* in simple expressions
+   * of form `a/b/c` to expressions with predicates
+   * `*[namespace-uri()='uuu'][local-name()='nnn']`. Also, quotation marks are
+   * not dealt with either.
+   * @param expression
+   * @param action the owning action element of the expression
+   */
   protected mangleNamespace(expression: string, action: ElementImpl): string {
     let a;
     let name;
@@ -104,6 +175,10 @@ export default class Diff {
     return tokens.join('');
   }
 
+  /**
+   * Breaks up the qualified name by colon `':'`.
+   * @param qname
+   */
   protected tokenizeQName(qname: string): string[] {
     let prefix = '';
     const parts = qname.split(':');
@@ -114,6 +189,13 @@ export default class Diff {
     return [prefix, name];
   }
 
+  /**
+   * Actually mangles the namespace.
+   * @param prefix
+   * @param name
+   * @param isAttr
+   * @param action
+   */
   protected mangleQName(
     prefix: string,
     name: string,

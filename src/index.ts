@@ -1,5 +1,4 @@
-import {Patcher} from './patcher';
-import {XML} from './xml';
-import Diff from './diff';
-
-export {Diff, Patcher, XML};
+export * as Patch from './patch';
+export * as XML from './xml';
+export * as Diff from './diff';
+export * from './errors';

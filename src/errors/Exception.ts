@@ -1,6 +1,9 @@
 import {NodeImpl} from 'xmldom-ts';
 import {Diff, XML} from '..';
 
+/**
+ * XML patch exception base class
+ */
 export default abstract class Exception extends Error {
   static readonly ErrorNamespace = 'urn:ietf:params:xml:ns:patch-ops-error';
 
@@ -13,7 +16,9 @@ export default abstract class Exception extends Error {
 
   static ErrMultipleMatches = 'Multiple matches found.';
 
-  static ErrNodeType = 'Invalid node type';
+  static ErrNodeTypeText = 'This is expected to be a text node';
+
+  static ErrNodeTypeMismatch = 'Type of the given node should match the target';
 
   static ErrNoMatch = 'No match found.';
 
@@ -45,10 +50,15 @@ export default abstract class Exception extends Error {
   static ErrXML = 'Invalid XML.';
   // endregion
 
+  /**
+   * The action that caused error
+   */
   action?: NodeImpl;
 
+  // The error XML document
   protected xml!: XML;
 
+  // tag name of the actual error
   protected abstract tag: string;
 
   constructor(message?: string, action?: NodeImpl) {
@@ -69,10 +79,17 @@ export default abstract class Exception extends Error {
     return this.toString();
   }
 
+  /**
+   * Qualifies the given local name with error namespace.
+   * @param name
+   */
   protected qualifyName(name: string) {
     return `${Exception.ErrorPrefix}:${name}`;
   }
 
+  /**
+   * Creates the actual error node
+   */
   protected createErrorNode() {
     const elem = this.xml.doc.createElementNS(
       Exception.ErrorNamespace,

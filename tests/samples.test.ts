@@ -1,6 +1,6 @@
 import {existsSync, readdirSync, readFileSync, writeFileSync} from 'fs';
 import {join} from 'path';
-import {Patcher} from '../src';
+import {Patch} from '../src';
 import {format} from './helpers';
 
 describe('Sample XML', () => {
@@ -15,7 +15,7 @@ describe('Sample XML', () => {
       const xml = readFileSync(source, {encoding: 'utf-8'});
       const diff = readFileSync(patch, {encoding: 'utf-8'});
       try {
-        const patched = new Patcher().load(diff).patch(xml);
+        const patched = new Patch().load(diff).patch(xml);
         writeFileSync(patchedFiles[idx], format(patched.toString()));
         expect(patched).toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
       } catch (ex) {

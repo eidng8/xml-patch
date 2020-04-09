@@ -1,11 +1,11 @@
-import {Patcher} from '../src';
+import {Patch} from '../src';
 import {InvalidNamespacePrefix} from '../src/errors';
 import InvalidNodeTypes from '../src/errors/InvalidNodeTypes';
 
 describe('Patcher <replace>', () => {
   test('it replaces target element', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load('<diff><replace sel="/a/b"><c/></replace></diff>')
       .patch('<a>x<b>y</b>z</a>')
       .toString({minify: true, preserveComments: true}),
@@ -14,25 +14,16 @@ describe('Patcher <replace>', () => {
 
   test('it replaces with mangled namespace', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load('<diff xmlns="urn:xxx"><replace sel="/a/b"><c/></replace></diff>')
       .patch('<m:a xmlns:m="urn:xxx">x<m:b>y</m:b>z</m:a>')
       .toString({minify: true, preserveComments: true}),
     ).toEqual('<m:a xmlns:m="urn:xxx">x<m:c/>z</m:a>');
   });
 
-  test('it replaces target element with multiple elements', () => {
-    expect.assertions(1);
-    expect(new Patcher()
-      .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
-      .patch('<a>x<b>y</b>z</a>')
-      .toString({minify: true, preserveComments: true}),
-    ).toEqual('<a>x<c/><d/><e/>z</a>');
-  });
-
   test('it replaces target attribute', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load('<diff><replace sel="/a/b/@c">v</replace></diff>')
       .patch('<a>x<b c="w">y</b>z</a>')
       .toString({minify: true, preserveComments: true}),
@@ -41,7 +32,7 @@ describe('Patcher <replace>', () => {
 
   test('it replaces processing instruction', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load(
         '<diff><replace sel="/a/processing-instruction(\'xml-stylesheet\')"><?xml-stylesheet href="xxx"?></replace></diff>')
       .patch('<a>x<?xml-stylesheet href="a"?>z</a>')
@@ -51,7 +42,7 @@ describe('Patcher <replace>', () => {
 
   test('it replaces comments', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load(
         '<diff><replace sel="/a/comment()[1]"><!--new--></replace></diff>')
       .patch('<a>x<!--old-->z</a>')
@@ -61,7 +52,7 @@ describe('Patcher <replace>', () => {
 
   test('it replaces text node', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load(
         '<diff><replace sel="/a/text()[1]">new text</replace></diff>')
       .patch('<a>xz</a>')
@@ -71,7 +62,7 @@ describe('Patcher <replace>', () => {
 
   test('it replaces namespace declaration', () => {
     expect.assertions(1);
-    expect(new Patcher()
+    expect(new Patch()
       .load(
         '<diff><replace sel="/a/namespace::pref">urn:new</replace></diff>')
       .patch('<a xmlns:pref="urn:old">xz</a>')
@@ -81,7 +72,7 @@ describe('Patcher <replace>', () => {
 
   test('it throws if prefix is not defined', () => {
     expect.assertions(1);
-    expect(() => new Patcher()
+    expect(() => new Patch()
       .load(
         '<diff><replace sel="/a/namespace::pref">urn:new</replace></diff>')
       .patch('<a><b xmlns:pref="urn:old"/>xz</a>'),
@@ -90,7 +81,7 @@ describe('Patcher <replace>', () => {
 
   test('it throws if action has no text child', () => {
     expect.assertions(1);
-    expect(() => new Patcher()
+    expect(() => new Patch()
       .load(
         '<diff><replace sel="/a/namespace::pref"><a/></replace></diff>')
       .patch('<a><b xmlns:pref="urn:old"/>xz</a>'),
