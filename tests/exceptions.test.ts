@@ -1,11 +1,11 @@
-import {Patch} from '../src';
 import {
   dontIgnoreExceptions,
   ignoreExceptions,
   InvalidAttributeValue,
   InvalidCharacterSet,
+  Patch,
   setExceptionHandler,
-} from '../src/errors';
+} from '../src';
 
 // these tests must assert that original content isn't changed when
 // an error is ignored.

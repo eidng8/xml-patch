@@ -63,7 +63,7 @@ export interface FormatOptions {
  * original `xmldom-ts` package but failed. The original project doesn't provide
  * a `package-lock.json`. `tsc` spills a whole lot of errors on it.
  */
-export class XML {
+export default class XML {
   /**
    * Default encoding to use while reading file
    */

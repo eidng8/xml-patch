@@ -1,8 +1,6 @@
-import {Patch} from '../src';
-import {InvalidNamespacePrefix} from '../src/errors';
-import InvalidNodeTypes from '../src/errors/InvalidNodeTypes';
+import {InvalidNamespacePrefix, InvalidNodeTypes, Patch} from '../src';
 
-describe('Patcher <replace>', () => {
+describe('Patch <replace>', () => {
   test('it replaces target element', () => {
     expect.assertions(1);
     expect(new Patch()

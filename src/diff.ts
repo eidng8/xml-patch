@@ -1,13 +1,13 @@
-import {XML} from './xml';
+import XML from './xml';
 import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
 import {
+  Exception,
   InvalidAttributeValue,
   InvalidPatchDirective,
   throwException,
 } from './errors';
-import Exception from './errors/Exception';
-import {Patch} from './patch';
+import Patch from './patch';
 
 /**
  * Parse the given XML patch document, according to

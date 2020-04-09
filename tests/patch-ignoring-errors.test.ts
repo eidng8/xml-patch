@@ -1,6 +1,6 @@
 import {Patch} from '../src';
 
-describe('Patcher <replace>', () => {
+describe('Patch <replace>', () => {
   test('it replaces target element with multiple elements', () => {
     expect.assertions(1);
     expect(new Patch()

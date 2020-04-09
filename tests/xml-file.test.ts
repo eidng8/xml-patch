@@ -1,6 +1,5 @@
-import {XML} from '../src';
 import {DocumentImpl} from 'xmldom-ts';
-import {InvalidDiffFormat} from '../src/errors';
+import {InvalidDiffFormat, XML} from '../src';
 
 describe('XMLFile', () => {
   it('reads XML file', async () => {

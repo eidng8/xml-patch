@@ -1,3 +1,5 @@
+import {NodeImpl} from 'xmldom-ts';
+import XML from '../xml';
 import InvalidAttributeValue from './InvalidAttributeValue';
 import InvalidCharacterSet from './InvalidCharacterSet';
 import InvalidDiffFormat from './InvalidDiffFormat';
@@ -13,8 +15,6 @@ import UnlocatedNode from './UnlocatedNode';
 import UnsupportedIdFunction from './UnsupportedIdFunction';
 import UnsupportedXmlId from './UnsupportedXmlId';
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
-import {XML} from '../xml';
 
 type ExceptionHandler = (exception: Exception) => void;
 
@@ -101,6 +101,7 @@ export {
   ignoreExceptions,
   setExceptionHandler,
   throwException,
+  Exception,
   ExceptionHandler,
   InvalidWhitespaceDirective,
   InvalidRootElementOperation,

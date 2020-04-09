@@ -1,10 +1,10 @@
-import {Patch} from '../src';
 import {
   InvalidNamespacePrefix,
   InvalidWhitespaceDirective,
-} from '../src/errors';
+  Patch,
+} from '../src';
 
-describe('Patcher <remove>', () => {
+describe('Patch <remove>', () => {
   test('it removes target element', () => {
     expect.assertions(1);
     expect(new Patch()

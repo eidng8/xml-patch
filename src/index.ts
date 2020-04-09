@@ -1,4 +1,7 @@
-export * as Patch from './patch';
-export * as XML from './xml';
-export * as Diff from './diff';
+import Patch from './patch';
+import XML, {FormatOptions, XMLFileOptions} from './xml';
+import Diff from './diff';
+
+export {Diff, Patch, XML, XMLFileOptions, FormatOptions};
+
 export * from './errors';

@@ -1,6 +1,6 @@
 import {AttrImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
-import {XML} from './xml';
+import XML from './xml';
 import Diff from './diff';
 import {
   assertNotRoot,
@@ -19,7 +19,7 @@ import Exception from './errors/Exception';
  * Patches XML according to
  * {@link https://tools.ietf.org/html/rfc5261|RFC 5261}.
  */
-export class Patch {
+export default class Patch {
   // region Constants
   /**
    * The `<add>` directive

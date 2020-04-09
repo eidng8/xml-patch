@@ -1,6 +1,6 @@
 import {Patch} from '../src';
 
-describe('Patcher <add>', () => {
+describe('Patch <add>', () => {
   test('it appends new element', () => {
     expect.assertions(1);
     expect(new Patch()

@@ -1,7 +1,6 @@
-import {Patch} from '../src';
-import {InvalidAttributeValue, UnlocatedNode} from '../src/errors';
+import {InvalidAttributeValue, Patch, UnlocatedNode} from '../src';
 
-describe('Patcher', () => {
+describe('Patch', () => {
   test('it throws error if `sel` were missing', () => {
     expect.assertions(1);
     expect(() => new Patch()

@@ -1,5 +1,4 @@
-import {Diff, XML} from '../src';
-import {InvalidAttributeValue} from '../src/errors';
+import {Diff, InvalidAttributeValue, XML} from '../src';
 
 describe('Diff', () => {
   test('it throws if `sel` attribute is missing', () => {
