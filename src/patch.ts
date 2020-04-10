@@ -13,6 +13,7 @@ import {
   assertNoWsAttr,
   assertTextChild,
   InvalidAttributeValue,
+  InvalidCharacterSet,
   InvalidNamespacePrefix,
   InvalidNodeTypes,
   InvalidPatchDirective,
@@ -125,6 +126,9 @@ export default class Patch {
    */
   public patch(xml: string): XmlWrapper {
     this.target = new XmlWrapper().fromString(xml);
+    if (this.target.encoding != this.diff.encoding) {
+      throwException(new InvalidCharacterSet());
+    }
     for (const action of this.diff.actions) {
       this.processAction(action);
     }
@@ -262,7 +266,10 @@ export default class Patch {
     let anchor = target;
     switch (action.getAttribute(Patch.Pos)) {
       case Patch.After:
-        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(target, action)) {
+        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(
+          target,
+          action,
+        )) {
           return;
         }
         for (const child of imported) {
@@ -271,7 +278,10 @@ export default class Patch {
         break;
 
       case Patch.Before:
-        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(target, action)) {
+        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(
+          target,
+          action,
+        )) {
           return;
         }
         for (const child of imported) {
@@ -434,8 +444,10 @@ export default class Patch {
         // RFC 3, last paragraph
         return;
       }
-      if (XmlWrapper.childElementCount(action) != 1
-          || XmlWrapper.firstElementChild(action)!.nodeType != target.nodeType) {
+      if (XmlWrapper.childElementCount(action)
+          != 1
+          || XmlWrapper.firstElementChild(action)!.nodeType
+          != target.nodeType) {
         // Although RFC doesn't explicitly specify the case, I think replacement
         // are allowed only one to one. Reasons:
         // 1. Last paragraph of 4.4, it uses `child`, not `children`;
@@ -545,7 +557,10 @@ export default class Patch {
         this.mangleNS(child, target, anchor);
       }
     }
-    if (!XmlWrapper.isElement(node) && !XmlWrapper.isAttribute(node)) return node;
+    if (!XmlWrapper.isElement(node)
+        && !XmlWrapper.isAttribute(node)) {
+      return node;
+    }
     const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
       (<ElementImpl>node).tagName || (<AttrImpl>node).name,
       target,

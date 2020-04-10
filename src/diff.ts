@@ -48,6 +48,13 @@ export default class Diff {
   }
 
   /**
+   * Encoding of the load XML.
+   */
+  get encoding(): string {
+    return this.xml.encoding;
+  }
+
+  /**
    * @param diff This can be an XML string, of a {@link XmlWrapper} instance.
    */
   constructor(diff: string | XmlWrapper) {
@@ -69,7 +76,8 @@ export default class Diff {
   }
 
   /**
-   * Pass through to underlining XML document's {@link XmlWrapper.lookupNamespaceURI}
+   * Pass through to underlining XML document's
+   * {@link XmlWrapper.lookupNamespaceURI}
    * @param prefix
    * @param node the node to be looked up
    */

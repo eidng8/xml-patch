@@ -20,6 +20,8 @@ export default abstract class Exception extends Error {
                         + ' because the given directives were not'
                         + ' understood.';
 
+  static ErrEncoding = 'Encodings of the two documents do not match.';
+
   static ErrMultipleMatches = 'Multiple matches found.';
 
   static ErrNodeTypeText = 'This is expected to be a text node';
