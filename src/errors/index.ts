@@ -4,8 +4,8 @@
  * Author: eidng8
  */
 
-import {NodeImpl} from 'xmldom-ts';
-import XML from '../xml';
+import {ElementImpl, NodeImpl} from 'xmldom-ts';
+import {Patch, XmlWrapper} from '..';
 import InvalidAttributeValue from './InvalidAttributeValue';
 import InvalidCharacterSet from './InvalidCharacterSet';
 import InvalidDiffFormat from './InvalidDiffFormat';
@@ -21,6 +21,7 @@ import UnlocatedNode from './UnlocatedNode';
 import UnsupportedIdFunction from './UnsupportedIdFunction';
 import UnsupportedXmlId from './UnsupportedXmlId';
 import Exception from './Exception';
+import ExceptionBag from './ExceptionBag';
 
 type ExceptionHandler = (exception: Exception) => void;
 
@@ -83,7 +84,7 @@ function throwException<T extends Exception>(exception: T): void {
  */
 function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
   // RFC 3, last paragraph: don't replace/remove root node, or add sibling
-  if (XML.isDocument(node) || XML.isRoot(node)) {
+  if (XmlWrapper.isDocument(node) || XmlWrapper.isRoot(node)) {
     throwException(new InvalidRootElementOperation(action));
     return false;
   }
@@ -91,12 +92,27 @@ function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
 }
 
 /**
- * Asserts the given action has exactly one text node child
+ * Asserts the given action has one text node child or no child at all
  * @param action
  */
 function assertTextChild(action: NodeImpl): boolean {
-  if (action.childNodes.length > 1 || !XML.isText(action.firstChild)) {
+  if (!action.childNodes.length) return true;
+  if (action.childNodes.length > 1 || !XmlWrapper.isText(action.firstChild)) {
     throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, action));
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Asserts the given action has no 'ws' attribute.
+ * @param action
+ * @param message
+ */
+function assertNoWsAttr(action: ElementImpl, message: string): boolean {
+  if (action.hasAttribute(Patch.Ws)) {
+    throwException(
+      new InvalidWhitespaceDirective(message, action));
     return false;
   }
   return true;
@@ -104,12 +120,14 @@ function assertTextChild(action: NodeImpl): boolean {
 
 export {
   assertNotRoot,
+  assertNoWsAttr,
   assertTextChild,
   dontIgnoreExceptions,
   ignoreExceptions,
   setExceptionHandler,
   throwException,
   Exception,
+  ExceptionBag,
   ExceptionHandler,
   InvalidWhitespaceDirective,
   InvalidRootElementOperation,

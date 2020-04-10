@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 /*
  * GPLv3 https://www.gnu.org/licenses/gpl-3.0.en.html
  *
@@ -5,7 +7,7 @@
  */
 
 import {NodeImpl} from 'xmldom-ts';
-import {XML} from '../src';
+import {XmlWrapper} from '../src';
 
 const pd = require('pretty-data').pd;
 
@@ -55,7 +57,7 @@ export function format(txt: string | NodeImpl | Node) {
   if ('string' != typeof xml) {
     xml = xml.toString();
   }
-  xml = new XML({warnError: true})
+  xml = new XmlWrapper({warnError: true})
     .fromString(xml)
     .toString({minify: true, preserveComments: true})
     .trim()

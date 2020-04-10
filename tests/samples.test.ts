@@ -16,7 +16,7 @@ describe('Sample XML', () => {
     const fixture = fixtures[idx];
     const patch = patches[idx];
 
-    test(`it patches ${source}`, () => {
+    it(`patches ${source}`, () => {
       expect.assertions(1);
       const xml = readFileSync(source, {encoding: 'utf-8'});
       const diff = readFileSync(patch, {encoding: 'utf-8'});

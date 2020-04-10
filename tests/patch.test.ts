@@ -7,7 +7,7 @@
 import {InvalidAttributeValue, Patch, UnlocatedNode} from '../src';
 
 describe('Patch', () => {
-  test('it throws error if `sel` were missing', () => {
+  it('throws error if `sel` were missing', () => {
     expect.assertions(1);
     expect(() => new Patch()
       .load('<diff><replace><c>y</c></replace></diff>')
@@ -15,7 +15,7 @@ describe('Patch', () => {
     ).toThrow(InvalidAttributeValue);
   });
 
-  test('it throws if `sel` matches no target', () => {
+  it('throws if `sel` matches no target', () => {
     expect.assertions(1);
     expect(() => new Patch()
       .load('<diff><replace sel="b/c"><c>y</c></replace></diff>')
@@ -23,7 +23,7 @@ describe('Patch', () => {
     ).toThrow(UnlocatedNode);
   });
 
-  test('it throws if matched multiple target', () => {
+  it('throws if matched multiple target', () => {
     expect.assertions(1);
     expect(() => new Patch()
       .load('<diff><add sel="a/b"><c>y</c></add></diff>')

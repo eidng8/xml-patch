@@ -4,8 +4,8 @@
  * Author: eidng8
  */
 
-import {NodeImpl} from 'xmldom-ts';
-import {Diff, XML} from '..';
+import {DocumentImpl, NodeImpl} from 'xmldom-ts';
+import {Diff, XmlWrapper} from '..';
 
 /**
  * XML patch exception base class
@@ -37,8 +37,6 @@ export default abstract class Exception extends Error {
                    + ' another sibling element for the document root'
                    + ' element cannot be added.';
 
-  static ErrSelAttribute = 'Invalid XPath expression by `sel`.';
-
   static ErrSelEmpty = '`sel` cannot be empty.';
 
   static ErrSelMissing = 'Missing `sel` attribute.';
@@ -62,7 +60,7 @@ export default abstract class Exception extends Error {
   action?: NodeImpl;
 
   // The error XML document
-  protected xml!: XML;
+  protected xml!: XmlWrapper;
 
   // tag name of the actual error
   protected abstract tag: string;
@@ -73,10 +71,7 @@ export default abstract class Exception extends Error {
   }
 
   public toString(): string {
-    this.xml = new XML().fromString(`<?xml version="1.0" encoding="utf-8"?>
-<${Exception.ErrorPrefix}:patch-ops-error
-    xmlns:${Exception.ErrorPrefix}="${Exception.ErrorNamespace}"
-    xmlns="${Diff.DiffNamespace}"></${Exception.ErrorPrefix}:patch-ops-error>`);
+    this.createRootNode();
     this.xml.root!.appendChild(this.createErrorNode());
     return this.xml.toString({pretty: true, preserveComments: true});
   }
@@ -86,18 +81,10 @@ export default abstract class Exception extends Error {
   }
 
   /**
-   * Qualifies the given local name with error namespace.
-   * @param name
-   */
-  protected qualifyName(name: string) {
-    return `${Exception.ErrorPrefix}:${name}`;
-  }
-
-  /**
    * Creates the actual error node
    */
-  protected createErrorNode() {
-    const elem = this.xml.doc.createElementNS(
+  public createErrorNode(doc?: DocumentImpl) {
+    const elem = (doc || this.xml.doc).createElementNS(
       Exception.ErrorNamespace,
       this.qualifyName(`${this.tag}`),
     );
@@ -108,5 +95,21 @@ export default abstract class Exception extends Error {
       elem.appendChild((this.xml.doc.importNode(this.action, true)));
     }
     return elem;
+  }
+
+  /**
+   * Qualifies the given local name with error namespace.
+   * @param name
+   */
+  protected qualifyName(name: string) {
+    return `${Exception.ErrorPrefix}:${name}`;
+  }
+
+  protected createRootNode() {
+    this.xml = new XmlWrapper().fromString(`<?xml version="1.0" encoding="utf-8"?>
+<${Exception.ErrorPrefix}:patch-ops-error
+    xmlns:${Exception.ErrorPrefix}="${Exception.ErrorNamespace}"
+    xmlns="${Diff.DiffNamespace}"/>`);
+    return this.xml.root!;
   }
 }

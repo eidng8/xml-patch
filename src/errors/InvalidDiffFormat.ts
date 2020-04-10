@@ -14,7 +14,7 @@ import {NodeImpl} from 'xmldom-ts';
 export default class InvalidDiffFormat extends Exception {
   protected tag: string = 'invalid-diff-format';
 
-  constructor(action?: NodeImpl) {
-    super(Exception.ErrXML, action);
+  constructor(message?: string, action?: NodeImpl) {
+    super(message || Exception.ErrXML, action);
   }
 }

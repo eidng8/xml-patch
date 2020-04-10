@@ -17,7 +17,12 @@ import {
   TextImpl,
 } from 'xmldom-ts';
 import iconv from 'iconv-lite';
-import {InvalidDiffFormat, throwException} from './errors';
+import {
+  ExceptionBag,
+  InvalidDiffFormat,
+  InvalidEntityDeclaration,
+  throwException,
+} from './errors';
 
 const pd = require('pretty-data').pd;
 
@@ -69,7 +74,8 @@ export interface FormatOptions {
  * original `xmldom-ts` package but failed. The original project doesn't provide
  * a `package-lock.json`. `tsc` spills a whole lot of errors on it.
  */
-export default class XML {
+export default class XmlWrapper {
+  // region Fields
   /**
    * Default encoding to use while reading file
    */
@@ -88,12 +94,9 @@ export default class XML {
   /**
    * List of all XML parse warnings
    */
-  protected _warnings!: string[];
+  protected _warnings: string[];
 
-  /**
-   * List of all XML parse errors
-   */
-  protected _errors!: string[];
+  protected _exceptions: ExceptionBag;
 
   /**
    * Treats warnings as errors
@@ -104,13 +107,15 @@ export default class XML {
    * The file system mock to be used
    */
   protected _fsMock?: any;
+  // endregion
 
+  // region Static Methods
   /**
    * Type guard
    * @param subject
    */
-  static isXML(subject: any): subject is XML {
-    return subject instanceof XML;
+  static isXML(subject: any): subject is XmlWrapper {
+    return subject instanceof XmlWrapper;
   }
 
   /**
@@ -174,7 +179,7 @@ export default class XML {
    * @param node
    */
   static isRoot(node: NodeImpl): boolean {
-    return XML.isDocument(node.parentNode);
+    return XmlWrapper.isDocument(node.parentNode);
   }
 
   /**
@@ -194,7 +199,7 @@ export default class XML {
    * @param node
    */
   static isEmptyText(node: NodeImpl): boolean {
-    return XML.isText(node) && !node.textContent!.trim();
+    return XmlWrapper.isText(node) && !node.textContent!.trim();
   }
 
   /**
@@ -206,7 +211,7 @@ export default class XML {
     let count = 0;
     let child = node.firstChild;
     while (child) {
-      const skip = ignoreWhiteSpace && XML.isEmptyText(child);
+      const skip = ignoreWhiteSpace && XmlWrapper.isEmptyText(child);
       child = child.nextSibling;
       if (skip) continue;
       count++;
@@ -221,7 +226,7 @@ export default class XML {
   static firstElementChild(node: NodeImpl): ElementImpl | null {
     let child = node.firstChild;
     while (child) {
-      if (XML.isElement(child)) return child;
+      if (XmlWrapper.isElement(child)) return child;
       child = child.nextSibling;
     }
     return null;
@@ -234,7 +239,7 @@ export default class XML {
   static firstCDataChild(node: NodeImpl): CommentImpl | null {
     let child = node.firstChild;
     while (child) {
-      if (XML.isCData(child)) return child;
+      if (XmlWrapper.isCData(child)) return child;
       child = child.nextSibling;
     }
     return null;
@@ -247,7 +252,7 @@ export default class XML {
   static firstCommentChild(node: NodeImpl): CommentImpl | null {
     let child = node.firstChild;
     while (child) {
-      if (XML.isComment(child)) return child;
+      if (XmlWrapper.isComment(child)) return child;
       child = child.nextSibling;
     }
     return null;
@@ -262,7 +267,7 @@ export default class XML {
   ): ProcessingInstructionImpl | null {
     let child = node.firstChild;
     while (child) {
-      if (XML.isProcessingInstruction(child)) return child;
+      if (XmlWrapper.isProcessingInstruction(child)) return child;
       child = child.nextSibling;
     }
     return null;
@@ -275,12 +280,15 @@ export default class XML {
   static nextElementSibling(node: NodeImpl): ElementImpl | null {
     let sibling = node.nextSibling;
     while (sibling) {
-      if (XML.isElement(sibling)) return sibling;
+      if (XmlWrapper.isElement(sibling)) return sibling;
       sibling = sibling.nextSibling;
     }
     return null;
   }
 
+  // endregion
+
+  // region Properties
   /**
    * Encoding of the loaded XML document
    */
@@ -302,50 +310,48 @@ export default class XML {
     return this.doc.documentElement as ElementImpl | null;
   }
 
-  /**
-   * List of all XML parse warnings
-   */
-  get warnings(): string[] {
-    return this._warnings;
+  get hasError(): boolean {
+    return this._exceptions.hasException
+           || (this._warnError && this._warnings.length > 0);
   }
 
-  /**
-   * List of all XML parse errors
-   */
-  get errors(): string[] {
-    return this._errors;
+  get exception(): ExceptionBag {
+    return this._exceptions;
   }
 
   /**
    * Creates a new DOM parser
    */
   protected get parser() {
-    /* istanbul ignore next */
     return new DOMParserImpl({
       // locator is always need for error position info
       locator: {},
       errorHandler: {
-        warning: err => this._warnings.push(err),
-        error: err => this._errors.push(err),
-        fatalError: err => this._errors.push(err),
+        warning: this.warning.bind(this),
+        error: this.error.bind(this),
+        fatalError: this.fatalError.bind(this),
       },
     });
   }
 
+  // endregion
+
   constructor(options: XMLFileOptions = {}) {
     this._defaultEncoding = options.defaultEncoding || 'utf-8';
-    this._warnError = options.warnError || false;
     this._fsMock = options.fsMock;
+    this._warnings = [];
+    this._exceptions = new ExceptionBag();
+    this._warnError = true;
+    if (undefined !== options.warnError) this._warnError = options.warnError;
   }
 
+  // region Public Methods
   /**
    * Load XML from the given file
    * @param path
    */
-  async fromFile(path: string): Promise<XML> {
+  async fromFile(path: string): Promise<XmlWrapper> {
     return new Promise((resolve, reject) => {
-      this._warnings = [];
-      this._errors = [];
       if (!existsSync(path)) {
         reject(new Error(`File doesn't exist: ${path}`));
         return;
@@ -359,13 +365,11 @@ export default class XML {
    * @param xml
    * @param encoding
    */
-  fromString(xml: string, encoding = 'utf-8'): XML {
-    this._warnings = [];
-    this._errors = [];
+  fromString(xml: string, encoding = 'utf-8'): XmlWrapper {
     this._encoding = encoding;
     this._doc = this.parser.parseFromString(xml) as DocumentImpl;
-    if (this.errors.length || (this._warnError && this.warnings.length)) {
-      throwException(new InvalidDiffFormat());
+    if (this.hasError) {
+      throwException(this.exception);
     }
     return this;
   }
@@ -388,21 +392,23 @@ export default class XML {
    * Remove all empty text nodes from descendants of the given node.
    * @param node
    */
-  removeEmptyTextNodes(node: NodeImpl): XML {
+  removeEmptyTextNodes(node: NodeImpl): XmlWrapper {
     if (!node.hasChildNodes()) return this;
-    let idx = 0;
-    let child: NodeImpl;
-    while ((child = node.childNodes[idx])) {
-      if (XML.isText(child)) {
+    let child: NodeImpl = node.firstChild;
+    while (child) {
+      if (XmlWrapper.isText(child)) {
         if (child.textContent && child.textContent.trim()) {
-          idx++;
-          continue;
+          child = child.nextSibling;
+        } else {
+          const n = child;
+          child = child.nextSibling;
+          node.removeChild(n);
         }
-        child.parentNode.removeChild(child);
-      } else if (XML.isElement(child)) {
+        continue;
+      } else if (XmlWrapper.isElement(child)) {
         this.removeEmptyTextNodes(child);
-        idx++;
       }
+      child = child.nextSibling;
     }
     return this;
   }
@@ -411,14 +417,14 @@ export default class XML {
    * {@link String.trim} all descendants' text nodes.
    * @param node
    */
-  trimTextContents(node: NodeImpl): XML {
+  trimTextContents(node: NodeImpl): XmlWrapper {
     if (!node.hasChildNodes()) return this;
     for (const child of node.childNodes) {
-      if (XML.isText(child)) {
+      if (XmlWrapper.isText(child)) {
         const txt = child.textContent && child.textContent.trim();
         child.textContent = txt;
         child.data = txt!;
-      } else if (XML.isElement(child)) {
+      } else if (XmlWrapper.isElement(child)) {
         this.trimTextContents(child);
       }
     }
@@ -467,13 +473,17 @@ export default class XML {
    * @param uri
    * @param node
    */
-  addNamespace(prefix: string, uri: string, node?: ElementImpl) {
-    if (!prefix || !uri) return;
+  addNamespace(prefix: string, uri: string, node?: ElementImpl): XmlWrapper {
+    if (!prefix) return this;
     const n = node || this.root!;
     n._nsMap[prefix] = uri;
     n.setAttribute(`xmlns:${prefix}`, uri);
+    return this;
   }
 
+  // endregion
+
+  // region Protected Methods
   /**
    * Tries to determine the proper encoding of the file, by the first
    * processing instruction. Uses default encoding if none were found.
@@ -516,8 +526,8 @@ export default class XML {
         .then(([encoding, buf]) => {
           const xml = iconv.decode(buf, encoding);
           this._doc = this.parser.parseFromString(xml) as DocumentImpl;
-          if (this.errors.length || (this._warnError && this.warnings.length)) {
-            reject(new Error('Failed to parse the given XML'));
+          if (this.hasError) {
+            reject(this.exception);
             return;
           }
           resolve(this._doc);
@@ -554,4 +564,25 @@ export default class XML {
       }
     });
   }
+
+  protected warning(err: string) {
+    if (this._warnError) {
+      this._exceptions.push(new InvalidDiffFormat(err));
+    }
+    this._warnings.push(err);
+  }
+
+  protected error(err: string) {
+    if (err.indexOf('entity not found:') > -1) {
+      this._exceptions.push(new InvalidEntityDeclaration(err));
+    } else {
+      this._exceptions.push(new InvalidDiffFormat(err));
+    }
+  }
+
+  protected fatalError(err: string) {
+    this._exceptions.push(new InvalidDiffFormat(err));
+  }
+
+  // endregion
 }

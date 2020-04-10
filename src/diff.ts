@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import XML from './xml';
+import XmlWrapper from './xml-wrapper';
 import {ElementImpl, NodeImpl} from 'xmldom-ts';
 import {XPathParser} from 'xpath-ts';
 import {
@@ -33,7 +33,7 @@ export default class Diff {
   /**
    * The loaded XML document
    */
-  protected xml!: XML;
+  protected xml!: XmlWrapper;
 
   /**
    * List of actions to be performed.
@@ -48,28 +48,28 @@ export default class Diff {
   }
 
   /**
-   * @param diff This can be an XML string, of a {@link XML} instance.
+   * @param diff This can be an XML string, of a {@link XmlWrapper} instance.
    */
-  constructor(diff: string | XML) {
+  constructor(diff: string | XmlWrapper) {
     this._actions = [];
     this.load(diff).loadActions().compileActions();
   }
 
   /**
-   * @param diff can be an XML string, of a {@link XML} instance.
+   * @param diff can be an XML string, of a {@link XmlWrapper} instance.
    * @return this instance
    */
-  load(diff: string | XML): Diff {
-    if (XML.isXML(diff)) {
+  load(diff: string | XmlWrapper): Diff {
+    if (XmlWrapper.isXML(diff)) {
       this.xml = diff;
       return this;
     }
-    this.xml = new XML().fromString(diff);
+    this.xml = new XmlWrapper().fromString(diff);
     return this;
   }
 
   /**
-   * Pass through to underlining XML document's {@link XML.lookupNamespaceURI}
+   * Pass through to underlining XML document's {@link XmlWrapper.lookupNamespaceURI}
    * @param prefix
    * @param node the node to be looked up
    */
@@ -78,7 +78,7 @@ export default class Diff {
   }
 
   /**
-   * Pass through to underlining XML document's {@link XML.lookupPrefix}
+   * Pass through to underlining XML document's {@link XmlWrapper.lookupPrefix}
    * @param uri
    * @param node the node to be looked up
    */
@@ -99,22 +99,30 @@ export default class Diff {
       // Just ignore it for now.
       return this;
     }
-    let action = XML.firstElementChild(root);
+    let action = XmlWrapper.firstElementChild(root);
     while (action) {
       if (!action.hasAttribute(Patch.Selector)) {
-        // Although RFC doesn't explicitly define how to deal with empty 'sel'.
-        // Judging by the description of <invalid-attribute-value> error,
-        // I think this should be an error.
         throwException(
           new InvalidAttributeValue(Exception.ErrSelMissing, action));
-        return this;
+        action = XmlWrapper.nextElementSibling(action);
+        continue;
+      }
+      if (!action.getAttribute(Patch.Selector)!.trim()) {
+        // Although RFC doesn't explicitly define how to deal with empty 'sel'.
+        // Judging by the description of <invalid-attribute-value> error,
+        // this should be an error.
+        throwException(
+          new InvalidAttributeValue(Exception.ErrSelEmpty, action));
+        action = XmlWrapper.nextElementSibling(action);
+        continue;
       }
       if (Diff.SupportedActions.indexOf(action.localName) < 0) {
         throwException(new InvalidPatchDirective(action));
+        action = XmlWrapper.nextElementSibling(action);
         continue;
       }
       this._actions.push(action);
-      action = XML.nextElementSibling(action);
+      action = XmlWrapper.nextElementSibling(action);
     }
     return this;
   }
@@ -126,12 +134,6 @@ export default class Diff {
   protected compileActions(): Diff {
     for (const action of this.actions) {
       const exp = action.getAttribute(Patch.Selector)!.trim();
-      if (!exp) {
-        // As mentioned in `loadActions()`, I think this is an error.
-        throwException(
-          new InvalidAttributeValue(Exception.ErrSelEmpty, action));
-        return this;
-      }
       let cmp = this.mangleNamespace(exp, action);
       // RFC 4.1, second paragraph: 'sel' attribute always start from root node
       if (!cmp.startsWith('/')) {
@@ -208,11 +210,6 @@ export default class Diff {
     isAttr: boolean,
     action: ElementImpl,
   ): string {
-    if (!name) return '';
-
-    // if the expression is a single wildcard, we don't need to do anything
-    if ('*' == name) return '*';
-
     // RFC 4.2.1, paragraph 3: leave this unqualified.
     if (!prefix && !action.namespaceURI) return `*[local-name()='${name}']`;
 

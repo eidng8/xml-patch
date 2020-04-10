@@ -6,10 +6,11 @@
 
 import {AttrImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
 import {select} from 'xpath-ts';
-import XML from './xml';
+import XmlWrapper from './xml-wrapper';
 import Diff from './diff';
 import {
   assertNotRoot,
+  assertNoWsAttr,
   assertTextChild,
   InvalidAttributeValue,
   InvalidNamespacePrefix,
@@ -63,6 +64,10 @@ export default class Patch {
   static readonly Pos = 'pos';
 
   /**
+   * The `ws` attribute of the `<remove>` directive
+   */
+  static readonly Ws = 'ws';
+  /**
    * An valid value to `'pos'` and `'ws'` attributes. Denoting action is applied
    * to the next sibling of the target node.
    */
@@ -73,13 +78,11 @@ export default class Patch {
    * applied to the previous sibling of the target node.
    */
   static readonly Before = 'before';
-
   /**
    * An valid value to `'pos'` attribute. Denoting inserting before the first
    * child node.
    */
   static readonly Prepend = 'prepend';
-
   /**
    * An valid value to `'ws'` attribute. Denoting action is applied to both
    * previous and next sibling of the target node.
@@ -105,7 +108,7 @@ export default class Patch {
   /**
    * The target XML document to be patched.
    */
-  protected target!: XML;
+  protected target!: XmlWrapper;
 
   /**
    * Load diff XML document from the given string.
@@ -120,8 +123,8 @@ export default class Patch {
    * Patches the given XML using the loaded diff.
    * @param xml
    */
-  public patch(xml: string): XML {
-    this.target = new XML().fromString(xml);
+  public patch(xml: string): XmlWrapper {
+    this.target = new XmlWrapper().fromString(xml);
     for (const action of this.diff.actions) {
       this.processAction(action);
     }
@@ -139,9 +142,10 @@ export default class Patch {
                   || elem.getAttribute(Patch.Selector)!;
     const [target, prefix] = this.select(query, elem);
     // this is the only place to use this function
-    // I don't like making it a member method
+    // I don't like making it a member method.
     const process = (target, cb) => {
       if (!target) return;
+      // In case of ignoring errors, multiple targets could be selected
       if (Array.isArray(target)) {
         target.forEach(t => t && cb(t));
       } else {
@@ -168,9 +172,6 @@ export default class Patch {
           process(target, t => this.processReplace(t, elem));
         }
         break;
-
-      default:
-        throwException(new InvalidPatchDirective(elem));
     }
   }
 
@@ -181,44 +182,42 @@ export default class Patch {
    * @param action
    */
   protected processAdd(target: NodeImpl, action: ElementImpl): void {
-    if (!action.hasChildNodes()) {
-      // RFC doesn't tell whether this should be considered an error.
-      // Just ignore it for now.
-      return;
-    }
-    const t = (action.getAttribute(Patch.Type) || '').trim() || '';
-    if (t.length) {
-      if ('@' == t[0]) {
-        if (action.hasChildNodes() && !assertTextChild(action)) {
-          // RFC 4.3, 4th paragraph, child node of attribute action must be
-          // text node. However, it doesn't mention about empty action node
-          // in such case. Considering that XML allows attribute values to be
-          // empty, this case should be considered valid.
-          return;
-        }
+    const type = (action.getAttribute(Patch.Type) || '').trim() || '';
+    if (type.length) {
+      if (!XmlWrapper.isElement(target)) {
+        throwException(new InvalidNodeTypes(Exception.ErrType, action));
+        return;
+      }
+      if ('@' == type[0]) {
+        if (!assertTextChild(action)) return;
+        // RFC 4.3, 4th paragraph, child node of attribute action must be
+        // text node. However, it doesn't mention about empty action node
+        // in such case. Considering that XML allows attribute values to be
+        // empty, this case should be considered valid.
         this.addAttribute(
           target,
           action,
-          t.substr(1),
+          type.substr(1),
           action.textContent!.trim(),
         );
-      } else if (t.startsWith(Patch.AxisAttribute)) {
+      } else if (type.startsWith(Patch.AxisAttribute)) {
         // same as above
-        if (action.hasChildNodes() && !assertTextChild(action)) return;
+        if (!assertTextChild(action)) return;
         this.addAttribute(
           target,
           action,
-          t.substr(Patch.AxisAttribute.length).trim(),
+          type.substr(Patch.AxisAttribute.length).trim(),
           action.textContent!.trim(),
         );
-      } else if (t.startsWith(Patch.AxisNamespace)) {
-        if (action.hasChildNodes() && !assertTextChild(action)) {
-          // Almost same as above. But there are more under the hood:
+      } else if (type.startsWith(Patch.AxisNamespace)) {
+        if (!action.hasChildNodes() || !assertTextChild(action)) {
+          // Empty namespace isn't valid. More detail:
           // https://stackoverflow.com/a/44278867/1353368
+          throwException(new InvalidPatchDirective(action));
           return;
         }
         this.target.addNamespace(
-          t.substr(Patch.AxisNamespace.length).trim(),
+          type.substr(Patch.AxisNamespace.length).trim(),
           action.textContent!.trim(),
           target as ElementImpl,
         );
@@ -238,18 +237,16 @@ export default class Patch {
    * @param value
    */
   protected addAttribute(
-    target: NodeImpl,
-    action: NodeImpl,
+    target: ElementImpl,
+    action: ElementImpl,
     name: string,
     value: string,
   ): void {
-    if (!target || !XML.isElement(target)) return;
     const [prefix, localName, targetPrefix, targetNS]
       = this.mapNamespace(name, target, action, true);
     if (targetNS) {
-      const p = targetPrefix || prefix;
-      const n = p ? `${p}:${localName}` : localName;
-      target.setAttributeNS(targetNS, n, value);
+      const p = `${targetPrefix || prefix}:${localName}`;
+      target.setAttributeNS(targetNS, p, value);
     } else {
       target.setAttribute(name, value || '');
     }
@@ -265,14 +262,18 @@ export default class Patch {
     let anchor = target;
     switch (action.getAttribute(Patch.Pos)) {
       case Patch.After:
-        if (!assertNotRoot(target, action)) return;
+        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(target, action)) {
+          return;
+        }
         for (const child of imported) {
           anchor = target.parentNode!.insertBefore(child, anchor.nextSibling);
         }
         break;
 
       case Patch.Before:
-        if (!assertNotRoot(target, action)) return;
+        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(target, action)) {
+          return;
+        }
         for (const child of imported) {
           target.parentNode!.insertBefore(child, target);
         }
@@ -302,24 +303,16 @@ export default class Patch {
    * @param action
    */
   protected processRemove(target: NodeImpl, action: ElementImpl): void {
-    const ws = action.getAttribute('ws');
+    const ws = action.getAttribute(Patch.Ws);
     // RFC 4.5, 2nd paragraph, `ws` is only not allowed with texts, attributes.
-    if (XML.isAttribute(target)) {
-      if (ws) {
-        throwException(
-          new InvalidAttributeValue(Exception.ErrWsAttribute, action));
-        // return;
-      }
+    if (XmlWrapper.isAttribute(target)) {
+      assertNoWsAttr(action, Exception.ErrWsAttribute);
       (target.ownerElement! as ElementImpl).removeAttributeNode(target);
-    } else if (XML.isText(target)) {
-      if (ws) {
-        throwException(
-          new InvalidAttributeValue(Exception.ErrWsTextNode, action));
-        // return;
-      }
+    } else if (XmlWrapper.isText(target)) {
+      assertNoWsAttr(action, Exception.ErrWsTextNode);
       target.parentNode!.removeChild(target);
     } else {
-      if (XML.isElement(target) && !assertNotRoot(target, action)) {
+      if (XmlWrapper.isElement(target) && !assertNotRoot(target, action)) {
         // RFC 3, last paragraph
         return;
       }
@@ -339,13 +332,13 @@ export default class Patch {
   protected removeWhiteSpaceNode(
     ws: string,
     target: NodeImpl,
-    action: NodeImpl,
+    action: ElementImpl,
   ): void {
     let sibling;
     const parent = target.parentNode!;
     if (Patch.After == ws || Patch.Both == ws) {
       sibling = target.nextSibling;
-      if (XML.isEmptyText(sibling)) {
+      if (XmlWrapper.isEmptyText(sibling)) {
         parent.removeChild(sibling);
       } else {
         throwException(
@@ -355,7 +348,7 @@ export default class Patch {
     }
     if (Patch.Before == ws || Patch.Both == ws) {
       sibling = target.previousSibling;
-      if (XML.isEmptyText(sibling)) {
+      if (XmlWrapper.isEmptyText(sibling)) {
         parent.removeChild(target.previousSibling);
       } else {
         throwException(
@@ -376,13 +369,9 @@ export default class Patch {
     prefix: string,
     action: ElementImpl,
   ): void {
-    if (action.getAttribute('ws')) {
-      // RFC 4.5, 2nd paragraph: specifically prohibits namespace nodes
-      // with `ws` attribute.
-      throwException(
-        new InvalidAttributeValue(Exception.ErrWsAttribute, action));
-      // return;
-    }
+    // RFC 4.5, 2nd paragraph: specifically prohibits namespace nodes
+    // with `ws` attribute.
+    assertNoWsAttr(action, Exception.ErrWsAttribute);
     const uri = target.lookupNamespaceURI(prefix);
     if (!uri) {
       throwException(new InvalidNamespacePrefix(Exception.ErrPrefix, action));
@@ -413,28 +402,28 @@ export default class Patch {
    * @param action
    */
   protected processReplace(target: NodeImpl, action: ElementImpl) {
-    if (XML.isAttribute(target)) {
+    if (XmlWrapper.isAttribute(target)) {
       target.value = action.textContent!;
       return;
-    } else if (XML.isText(target)) {
+    } else if (XmlWrapper.isText(target)) {
       target.data = target.nodeValue = action.textContent!;
       return;
-    } else if (XML.isProcessingInstruction(target)) {
-      const child = XML.firstProcessingInstructionChild(action);
+    } else if (XmlWrapper.isProcessingInstruction(target)) {
+      const child = XmlWrapper.firstProcessingInstructionChild(action);
       if (!child) {
         throwException(
           new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
         // return;
       }
-    } else if (XML.isCData(target)) {
-      const child = XML.firstCDataChild(action);
+    } else if (XmlWrapper.isCData(target)) {
+      const child = XmlWrapper.firstCDataChild(action);
       if (!child) {
         throwException(
           new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
         // return;
       }
-    } else if (XML.isComment(target)) {
-      const child = XML.firstCommentChild(action);
+    } else if (XmlWrapper.isComment(target)) {
+      const child = XmlWrapper.firstCommentChild(action);
       if (!child) {
         throwException(
           new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
@@ -445,8 +434,8 @@ export default class Patch {
         // RFC 3, last paragraph
         return;
       }
-      if (XML.childElementCount(action) != 1
-          || XML.firstElementChild(action)!.nodeType != target.nodeType) {
+      if (XmlWrapper.childElementCount(action) != 1
+          || XmlWrapper.firstElementChild(action)!.nodeType != target.nodeType) {
         // Although RFC doesn't explicitly specify the case, I think replacement
         // are allowed only one to one. Reasons:
         // 1. Last paragraph of 4.4, it uses `child`, not `children`;
@@ -507,24 +496,17 @@ export default class Patch {
    */
   protected select(
     expression: string,
-    action: NodeImpl,
+    action: ElementImpl,
   ): [NodeImpl | NodeImpl[] | null, string] {
-    const parts = /^(.+?)(?:\/namespace::(.+))?$/i.exec(expression);
-    if (!parts || parts.length < 2) {
-      throwException(
-        new InvalidAttributeValue(Exception.ErrSelAttribute, action));
-      return [null, ''];
-    }
-    const target = select(parts[1], this.target.doc) as NodeImpl | NodeImpl[];
+    const parts = /^(.+?)(?:\/namespace::(.+))?$/i.exec(expression)!;
+    const target = select(parts[1], this.target.doc) as NodeImpl[];
     // RFC 4.1, first paragraph, last sentence: must match exactly one node.
-    if (Array.isArray(target)) {
-      if (1 == target.length) {
-        return [target[0], parts[2] || ''];
-      } else if (target.length > 1) {
-        throwException(
-          new UnlocatedNode(Exception.ErrMultipleMatches, action));
-        return [target, ''];
-      }
+    if (1 == target.length) {
+      return [target[0], parts[2] || ''];
+    } else if (target.length > 1) {
+      throwException(
+        new UnlocatedNode(Exception.ErrMultipleMatches, action));
+      return [target, ''];
     }
     throwException(new UnlocatedNode(Exception.ErrNoMatch, action));
     return [null, ''];
@@ -556,14 +538,14 @@ export default class Patch {
   protected mangleNS(
     node: NodeImpl | AttrImpl,
     target: NodeImpl,
-    anchor?: NodeImpl,
+    anchor: NodeImpl,
   ): NodeImpl {
     if (node.hasChildNodes()) {
       for (const child of node.childNodes) {
         this.mangleNS(child, target, anchor);
       }
     }
-    if (!XML.isElement(node) && !XML.isAttribute(node)) return node;
+    if (!XmlWrapper.isElement(node) && !XmlWrapper.isAttribute(node)) return node;
     const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
       (<ElementImpl>node).tagName || (<AttrImpl>node).name,
       target,
@@ -574,9 +556,9 @@ export default class Patch {
     } else if (targetNS) {
       this.setPrefix(node, prefix, targetNS);
     }
-    if (XML.isAttribute(node)) return node;
+    if (XmlWrapper.isAttribute(node)) return node;
     if (node.hasAttributes()) {
-      const attrs = XML.allAttributes(node);
+      const attrs = XmlWrapper.allAttributes(node);
       for (const attr of attrs) {
         this.mangleNS(attr, target, anchor);
       }
@@ -591,12 +573,16 @@ export default class Patch {
    * @param prefix
    * @param ns
    */
-  protected setPrefix(node: NodeImpl, prefix: string, ns?: string): void {
+  protected setPrefix(
+    node: ElementImpl | AttrImpl,
+    prefix: string,
+    ns?: string,
+  ): void {
     node.prefix = prefix;
     if (ns) {
       node.namespaceURI = ns;
     }
-    if (XML.isElement(node)) {
+    if (XmlWrapper.isElement(node)) {
       if (prefix) {
         node.nodeName = `${prefix}:${node.localName}`;
         node.tagName = `${prefix}:${node.localName}`;
@@ -604,7 +590,7 @@ export default class Patch {
         node.nodeName = node.localName;
         node.tagName = node.localName;
       }
-    } else if (XML.isAttribute(node)) {
+    } else {
       if (prefix) {
         node.nodeName = `${prefix}:${node.localName}`;
         node.name = `${prefix}:${node.localName}`;
@@ -625,25 +611,23 @@ export default class Patch {
   protected mapNamespace(
     name: string,
     target: NodeImpl,
-    node?: NodeImpl,
+    node: NodeImpl,
     isAttr?: boolean,
   ): string[] {
     const parts = name.split(':');
     if (parts.length < 2) {
       // RFC 4.2.3, last "For example" paragraph, last sentence:
       // unprefixed attributes don't inherit the default namespace declaration
-      if (node && XML.isElement(node) && node.namespaceURI && !isAttr) {
+      if (XmlWrapper.isElement(node) && node.namespaceURI && !isAttr) {
         const prefix = this.target.lookupPrefix(node.namespaceURI, target);
         return ['', name, prefix || '', node.namespaceURI];
       }
       return ['', name, '', ''];
     }
     const [prefix, local] = parts;
-    const uri = node
-      ? this.diff.lookupNamespaceURI(prefix, node)
-      : this.target.lookupNamespaceURI(prefix, target);
+    const uri = this.diff.lookupNamespaceURI(prefix, node)!;
     const targetPrefix = this.target.lookupPrefix(uri);
-    return [prefix, local, targetPrefix || '', uri || ''];
+    return [prefix, local, targetPrefix || '', uri];
   }
 
   /**
@@ -652,7 +636,7 @@ export default class Patch {
    * @param prefix
    */
   protected hasPrefixChildren(anchor: ElementImpl, prefix: string): boolean {
-    let child = XML.firstElementChild(anchor);
+    let child = XmlWrapper.firstElementChild(anchor);
     let found = false;
     while (child && !found) {
       if (prefix == child.prefix) {

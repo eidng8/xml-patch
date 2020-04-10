@@ -5,9 +5,9 @@
  */
 
 import Patch from './patch';
-import XML, {FormatOptions, XMLFileOptions} from './xml';
+import XmlWrapper, {FormatOptions, XMLFileOptions} from './xml-wrapper';
 import Diff from './diff';
 
-export {Diff, Patch, XML, XMLFileOptions, FormatOptions};
+export {Diff, Patch, XmlWrapper, XMLFileOptions, FormatOptions};
 
 export * from './errors';
