@@ -73,15 +73,9 @@ describe('XML Wrapper', () => {
     });
   });
 
-  it('ignores XML warning if requested', async () => {
-    expect.assertions(1);
-    expect(() => new XmlWrapper({warnError: false}).fromString('<a>'))
-      .not.toThrow();
-  });
-
   it('throws XML warning in string', () => {
     expect.assertions(1);
-    const xml = new XmlWrapper({warnError: true});
+    const xml = new XmlWrapper();
     expect(() => xml.fromString('<a>')).toThrow(ExceptionBag);
   });
 

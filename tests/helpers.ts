@@ -57,7 +57,7 @@ export function format(txt: string | NodeImpl | Node) {
   if ('string' != typeof xml) {
     xml = xml.toString();
   }
-  xml = new XmlWrapper({warnError: true})
+  xml = new XmlWrapper()
     .fromString(xml)
     .toString({minify: true, preserveComments: true})
     .trim()

@@ -36,11 +36,6 @@ export interface XMLFileOptions {
   defaultEncoding?: string;
 
   /**
-   * Treats warnings as errors
-   */
-  warnError?: boolean;
-
-  /**
    * The file system mock to be used
    */
   fsMock?: any;
@@ -91,17 +86,7 @@ export default class XmlWrapper {
    */
   protected _encoding!: string;
 
-  /**
-   * List of all XML parse warnings
-   */
-  protected _warnings: string[];
-
   protected _exceptions: ExceptionBag;
-
-  /**
-   * Treats warnings as errors
-   */
-  protected _warnError: boolean;
 
   /**
    * The file system mock to be used
@@ -311,8 +296,7 @@ export default class XmlWrapper {
   }
 
   get hasError(): boolean {
-    return this._exceptions.hasException
-           || (this._warnError && this._warnings.length > 0);
+    return this._exceptions.hasException;
   }
 
   get exception(): ExceptionBag {
@@ -339,10 +323,7 @@ export default class XmlWrapper {
   constructor(options: XMLFileOptions = {}) {
     this._defaultEncoding = options.defaultEncoding || 'utf-8';
     this._fsMock = options.fsMock;
-    this._warnings = [];
     this._exceptions = new ExceptionBag();
-    this._warnError = true;
-    if (undefined !== options.warnError) this._warnError = options.warnError;
   }
 
   // region Public Methods
@@ -566,10 +547,7 @@ export default class XmlWrapper {
   }
 
   protected warning(err: string) {
-    if (this._warnError) {
-      this._exceptions.push(new InvalidDiffFormat(err));
-    }
-    this._warnings.push(err);
+    this._exceptions.push(new InvalidDiffFormat(err));
   }
 
   protected error(err: string) {
