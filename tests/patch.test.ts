@@ -22,19 +22,29 @@ describe('Patch', () => {
   });
 
   it('throws if `sel` matches no target', () => {
-    expect.assertions(1);
-    expect(() => new Patch()
-      .load('<diff><replace sel="b/c"><c>y</c></replace></diff>')
-      .patch('<a>x<b>y<c/></b>z</a>'),
-    ).toThrow(UnlocatedNode);
+    require('../src/translations/zh_chs');
+    expect.assertions(2);
+    try {
+      new Patch()
+        .load('<diff><replace sel="b/c"><c>y</c></replace></diff>')
+        .patch('<a>x<b>y<c/></b>z</a>');
+    } catch (e) {
+      expect(e).toBeInstanceOf(UnlocatedNode);
+      expect(e.message).toBe('无法找到匹配节点。');
+    }
   });
 
   it('throws if matched multiple target', () => {
-    expect.assertions(1);
-    expect(() => new Patch()
-      .load('<diff><add sel="a/b"><c>y</c></add></diff>')
-      .patch('<a>x<b>y</b><b>y</b>z</a>'),
-    ).toThrow(UnlocatedNode);
+    require('../src/translations/zh_cht');
+    expect.assertions(2);
+    try {
+      new Patch()
+        .load('<diff><add sel="a/b"><c>y</c></add></diff>')
+        .patch('<a>x<b>y</b><b>y</b>z</a>');
+    } catch (e) {
+      expect(e).toBeInstanceOf(UnlocatedNode);
+      expect(e.message).toBe('匹配到了多個節點。');
+    }
   });
 
   it('throws if encoding is not same', () => {
