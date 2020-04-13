@@ -115,7 +115,7 @@ export default class Patch {
    * Load diff XML document from the given string.
    * @param diff
    */
-  public load(diff: string): Patch {
+  public load(diff: string | XmlWrapper): Patch {
     this.diff = new Diff(diff);
     return this;
   }
@@ -124,8 +124,12 @@ export default class Patch {
    * Patches the given XML using the loaded diff.
    * @param xml
    */
-  public patch(xml: string): XmlWrapper {
-    this.target = new XmlWrapper().fromString(xml);
+  public patch(xml: string | XmlWrapper): XmlWrapper {
+    if (XmlWrapper.isXML(xml)) {
+      this.target = xml;
+    } else {
+      this.target = new XmlWrapper().fromString(xml);
+    }
     if (this.target.encoding != this.diff.encoding) {
       throwException(new InvalidCharacterSet());
     }

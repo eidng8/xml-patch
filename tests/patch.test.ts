@@ -4,7 +4,13 @@
  * Author: eidng8
  */
 
-import {InvalidAttributeValue, Patch, UnlocatedNode} from '../src';
+import {
+  InvalidAttributeValue,
+  InvalidCharacterSet,
+  Patch,
+  UnlocatedNode,
+} from '../src';
+import XmlWrapper from '../src/xml-wrapper';
 
 describe('Patch', () => {
   it('throws error if `sel` were missing', () => {
@@ -27,7 +33,14 @@ describe('Patch', () => {
     expect.assertions(1);
     expect(() => new Patch()
       .load('<diff><add sel="a/b"><c>y</c></add></diff>')
-      .patch('<a>x<b>y</b><b>y</b>z</a>').toString(),
+      .patch('<a>x<b>y</b><b>y</b>z</a>'),
     ).toThrow(UnlocatedNode);
+  });
+
+  it('throws if encoding is not same', () => {
+    expect.assertions(1);
+    const d = new XmlWrapper({defaultEncoding: 'ascii'}).fromString('<a/>');
+    const x = new XmlWrapper({defaultEncoding: 'utf-8'}).fromString('<a/>');
+    expect(() => new Patch().load(d).patch(x)).toThrow(InvalidCharacterSet);
   });
 });
