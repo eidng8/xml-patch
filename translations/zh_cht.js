@@ -3,7 +3,7 @@
  *
  * Author: eidng8
  */
-import Exception from '../errors/Exception';
+const Exception = require('../lib/index').Exception;
 
 Exception.ErrDirective = '無法完成指定的修改操作。';
 
