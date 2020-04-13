@@ -346,8 +346,8 @@ export default class XmlWrapper {
    * @param xml
    * @param encoding
    */
-  fromString(xml: string, encoding = 'utf-8'): XmlWrapper {
-    this._encoding = encoding;
+  fromString(xml: string, encoding?: string): XmlWrapper {
+    this._encoding = encoding || this._defaultEncoding;
     this._doc = this.parser.parseFromString(xml) as DocumentImpl;
     if (this.hasError) {
       throwException(this.exception);
