@@ -5,7 +5,6 @@
  */
 
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
 
 /**
  * The namespace URI for the given prefix could not be located or resolved,
@@ -14,8 +13,4 @@ import {NodeImpl} from 'xmldom-ts';
  */
 export default class InvalidNamespacePrefix extends Exception {
   protected tag: string = 'invalid-namespace-prefix';
-
-  constructor(action?: NodeImpl) {
-    super(Exception.ErrPrefix, action);
-  }
 }
