@@ -23,43 +23,10 @@ import {
   InvalidEntityDeclaration,
   throwException,
 } from './errors';
+import XMLFileOptions from './file-options';
+import FormatOptions from './format-options';
 
 const pd = require('pretty-data').pd;
-
-/**
- * Options to reading XML file
- */
-export interface XMLFileOptions {
-  /**
-   * Default encoding to use while reading file
-   */
-  defaultEncoding?: string;
-
-  /**
-   * The file system mock to be used
-   */
-  fsMock?: any;
-}
-
-/**
- * Options to format the XML document to string
- */
-export interface FormatOptions {
-  /**
-   * Pretty print the XML
-   */
-  pretty?: boolean,
-
-  /**
-   * Minify the XML
-   */
-  minify?: boolean,
-
-  /**
-   * Preserve comments in XML
-   */
-  preserveComments?: boolean
-}
 
 /**
  * A wrapper over {@link https://www.npmjs.com/package/xmldom-ts|xmldom-ts}.

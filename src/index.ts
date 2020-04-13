@@ -4,9 +4,11 @@
  * Author: eidng8
  */
 
-import Patch from './patch';
-import XmlWrapper, {FormatOptions, XMLFileOptions} from './xml-wrapper';
 import Diff from './diff';
+import Patch from './patch';
+import XmlWrapper from './xml-wrapper';
+import FormatOptions from './format-options';
+import XMLFileOptions from './file-options';
 
 export {Diff, Patch, XmlWrapper, XMLFileOptions, FormatOptions};
 

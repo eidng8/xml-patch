@@ -278,7 +278,7 @@ StyleCopReport.xml
 *.tmp
 *.tmp_proj
 *_wpftmp.csproj
-*.log
+#*.log
 *.vspscc
 *.vssscc
 .builds
@@ -466,7 +466,7 @@ FakesAssemblies/
 
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
-node_modules/
+#node_modules/
 
 # Visual Studio 6 build log
 *.plg
