@@ -563,6 +563,8 @@ export default class Patch {
     }
     if (!XmlWrapper.isElement(node)
         && !XmlWrapper.isAttribute(node)) {
+      // we are in the middle of importing nodes that can be all kinds of nodes,
+      // don't throw exception here.
       return node;
     }
     const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
@@ -633,6 +635,9 @@ export default class Patch {
     node: NodeImpl,
     isAttr?: boolean,
   ): string[] {
+    // we may in the middle of add or replacing nodes, which may involve adding
+    // new namespaces to target.
+    // dont throw any exception here.
     const parts = name.split(':');
     if (parts.length < 2) {
       // RFC 4.2.3, last "For example" paragraph, last sentence:

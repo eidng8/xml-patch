@@ -5,6 +5,7 @@
  */
 
 import Exception from './Exception';
+import {NodeImpl} from 'xmldom-ts';
 
 /**
  * The nodeset function id() is not supported, and thus attributes with the ID
@@ -12,4 +13,8 @@ import Exception from './Exception';
  */
 export default class UnsupportedIdFunction extends Exception {
   protected tag: string = 'unsupported-id-function';
+
+  constructor(action?: NodeImpl) {
+    super(Exception.ErrFunction, action);
+  }
 }

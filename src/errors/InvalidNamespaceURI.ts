@@ -5,6 +5,7 @@
  */
 
 import Exception from './Exception';
+import {NodeImpl} from 'xmldom-ts';
 
 /**
  * The namespace URI value is not valid or the target document did not have this
@@ -12,4 +13,8 @@ import Exception from './Exception';
  */
 export default class InvalidNamespaceURI extends Exception {
   protected tag: string = 'invalid-namespace-uri';
+
+  constructor(action?: NodeImpl) {
+    super(Exception.ErrNamespaceURI, action);
+  }
 }

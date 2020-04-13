@@ -423,11 +423,12 @@ export default class XmlWrapper {
       return node ? node.lookupNamespaceURI('')
         : this.root!.lookupNamespaceURI('');
     }
-    let anchor = node || this.root!;
-    do {
+    let anchor = node || this.root;
+    while (anchor) {
       const uri = anchor.lookupNamespaceURI(prefix);
       if (uri) return uri;
-    } while ((anchor = anchor.parentNode));
+      anchor = anchor.parentNode;
+    }
     return null;
   }
 
@@ -439,11 +440,12 @@ export default class XmlWrapper {
    */
   lookupPrefix(uri: string | null, node?: NodeImpl): string | null {
     if (!uri) return null;
-    let anchor = node || this.root!;
-    do {
+    let anchor = node || this.root;
+    while (anchor) {
       const prefix = anchor.lookupPrefix(uri);
       if (prefix) return prefix;
-    } while ((anchor = anchor.parentNode));
+      anchor = anchor.parentNode;
+    }
     return null;
   }
 

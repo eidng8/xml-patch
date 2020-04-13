@@ -5,10 +5,14 @@
  */
 
 import {
-  dontIgnoreExceptions, Exception,
+  dontIgnoreExceptions,
+  Exception,
   ignoreExceptions,
-  InvalidAttributeValue, InvalidDiffFormat,
-  throwException,
+  InvalidAttributeValue,
+  InvalidDiffFormat,
+  InvalidNamespacePrefix,
+  InvalidNamespaceURI, InvalidPrologOperation,
+  throwException, UnsupportedIdFunction, UnsupportedXmlId,
 } from '../src';
 
 describe('Exception', () => {
@@ -28,8 +32,18 @@ describe('Exception', () => {
   });
 
   it('has default message', () => {
-    expect.assertions(1);
-    const ex = new InvalidDiffFormat();
+    expect.assertions(6);
+    let ex: Exception = new InvalidDiffFormat();
     expect(ex.message).toEqual(Exception.ErrXML);
+    ex = new InvalidNamespacePrefix();
+    expect(ex.message).toEqual(Exception.ErrPrefix);
+    ex = new InvalidNamespaceURI();
+    expect(ex.message).toEqual(Exception.ErrNamespaceURI);
+    ex = new InvalidPrologOperation();
+    expect(ex.message).toEqual(Exception.ErrProlog);
+    ex = new UnsupportedIdFunction();
+    expect(ex.message).toEqual(Exception.ErrFunction);
+    ex = new UnsupportedXmlId();
+    expect(ex.message).toEqual(Exception.ErrID);
   });
 });

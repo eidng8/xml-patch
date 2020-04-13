@@ -22,7 +22,16 @@ export default abstract class Exception extends Error {
 
   static ErrEncoding = 'Encodings of the two documents do not match.';
 
+  static ErrFunction = 'The nodeset function id() is not supported, and thus'
+                       + ' attributes with the ID type are not known.';
+
+  static ErrID = 'The attribute xml:id as an ID attribute in XML documents is'
+                 + ' not supported.';
+
   static ErrMultipleMatches = 'Multiple matches found.';
+
+  static ErrNamespaceURI = 'The namespace URI value is not valid or the'
+                           + ' target document did not have this declaration.';
 
   static ErrNodeTypeText = 'This is expected to be a text node';
 
@@ -34,6 +43,8 @@ export default abstract class Exception extends Error {
                      + ' located or resolved.';
 
   static ErrPrefixUsed = 'The given prefix is being used.';
+
+  static ErrProlog = 'Patch failure related to XML prolog nodes.';
 
   static ErrRoot = 'The root element of the document cannot be removed or'
                    + ' another sibling element for the document root'
