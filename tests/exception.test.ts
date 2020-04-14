@@ -9,6 +9,7 @@ import {
   Exception,
   ignoreExceptions,
   InvalidAttributeValue,
+  InvalidDiffFormat,
   InvalidNamespaceURI,
   InvalidPrologOperation,
   throwException,
@@ -24,6 +25,11 @@ describe('Exception', () => {
     expect(ex).toContain('<err:invalid-attribute-value/>');
   });
 
+  it('has default message', () => {
+    expect.assertions(1);
+    expect(new InvalidDiffFormat().message).toEqual(Exception.ErrXML);
+  });
+
   it('does nothing if no error handler', () => {
     expect.assertions(1);
     ignoreExceptions(InvalidAttributeValue);
@@ -32,7 +38,7 @@ describe('Exception', () => {
     dontIgnoreExceptions();
   });
 
-  it('has default message', () => {
+  it('does not throw these errors', () => {
     expect.assertions(4);
     let ex: Exception = new InvalidNamespaceURI();
     expect(ex.message).toEqual(Exception.ErrNamespaceURI);
