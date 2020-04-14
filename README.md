@@ -1,5 +1,8 @@
 # XML Patch
 
+[![Build Status](https://travis-ci.com/eidng8/xml-patch.svg?branch=master)](https://travis-ci.com/eidng8/xml-patch)
+[![Coverage Status](https://coveralls.io/repos/github/eidng8/xml-patch/badge.svg?branch=master)](https://coveralls.io/github/eidng8/xml-patch?branch=master)
+
 This library provides functionalities to apply XML patch.
 It is supposed to be [RFC 5261](https://tools.ietf.org/html/rfc5261) compliant.
 
