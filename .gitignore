@@ -1,7 +1,7 @@
 lib/
 *.bak
 *.tgz
-tests/data/*.js-patched.xml
+tests/data/*.*patched.xml
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Node template

@@ -37,11 +37,14 @@ function dontIgnoreExceptions(): void {
 }
 
 /**
- * Turns off the given exceptions. Once turned off, the specified exception will
+ * Turns off the given exceptions. Once turned off, the specified exception
+ * will
  * not be thrown. When such error occurred, if a global error handler is
  * previously set with {@link setExceptionHandler}, the error handler will be
  * invoked with the actual exception.
- * @param exceptions
+ * @param exceptions everything passed to this parameter, albeit arrays, rest
+ *   arguments, or combination of both, will be flattened to a one-dimension
+ *   array.
  */
 function ignoreExceptions(
   ...exceptions: { new(): Exception }[] | { new(): Exception }[][]

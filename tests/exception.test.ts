@@ -9,7 +9,6 @@ import {
   Exception,
   ignoreExceptions,
   InvalidAttributeValue,
-  InvalidDiffFormat,
   InvalidNamespaceURI,
   InvalidPrologOperation,
   throwException,
@@ -34,10 +33,8 @@ describe('Exception', () => {
   });
 
   it('has default message', () => {
-    expect.assertions(5);
-    let ex: Exception = new InvalidDiffFormat();
-    expect(ex.message).toEqual(Exception.ErrXML);
-    ex = new InvalidNamespaceURI();
+    expect.assertions(4);
+    let ex: Exception = new InvalidNamespaceURI();
     expect(ex.message).toEqual(Exception.ErrNamespaceURI);
     ex = new InvalidPrologOperation();
     expect(ex.message).toEqual(Exception.ErrProlog);
