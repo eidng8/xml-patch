@@ -5,8 +5,6 @@
  */
 
 const path = require('path');
-// const Uglify = require('uglifyjs-webpack-plugin');
-const Clean = require('clean-webpack-plugin').CleanWebpackPlugin;
 
 module.exports = {
   mode: 'production',
@@ -35,8 +33,4 @@ module.exports = {
       },
     ],
   },
-  // optimization: {
-  //   minimizer: [new Uglify()],
-  // },
-  plugins: [new Clean()],
 };

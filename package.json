@@ -4,9 +4,9 @@
   "description": "XML Patch conforming to RFC 5261.",
   "main": "lib/index.js",
   "scripts": {
-    "build": "webpack",
+    "build": "webpack && tsc",
     "test": "jest",
-    "test-cover": "npm test -- --coverage"
+    "test:cover": "npm test -- --coverage"
   },
   "keywords": [
     "typescript",
@@ -19,7 +19,8 @@
   "bugs": "git@github.com:eidng8/xml-patch/issues",
   "files": [
     "src",
-    "lib"
+    "lib",
+    "typings"
   ],
   "devDependencies": {
     "@babel/core": "^7.9.0",
