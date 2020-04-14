@@ -15,10 +15,6 @@ module.exports = {
     path: path.resolve(__dirname, 'lib'),
     filename: '[name].js',
     libraryTarget: 'commonjs',
-    // libraryTarget: 'umd',
-    // library: 'G8XmlPatch',
-    // umdNamedDefine: true,
-    // globalObject: 'this',
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
