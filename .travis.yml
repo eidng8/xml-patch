@@ -1,0 +1,47 @@
+branches:
+  only:
+    - master
+    - dev
+os:
+  - linux
+language: node_js
+node_js:
+  - 12
+addons:
+  chrome: stable
+cache:
+  directories:
+    - node_modules
+install:
+  - npm install
+script:
+  - npm run test:cover
+  - npm install coveralls
+  - cat ./coverage/lcov.info | coveralls
+
+before_deploy:
+  - export TRAVIS_TAG=${TRAVIS_TAG:-$(node -p "require('./package.json').version")-$(date +'%Y.%m.%d')-$(git log --format=%h -1)}
+  - echo ${TRAVIS_TAG}
+  - "if [[ ${TAGGED} != 1 ]]; then git tag ${TRAVIS_TAG} && export TAGGED=1; fi"
+  - "if [[ ! -e lib ]]; then npm run build && export PACKAGE=$(npm pack --silent); fi"
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    file: $PACKAGE
+    api_key:
+      secure: Z4+zHdz07/2oO6QPIeSk/ZaS8+QwldjYPc0iRPIF/6N0Cww35EIMvtEm/tLMyZcw8kYJHAdh9v7q/bNrBwCdhmZ7/8d4qk8cFfqhxjWfA/8EnA8Juo+5+3gkUpYPukcNtDlaei3l++96k3sQ4FyYxuEpY3lWGzFwJggWA+LQGVebGKDreFnVytEr8DeXnOUhCamN39uv8xqrbJufvp+3vWNXu4PwRd5R7N+HqoZGPIQMa8rJwbPhW2cJF4bQoy7ZNzhh6/C0UbhEG9ykBWy/9VXIjxq46RJcWXVSq0dUEhhGWn34F5OZqDxOElPDzntXpunbNb1HnDFCw/hWy4BhDTlNI7DLhFc1R4+PRfd0c0lY1flHt/Xza5O4kV7P24bhZHuf8qVQyWjBg6mf+AOON88k7ewPyqKbkYphoeGdG0AktMcJ3CMbsKvgYtp/+K0mVtPsrgrFkJrXK9vgUazhBlkeq8PRxOrkTP9XeazZR6WzE7tJAmd612Q8Ij7zC1KNyXD1OCoFUs5KkjVD0vx7dM5jafWjhd3GWTegGJgQ/OOecXbfsigvwbSeaMN9Mh9RP8XrKXV8ajj7QeqhHOCzBtt4OukhjXXoU24BK3/Lak/WznKbrnVdtEORlU0jPcnXJvKrMrsRjeHQOeqZOTs4Mgt2GXcKGnzvTbsZVyceMZI=
+    on:
+      repo: eidng8/vue-tree
+      branch: master
+      #tags: true
+      condition: ${TRAVIS_EVENT_TYPE} == push
+  - provider: npm
+    skip_cleanup: true
+    email: cheung.jackey@gmail.com
+    api_key:
+      secure: 2mIMc5dD88yzeeAhV1D8uTFJIJhYKgTMPH36K3HbLvMHUtSYRQBOob9H075iEsQ3Ta1Liuk27T93Q0atVsybUj1ufWo0Hzal0iYd4s1aj08hTsiIahD0EPf+dmSRaUELXqjFofXgboRugpxDeyTvOjCTjKT+eF3c1c+X7AFiPMmVzLJmx3eFRb8y3F9yUJ5nVz8NyvjJzv6Me6sf59O8a04awqL9okaSmJcdj79/7lkUzWAQ00LNKHXU+eP5C65VMciqu02PCRIk+C2nNOfw7IH5cRW3ZPzngPu6HAPgeUP0CloRU8yM8qU1LF9A/1IE09fRvctZnOCR2zt3EigmrmWVPPqiYBy2G95NQCJfGlAfynWVl+r/aMHmtABb818OBUyOXBxhEISrW9jJVm3z1N4gqYr+/Yfc62jkCGwUQHhDBOgOuNQv+G/8dN/FzRqRbCm/rXLcP4HaRfFu+CDkf+MFKu5jF5R7QFydRG3XVCOv73mpt/AFewJUJs7+IY/jPQ7J4JMeVhDYo3l31iC1mPE4+ylk9skq6Ss5v17N7/uahE8odV9tUyx0vDUTXfzjtIp6EH+y59HFNHn6dO2wAnQyozGvcDiQazt8jgcEcEAsRiVjrfVYO+UxBLTV2keXkvE4rzdAJZXJZblwRuyC5yFmBlUNGY38bpVBZZYTB+g=
+    on:
+      repo: eidng8/vue-tree
+      branch: master
+      condition: ${TRAVIS_EVENT_TYPE} == push
+      #tags: true
