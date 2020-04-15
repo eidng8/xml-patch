@@ -9,9 +9,6 @@ import { select } from 'xpath-ts';
 import XmlWrapper from './xml/xml-wrapper';
 import Diff from './diff';
 import {
-  assertNotRoot,
-  assertNoWsAttr,
-  assertTextChild,
   InvalidAttributeValue,
   InvalidCharacterSet,
   InvalidNamespacePrefix,
@@ -29,15 +26,22 @@ import {
   firstCommentChild,
   firstElementChild,
   firstProcessingInstructionChild,
+  isEmptyText,
+} from './utils/helpers';
+import {
   isAttribute,
   isCData,
   isComment,
   isElement,
-  isEmptyText,
   isProcessingInstruction,
   isText,
   isXmlWrapper,
-} from './helpers';
+} from './utils/type-guards';
+import {
+  assertNotRoot,
+  assertNoWsAttr,
+  assertTextChild,
+} from './utils/asserts';
 
 /**
  * Patches XML according to

@@ -13,7 +13,8 @@ import {
 } from '../errors';
 import XmlOptions from './xml-options';
 import FormatOptions from './format-options';
-import { isElement, isText, lookupAncestor } from '../helpers';
+import { lookupAncestor } from '../utils/helpers';
+import { isElement, isText } from '../utils/type-guards';
 
 const pd = require('pretty-data').pd;
 

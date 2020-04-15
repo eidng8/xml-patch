@@ -14,7 +14,8 @@ import {
   throwException,
 } from './errors';
 import Patch from './patch';
-import { firstElementChild, isXmlWrapper, nextElementSibling } from './helpers';
+import { firstElementChild, nextElementSibling } from './utils/helpers';
+import { isXmlWrapper } from './utils/type-guards';
 
 /**
  * Parse the given XML patch document, according to
