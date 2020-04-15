@@ -16,6 +16,13 @@ import {
   TextImpl,
 } from 'xmldom-ts';
 
+export type NodeMatcher = (
+  node: NodeImpl,
+  ...args: any[]
+) => any | null | undefined;
+
+export type NodeIterator = (node: NodeImpl) => NodeImpl | null;
+
 /**
  * XmlWrapper Type guard
  * @param subject
@@ -187,7 +194,7 @@ export function nextElementSibling(node: NodeImpl): ElementImpl | null {
  */
 export function lookupAncestor(
   node: NodeImpl,
-  match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
+  match: NodeMatcher,
   ...args: any[]
 ): any | null {
   return lookupThrough(node, match, n => n.parentNode, ...args);
@@ -206,7 +213,7 @@ export function lookupAncestor(
  */
 export function lookupSibling(
   node: NodeImpl,
-  match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
+  match: NodeMatcher,
   ...args: any[]
 ): any | null {
   return lookupThrough(node, match, n => n.nextSibling, ...args);
@@ -228,8 +235,8 @@ export function lookupSibling(
  */
 export function lookupThrough(
   node: NodeImpl | null,
-  match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
-  next: (node: NodeImpl) => NodeImpl | null,
+  match: NodeMatcher,
+  next: NodeIterator,
   ...args: any[]
 ): any | null {
   let anchor = node;
