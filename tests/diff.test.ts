@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import {Diff, InvalidAttributeValue, XmlWrapper} from '../src';
+import { Diff, InvalidAttributeValue, XmlWrapper } from '../src';
 import './helpers';
 
 describe('Diff', () => {
@@ -16,22 +16,23 @@ describe('Diff', () => {
     } catch (ex) {
       expect(ex).toBeInstanceOf(InvalidAttributeValue);
       expect(ex.toLocaleString()).toEqualXml(
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        + '<err:patch-ops-error \n'
-        + '  xmlns:err="urn:ietf:params:xml:ns:patch-ops-error" \n'
-        + '  xmlns="urn:ietf:params:xml:ns:pidf-diff">\n'
-        + '  <err:invalid-attribute-value phrase="Missing `sel` attribute.">\n'
-        + '    <add/>\n'
-        + '  </err:invalid-attribute-value>\n'
-        + '</err:patch-ops-error>',
+        '<?xml version="1.0" encoding="utf-8"?>\n' +
+          '<err:patch-ops-error \n' +
+          '  xmlns:err="urn:ietf:params:xml:ns:patch-ops-error" \n' +
+          '  xmlns="urn:ietf:params:xml:ns:pidf-diff">\n' +
+          '  <err:invalid-attribute-value phrase="Missing `sel` attribute.">\n' +
+          '    <add/>\n' +
+          '  </err:invalid-attribute-value>\n' +
+          '</err:patch-ops-error>',
       );
     }
   });
 
   it('throws if `sel` attribute is empty', () => {
     expect.assertions(1);
-    expect(() => new Diff('<diff><add sel=" "/></diff>'))
-      .toThrow(InvalidAttributeValue);
+    expect(() => new Diff('<diff><add sel=" "/></diff>')).toThrow(
+      InvalidAttributeValue,
+    );
   });
 
   it('will not change expression without namespace', async () => {
@@ -39,10 +40,10 @@ describe('Diff', () => {
     const xml = new XmlWrapper();
     await xml.fromFile('tests/data/1A.diff.xml');
     const diff = new Diff(xml);
-    expect(diff.actions[0].getAttribute('sel'))
-      .toBe('/a/b');
-    expect(diff.actions[0].getAttribute('p-sel'))
-      .toBe('/*[local-name()=\'a\']/*[local-name()=\'b\']');
+    expect(diff.actions[0].getAttribute('sel')).toBe('/a/b');
+    expect(diff.actions[0].getAttribute('p-sel')).toBe(
+      "/*[local-name()='a']/*[local-name()='b']",
+    );
   });
 
   it('mangles diff namespace', async () => {
@@ -94,8 +95,9 @@ describe('Diff', () => {
 
   it('will not touch predicates', () => {
     expect.assertions(2);
-    const action = new Diff('<diff><add sel="//[id()=\'abc\']"/></diff>').actions[0];
-    expect(action.getAttribute('sel')).toEqual('//[id()=\'abc\']');
+    const action = new Diff('<diff><add sel="//[id()=\'abc\']"/></diff>')
+      .actions[0];
+    expect(action.getAttribute('sel')).toEqual("//[id()='abc']");
     expect(action.getAttribute('p-sel')).toBeNull();
   });
 
@@ -109,7 +111,6 @@ describe('Diff', () => {
   it('looks up prefix', () => {
     expect.assertions(1);
     const diff = new Diff('<diff xmlns:p="urn:xxx"><p:add sel="a"/></diff>');
-    expect(diff.lookupPrefix('urn:xxx', diff.actions[0]))
-      .toEqual('p');
+    expect(diff.lookupPrefix('urn:xxx', diff.actions[0])).toEqual('p');
   });
 });

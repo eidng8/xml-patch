@@ -6,8 +6,8 @@
  * Author: eidng8
  */
 
-import {NodeImpl} from 'xmldom-ts';
-import {XmlWrapper} from '../src';
+import { NodeImpl } from 'xmldom-ts';
+import { XmlWrapper } from '../src';
 
 const pd = require('pretty-data').pd;
 
@@ -29,17 +29,12 @@ expect.extend({
       expected: fmtExpected,
       pass: fmtReceived == fmtExpected,
       message: () => {
-        const strDiff = this.utils.diff(
-          fmtExpected,
-          fmtReceived,
-          {expand: this.expand},
-        );
-        let msg = this.utils.matcherHint(
-          'toEqualXml',
-          'received',
-          'expected',
-          {promise: this.promise},
-        );
+        const strDiff = this.utils.diff(fmtExpected, fmtReceived, {
+          expand: this.expand,
+        });
+        let msg = this.utils.matcherHint('toEqualXml', 'received', 'expected', {
+          promise: this.promise,
+        });
         if (strDiff && strDiff.includes('- Expect')) {
           msg += `\n\n${strDiff}`;
         } else {
@@ -59,7 +54,7 @@ export function format(txt: string | NodeImpl | Node) {
   }
   xml = new XmlWrapper()
     .fromString(xml)
-    .toString({minify: true, preserveComments: true})
+    .toString({ minify: true, preserveComments: true })
     .trim()
     .replace(/(?:(>)\s+|\s+(<))/g, '$1$2')
     .replace(/\r/g, '');

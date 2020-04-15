@@ -4,8 +4,8 @@
  * Author: eidng8
  */
 
-import {AttrImpl, ElementImpl, NodeImpl} from 'xmldom-ts';
-import {select} from 'xpath-ts';
+import { AttrImpl, ElementImpl, NodeImpl } from 'xmldom-ts';
+import { select } from 'xpath-ts';
 import XmlWrapper from './xml-wrapper';
 import Diff from './diff';
 import {
@@ -146,8 +146,8 @@ export default class Patch {
   protected processAction(elem: ElementImpl) {
     // Caution: `tagName` also includes prefix, don't use it.
     const action = elem.localName;
-    const query = elem.getAttribute(Patch.Predicated)
-                  || elem.getAttribute(Patch.Selector)!;
+    const query =
+      elem.getAttribute(Patch.Predicated) || elem.getAttribute(Patch.Selector)!;
     const [target, prefix] = this.select(query, elem);
     // this is the only place to use this function
     // I don't like making it a member method.
@@ -250,8 +250,12 @@ export default class Patch {
     name: string,
     value: string,
   ): void {
-    const [prefix, localName, targetPrefix, targetNS]
-      = this.mapNamespace(name, target, action, true);
+    const [prefix, localName, targetPrefix, targetNS] = this.mapNamespace(
+      name,
+      target,
+      action,
+      true,
+    );
     if (targetNS) {
       const p = `${targetPrefix || prefix}:${localName}`;
       target.setAttributeNS(targetNS, p, value);
@@ -270,10 +274,10 @@ export default class Patch {
     let anchor = target;
     switch (action.getAttribute(Patch.Pos)) {
       case Patch.After:
-        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(
-          target,
-          action,
-        )) {
+        if (
+          XmlWrapper.firstElementChild(action) &&
+          !assertNotRoot(target, action)
+        ) {
           return;
         }
         for (const child of imported) {
@@ -282,10 +286,10 @@ export default class Patch {
         break;
 
       case Patch.Before:
-        if (XmlWrapper.firstElementChild(action) && !assertNotRoot(
-          target,
-          action,
-        )) {
+        if (
+          XmlWrapper.firstElementChild(action) &&
+          !assertNotRoot(target, action)
+        ) {
           return;
         }
         for (const child of imported) {
@@ -356,7 +360,8 @@ export default class Patch {
         parent.removeChild(sibling);
       } else {
         throwException(
-          new InvalidWhitespaceDirective(Exception.ErrWsAfter, action));
+          new InvalidWhitespaceDirective(Exception.ErrWsAfter, action),
+        );
         // return;
       }
     }
@@ -366,7 +371,8 @@ export default class Patch {
         parent.removeChild(target.previousSibling);
       } else {
         throwException(
-          new InvalidWhitespaceDirective(Exception.ErrWsBefore, action));
+          new InvalidWhitespaceDirective(Exception.ErrWsBefore, action),
+        );
         // return;
       }
     }
@@ -393,13 +399,14 @@ export default class Patch {
     }
     if (this.hasPrefixChildren(target, prefix)) {
       throwException(
-        new InvalidNamespacePrefix(Exception.ErrPrefixUsed, action));
+        new InvalidNamespacePrefix(Exception.ErrPrefixUsed, action),
+      );
       return;
     }
     target.nodeName = target.localName;
     target.tagName = target.localName;
     target.prefix = null;
-    delete (target._nsMap[prefix]);
+    delete target._nsMap[prefix];
     target.removeAttributeNode(target.getAttributeNode(`xmlns:${prefix}`));
     if (target.namespaceURI == uri) {
       target.namespaceURI = null;
@@ -426,21 +433,24 @@ export default class Patch {
       const child = XmlWrapper.firstProcessingInstructionChild(action);
       if (!child) {
         throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
+          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
+        );
         // return;
       }
     } else if (XmlWrapper.isCData(target)) {
       const child = XmlWrapper.firstCDataChild(action);
       if (!child) {
         throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
+          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
+        );
         // return;
       }
     } else if (XmlWrapper.isComment(target)) {
       const child = XmlWrapper.firstCommentChild(action);
       if (!child) {
         throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
+          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
+        );
         // return;
       }
     } else {
@@ -448,10 +458,10 @@ export default class Patch {
         // RFC 3, last paragraph
         return;
       }
-      if (XmlWrapper.childElementCount(action)
-          != 1
-          || XmlWrapper.firstElementChild(action)!.nodeType
-          != target.nodeType) {
+      if (
+        XmlWrapper.childElementCount(action) != 1 ||
+        XmlWrapper.firstElementChild(action)!.nodeType != target.nodeType
+      ) {
         // Although RFC doesn't explicitly specify the case, I think replacement
         // are allowed only one to one. Reasons:
         // 1. Last paragraph of 4.4, it uses `child`, not `children`;
@@ -463,15 +473,17 @@ export default class Patch {
         // 4. Lastly, in the last sentence of `<invalid-node-types>`, it states
         //    somewhat explicitly.
         throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action));
+          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
+        );
         // return;
       }
     }
     const anchor = target.nextSibling;
     const parent = target.parentNode!;
     parent.removeChild(target);
-    this.importNodes(action.childNodes, target)
-      .forEach(node => parent.insertBefore(node, anchor));
+    this.importNodes(action.childNodes, target).forEach(node =>
+      parent.insertBefore(node, anchor),
+    );
   }
 
   /**
@@ -520,8 +532,7 @@ export default class Patch {
     if (1 == target.length) {
       return [target[0], parts[2] || ''];
     } else if (target.length > 1) {
-      throwException(
-        new UnlocatedNode(Exception.ErrMultipleMatches, action));
+      throwException(new UnlocatedNode(Exception.ErrMultipleMatches, action));
       return [target, ''];
     }
     throwException(new UnlocatedNode(Exception.ErrNoMatch, action));
@@ -561,8 +572,7 @@ export default class Patch {
         this.mangleNS(child, target, anchor);
       }
     }
-    if (!XmlWrapper.isElement(node)
-        && !XmlWrapper.isAttribute(node)) {
+    if (!XmlWrapper.isElement(node) && !XmlWrapper.isAttribute(node)) {
       // we are in the middle of importing nodes that can be all kinds of nodes,
       // don't throw exception here.
       return node;

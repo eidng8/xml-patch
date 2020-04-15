@@ -14,124 +14,137 @@ import './helpers';
 describe('Patch <remove>', () => {
   it('removes target element', () => {
     expect.assertions(1);
-    expect(new Patch()
-      .load('<diff><remove sel="/a/b"/></diff>')
-      .patch('<a>x<b>y</b>z</a>'))
-      .toEqualXml('<a>xz</a>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="/a/b"/></diff>')
+        .patch('<a>x<b>y</b>z</a>'),
+    ).toEqualXml('<a>xz</a>');
   });
 
   it('removes comment', () => {
     expect.assertions(1);
-    expect(new Patch()
-      .load('<diff><remove sel="a/comment()[1]"/></diff>')
-      .patch('<a><!--d/--><b>y</b></a>'))
-      .toEqualXml('<a><b>y</b></a>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="a/comment()[1]"/></diff>')
+        .patch('<a><!--d/--><b>y</b></a>'),
+    ).toEqualXml('<a><b>y</b></a>');
   });
 
   it('removes processing instruction', () => {
     expect.assertions(1);
-    expect(new Patch()
-      .load(
-        '<diff><remove sel="a/processing-instruction(\'xml-stylesheet\')"/></diff>')
-      .patch('<a><?xml-stylesheet href="a"?><b>y</b></a>'))
-      .toEqualXml('<a><b>y</b></a>');
+    expect(
+      new Patch()
+        .load(
+          '<diff><remove sel="a/processing-instruction(\'xml-stylesheet\')"/></diff>',
+        )
+        .patch('<a><?xml-stylesheet href="a"?><b>y</b></a>'),
+    ).toEqualXml('<a><b>y</b></a>');
   });
 
   it('removes prefix declaration', () => {
     expect.assertions(2);
-    expect(new Patch()
-      .load(
-        '<diff><remove sel="a/b/namespace::pf"/></diff>')
-      .patch('<a><b xmlns:pf="urn:xxx">y</b></a>'))
-      .toEqualXml('<a><b>y</b></a>');
-    expect(new Patch()
-      .load(
-        '<diff><remove sel="a/pf:b/namespace::pf"/></diff>')
-      .patch('<a><pf:b xmlns:pf="urn:xxx">y</pf:b></a>'))
-      .toEqualXml('<a><b>y</b></a>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="a/b/namespace::pf"/></diff>')
+        .patch('<a><b xmlns:pf="urn:xxx">y</b></a>'),
+    ).toEqualXml('<a><b>y</b></a>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="a/pf:b/namespace::pf"/></diff>')
+        .patch('<a><pf:b xmlns:pf="urn:xxx">y</pf:b></a>'),
+    ).toEqualXml('<a><b>y</b></a>');
   });
 
   it('removes root level non-element node', () => {
     expect.assertions(2);
-    expect(new Patch()
-      .load('<diff><remove sel="comment()[1]"/></diff>')
-      .patch('<!--ccc--><a/>')
-      .toString({minify: true, preserveComments: true}),
+    expect(
+      new Patch()
+        .load('<diff><remove sel="comment()[1]"/></diff>')
+        .patch('<!--ccc--><a/>')
+        .toString({ minify: true, preserveComments: true }),
     ).toEqual('<a/>');
-    expect(new Patch()
-      .load('<diff><remove sel="processing-instruction(\'xml\')"/></diff>')
-      .patch('<?xml version="1.0"?><a/>'))
-      .toEqualXml('<a/>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="processing-instruction(\'xml\')"/></diff>')
+        .patch('<?xml version="1.0"?><a/>'),
+    ).toEqualXml('<a/>');
   });
 
   it('removes white space text node before target', () => {
     expect.assertions(1);
-    expect(new Patch()
-      .load('<diff><remove sel="/a/b" ws="before"/></diff>')
-      .patch('<a>\n   \n<b>y</b>\nz</a>'))
-      .toEqualXml('<a>\nz</a>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="/a/b" ws="before"/></diff>')
+        .patch('<a>\n   \n<b>y</b>\nz</a>'),
+    ).toEqualXml('<a>\nz</a>');
   });
 
   it('removes white space text node after target', () => {
     expect.assertions(1);
-    expect(new Patch()
-      .load('<diff><remove sel="/a/b" ws="after"/></diff>')
-      .patch('<a>x\n<b>y</b>\n   \n</a>'))
-      .toEqualXml('<a>x\n</a>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="/a/b" ws="after"/></diff>')
+        .patch('<a>x\n<b>y</b>\n   \n</a>'),
+    ).toEqualXml('<a>x\n</a>');
   });
 
   it('removes white space text node around target', () => {
     expect.assertions(1);
-    expect(new Patch()
-      .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a>\n   \n<b>y</b>\n   \n</a>'))
-      .toEqualXml('<a/>');
+    expect(
+      new Patch()
+        .load('<diff><remove sel="/a/b" ws="both"/></diff>')
+        .patch('<a>\n   \n<b>y</b>\n   \n</a>'),
+    ).toEqualXml('<a/>');
   });
 
   it('throws exception if no white space text node', () => {
     expect.assertions(3);
-    expect(() => new Patch()
-      .load('<diff><remove sel="/a/b" ws="before"/></diff>')
-      .patch('<a>\nx\n<b>y</b>\nz\n</a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="/a/b" ws="before"/></diff>')
+        .patch('<a>\nx\n<b>y</b>\nz\n</a>'),
     ).toThrow(InvalidWhitespaceDirective);
-    expect(() => new Patch()
-      .load('<diff><remove sel="/a/b" ws="after"/></diff>')
-      .patch('<a>\nx\n<b>y</b>\nz\n</a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="/a/b" ws="after"/></diff>')
+        .patch('<a>\nx\n<b>y</b>\nz\n</a>'),
     ).toThrow(InvalidWhitespaceDirective);
-    expect(() => new Patch()
-      .load('<diff><remove sel="/a/b" ws="both"/></diff>')
-      .patch('<a><d/><b>y</b><c/></a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="/a/b" ws="both"/></diff>')
+        .patch('<a><d/><b>y</b><c/></a>'),
     ).toThrow(InvalidWhitespaceDirective);
   });
 
   it('throws exception on `ws` in invalid node type', () => {
     expect.assertions(1);
-    expect(() => new Patch()
-      .load('<diff><remove sel="/a/@b" ws="before"/></diff>')
-      .patch('<a b=""/>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="/a/@b" ws="before"/></diff>')
+        .patch('<a b=""/>'),
     ).toThrow(InvalidWhitespaceDirective);
   });
 
   it('throws if prefix is not defined', () => {
     expect.assertions(2);
-    expect(() => new Patch()
-      .load(
-        '<diff><remove sel="a/b/namespace::pr"/></diff>')
-      .patch('<a><b xmlns:pf="urn:xxx">y</b></a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="a/b/namespace::pr"/></diff>')
+        .patch('<a><b xmlns:pf="urn:xxx">y</b></a>'),
     ).toThrow(InvalidNamespacePrefix);
-    expect(() => new Patch()
-      .load(
-        '<diff><remove sel="a/namespace::pf"/></diff>')
-      .patch('<a><b xmlns:pf="urn:xxx">y</b></a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="a/namespace::pf"/></diff>')
+        .patch('<a><b xmlns:pf="urn:xxx">y</b></a>'),
     ).toThrow(InvalidNamespacePrefix);
   });
 
   it('throws if prefix is in use', () => {
     expect.assertions(1);
-    expect(() => new Patch()
-      .load(
-        '<diff><remove sel="a/namespace::pf"/></diff>')
-      .patch('<a xmlns:pf="urn:xxx"><b><d/><e>e</e><pf:c/>y</b></a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><remove sel="a/namespace::pf"/></diff>')
+        .patch('<a xmlns:pf="urn:xxx"><b><d/><e>e</e><pf:c/>y</b></a>'),
     ).toThrow(InvalidNamespacePrefix);
   });
 });

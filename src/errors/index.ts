@@ -4,8 +4,8 @@
  * Author: eidng8
  */
 
-import {ElementImpl, NodeImpl} from 'xmldom-ts';
-import {Patch, XmlWrapper} from '..';
+import { ElementImpl, NodeImpl } from 'xmldom-ts';
+import { Patch, XmlWrapper } from '..';
 import InvalidAttributeValue from './InvalidAttributeValue';
 import InvalidCharacterSet from './InvalidCharacterSet';
 import InvalidDiffFormat from './InvalidDiffFormat';
@@ -25,7 +25,7 @@ import ExceptionBag from './ExceptionBag';
 
 type ExceptionHandler = (exception: Exception) => void;
 
-let ignoredExceptions = [] as { new(): Exception }[];
+let ignoredExceptions = [] as { new (): Exception }[];
 
 let exceptionHandler: (exception: Exception) => void;
 
@@ -33,7 +33,7 @@ let exceptionHandler: (exception: Exception) => void;
  * Turns on all exceptions
  */
 function dontIgnoreExceptions(): void {
-  ignoredExceptions = [] as { new(): Exception }[];
+  ignoredExceptions = [] as { new (): Exception }[];
 }
 
 /**
@@ -47,7 +47,7 @@ function dontIgnoreExceptions(): void {
  *   array.
  */
 function ignoreExceptions(
-  ...exceptions: { new(): Exception }[] | { new(): Exception }[][]
+  ...exceptions: { new (): Exception }[] | { new (): Exception }[][]
 ): void {
   ignoredExceptions = exceptions.flat();
 }
@@ -114,8 +114,7 @@ function assertTextChild(action: NodeImpl): boolean {
  */
 function assertNoWsAttr(action: ElementImpl, message: string): boolean {
   if (action.hasAttribute(Patch.Ws)) {
-    throwException(
-      new InvalidWhitespaceDirective(message, action));
+    throwException(new InvalidWhitespaceDirective(message, action));
     return false;
   }
   return true;

@@ -5,8 +5,8 @@
  */
 
 import XmlWrapper from './xml-wrapper';
-import {ElementImpl, NodeImpl} from 'xmldom-ts';
-import {XPathParser} from 'xpath-ts';
+import { ElementImpl, NodeImpl } from 'xmldom-ts';
+import { XPathParser } from 'xpath-ts';
 import {
   Exception,
   InvalidAttributeValue,
@@ -111,7 +111,8 @@ export default class Diff {
     while (action) {
       if (!action.hasAttribute(Patch.Selector)) {
         throwException(
-          new InvalidAttributeValue(Exception.ErrSelMissing, action));
+          new InvalidAttributeValue(Exception.ErrSelMissing, action),
+        );
         action = XmlWrapper.nextElementSibling(action);
         continue;
       }
@@ -120,7 +121,8 @@ export default class Diff {
         // Judging by the description of <invalid-attribute-value> error,
         // this should be an error.
         throwException(
-          new InvalidAttributeValue(Exception.ErrSelEmpty, action));
+          new InvalidAttributeValue(Exception.ErrSelEmpty, action),
+        );
         action = XmlWrapper.nextElementSibling(action);
         continue;
       }
@@ -178,7 +180,7 @@ export default class Diff {
           break;
 
         case XPathParser.LITERAL:
-          name = tokens[idx].replace('\\', '\\\\').replace('\'', '\\\'');
+          name = tokens[idx].replace('\\', '\\\\').replace("'", "\\'");
           tokens[idx] = `'${name}'`;
           break;
 
@@ -222,8 +224,10 @@ export default class Diff {
     if (!prefix && !action.namespaceURI) return `*[local-name()='${name}']`;
 
     // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
-    const ns = isAttr && !prefix ? ''
-      : this.xml.lookupNamespaceURI(prefix || '', action);
+    const ns =
+      isAttr && !prefix
+        ? ''
+        : this.xml.lookupNamespaceURI(prefix || '', action);
 
     // use predicates for our convenience
     let exp = '*';

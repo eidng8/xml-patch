@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import {existsSync, readFile} from 'fs';
+import { existsSync, readFile } from 'fs';
 import {
   AttrImpl,
   CDATASectionImpl,
@@ -304,7 +304,9 @@ export default class XmlWrapper {
         reject(new Error(`File doesn't exist: ${path}`));
         return;
       }
-      this.loadFile(path).then(() => resolve(this)).catch(r => reject(r));
+      this.loadFile(path)
+        .then(() => resolve(this))
+        .catch(r => reject(r));
     });
   }
 
@@ -324,11 +326,14 @@ export default class XmlWrapper {
 
   toString(options?: FormatOptions): string {
     const xml = this.doc.toString();
-    const opts = Object.assign({
-      pretty: true,
-      minify: false,
-      preserveComments: true,
-    }, options);
+    const opts = Object.assign(
+      {
+        pretty: true,
+        minify: false,
+        preserveComments: true,
+      },
+      options,
+    );
     if (opts.minify) {
       return pd.xmlmin(xml, opts.preserveComments);
     }
@@ -387,7 +392,8 @@ export default class XmlWrapper {
    */
   lookupNamespaceURI(prefix: string | null, node?: NodeImpl): string | null {
     if (!prefix) {
-      return node ? node.lookupNamespaceURI('')
+      return node
+        ? node.lookupNamespaceURI('')
         : this.root!.lookupNamespaceURI('');
     }
     let anchor = node || this.root;

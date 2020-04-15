@@ -10,6 +10,6 @@ import XmlWrapper from './xml-wrapper';
 import FormatOptions from './format-options';
 import XMLFileOptions from './file-options';
 
-export {Diff, Patch, XmlWrapper, XMLFileOptions, FormatOptions};
+export { Diff, Patch, XmlWrapper, XMLFileOptions, FormatOptions };
 
 export * from './errors';

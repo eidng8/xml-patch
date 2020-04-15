@@ -5,7 +5,7 @@
  */
 
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
+import { NodeImpl } from 'xmldom-ts';
 
 /**
  * This indicates that the diff body of the request was not a well-formed XML

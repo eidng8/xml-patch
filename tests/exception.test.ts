@@ -33,8 +33,7 @@ describe('Exception', () => {
   it('does nothing if no error handler', () => {
     expect.assertions(1);
     ignoreExceptions(InvalidAttributeValue);
-    expect(() => throwException(new InvalidAttributeValue()))
-      .not.toThrow();
+    expect(() => throwException(new InvalidAttributeValue())).not.toThrow();
     dontIgnoreExceptions();
   });
 

@@ -5,7 +5,7 @@
  */
 
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
+import { NodeImpl } from 'xmldom-ts';
 
 /**
  * The attribute xml:id as an ID attribute in XML documents is not supported.
