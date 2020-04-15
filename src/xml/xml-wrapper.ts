@@ -13,7 +13,7 @@ import {
 } from '../errors';
 import XmlOptions from './xml-options';
 import FormatOptions from './format-options';
-import { isElement, isText, lookup } from '../helpers';
+import { isElement, isText, lookupAncestor } from '../helpers';
 
 const pd = require('pretty-data').pd;
 
@@ -174,7 +174,7 @@ export default class XmlWrapper {
         ? node.lookupNamespaceURI('')
         : this.root!.lookupNamespaceURI('');
     }
-    return lookup(
+    return lookupAncestor(
       node || this.root!,
       (anchor, prefix) => anchor.lookupNamespaceURI(prefix),
       prefix,
@@ -189,7 +189,7 @@ export default class XmlWrapper {
    */
   lookupPrefix(uri: string | null, node?: NodeImpl): string | null {
     if (!uri) return null;
-    return lookup(
+    return lookupAncestor(
       node || this.root!,
       (anchor, uri) => anchor.lookupPrefix(uri),
       uri,

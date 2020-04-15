@@ -135,12 +135,7 @@ export function childElementCount(
  * @param node
  */
 export function firstElementChild(node: NodeImpl): ElementImpl | null {
-  let child = node.firstChild;
-  while (child) {
-    if (isElement(child)) return child;
-    child = child.nextSibling;
-  }
-  return null;
+  return lookupSibling(node.firstChild, n => (isElement(n) ? n : null));
 }
 
 /**
@@ -148,12 +143,7 @@ export function firstElementChild(node: NodeImpl): ElementImpl | null {
  * @param node
  */
 export function firstCDataChild(node: NodeImpl): CommentImpl | null {
-  let child = node.firstChild;
-  while (child) {
-    if (isCData(child)) return child;
-    child = child.nextSibling;
-  }
-  return null;
+  return lookupSibling(node.firstChild, n => (isCData(n) ? n : null));
 }
 
 /**
@@ -161,12 +151,7 @@ export function firstCDataChild(node: NodeImpl): CommentImpl | null {
  * @param node
  */
 export function firstCommentChild(node: NodeImpl): CommentImpl | null {
-  let child = node.firstChild;
-  while (child) {
-    if (isComment(child)) return child;
-    child = child.nextSibling;
-  }
-  return null;
+  return lookupSibling(node.firstChild, n => (isComment(n) ? n : null));
 }
 
 /**
@@ -176,12 +161,9 @@ export function firstCommentChild(node: NodeImpl): CommentImpl | null {
 export function firstProcessingInstructionChild(
   node: NodeImpl,
 ): ProcessingInstructionImpl | null {
-  let child = node.firstChild;
-  while (child) {
-    if (isProcessingInstruction(child)) return child;
-    child = child.nextSibling;
-  }
-  return null;
+  return lookupSibling(node.firstChild, n =>
+    isProcessingInstruction(n) ? n : null,
+  );
 }
 
 /**
@@ -189,12 +171,7 @@ export function firstProcessingInstructionChild(
  * @param node
  */
 export function nextElementSibling(node: NodeImpl): ElementImpl | null {
-  let sibling = node.nextSibling;
-  while (sibling) {
-    if (isElement(sibling)) return sibling;
-    sibling = sibling.nextSibling;
-  }
-  return null;
+  return lookupSibling(node.nextSibling, n => (isElement(n) ? n : null));
 }
 
 /**
@@ -208,16 +185,58 @@ export function nextElementSibling(node: NodeImpl): ElementImpl | null {
  * @param match A callback function to determine if the node matches criteria.
  * @param args Extra arguments to be passed to `match` callback.
  */
-export function lookup(
+export function lookupAncestor(
   node: NodeImpl,
   match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
+  ...args: any[]
+): any | null {
+  return lookupThrough(node, match, n => n.parentNode, ...args);
+}
+
+/**
+ * Looks up for something matching certain criteria, among siblings from
+ * `node` onward.
+ *
+ * The `match` callback should determine whether a given node fulfills criteria.
+ * If `match()` returns a value that is not `null` or `undefined`, the loop will
+ * return immediately, with the return value from `match()`.
+ * @param node The node to start looking.
+ * @param match A callback function to determine if the node matches criteria.
+ * @param args Extra arguments to be passed to `match` callback.
+ */
+export function lookupSibling(
+  node: NodeImpl,
+  match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
+  ...args: any[]
+): any | null {
+  return lookupThrough(node, match, n => n.nextSibling, ...args);
+}
+
+/**
+ * Looks up for something matching certain criteria.
+ *
+ * The `next` callback should return the next node of interest. If `next()`
+ * returns a falsy value, the loop breaks and returns `null`.
+ *
+ * The `match` callback should determine whether a given node fulfills criteria.
+ * If `match()` returns a value that is not `null` or `undefined`, the loop will
+ * return immediately, with the return value from `match()`.
+ * @param node The node to start looking.
+ * @param match A callback function to determine if the node matches criteria.
+ * @param next A callback that returns the next node to be matched.
+ * @param args Extra arguments to be passed to `match` callback.
+ */
+export function lookupThrough(
+  node: NodeImpl | null,
+  match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
+  next: (node: NodeImpl) => NodeImpl | null,
   ...args: any[]
 ): any | null {
   let anchor = node;
   while (anchor) {
     const ret = match(anchor, ...args);
     if (ret !== null && ret !== undefined) return ret;
-    anchor = anchor.parentNode;
+    anchor = next(anchor);
   }
   return null;
 }
