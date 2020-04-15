@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import XmlWrapper from './xml-wrapper';
+import XmlWrapper from './xml/xml-wrapper';
 import {
   AttrImpl,
   CDATASectionImpl,
@@ -193,6 +193,31 @@ export function nextElementSibling(node: NodeImpl): ElementImpl | null {
   while (sibling) {
     if (isElement(sibling)) return sibling;
     sibling = sibling.nextSibling;
+  }
+  return null;
+}
+
+/**
+ * Looks up for something matching certain criteria, falling back to
+ * ancestors all the way to the document root. Starting from the given node.
+ *
+ * The `match` callback should determine whether a given node fulfills criteria.
+ * If `match()` returns a value that is not `null` or `undefined`, the loop will
+ * return immediately, with the return value from `match()`.
+ * @param node The node to start looking.
+ * @param match A callback function to determine if the node matches criteria.
+ * @param args Extra arguments to be passed to `match` callback.
+ */
+export function lookup(
+  node: NodeImpl,
+  match: (node: NodeImpl, ...args: any[]) => any | null | undefined,
+  ...args: any[]
+): any | null {
+  let anchor = node;
+  while (anchor) {
+    const ret = match(anchor, ...args);
+    if (ret !== null && ret !== undefined) return ret;
+    anchor = anchor.parentNode;
   }
   return null;
 }

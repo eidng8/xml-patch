@@ -6,7 +6,7 @@
 
 import { AttrImpl, ElementImpl, NodeImpl } from 'xmldom-ts';
 import { select } from 'xpath-ts';
-import XmlWrapper from './xml-wrapper';
+import XmlWrapper from './xml/xml-wrapper';
 import Diff from './diff';
 import {
   assertNotRoot,

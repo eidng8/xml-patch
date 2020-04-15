@@ -4,18 +4,16 @@
  * Author: eidng8
  */
 
-import { existsSync, readFile } from 'fs';
 import { DocumentImpl, DOMParserImpl, ElementImpl, NodeImpl } from 'xmldom-ts';
-import iconv from 'iconv-lite';
 import {
   ExceptionBag,
   InvalidDiffFormat,
   InvalidEntityDeclaration,
   throwException,
-} from './errors';
-import XMLFileOptions from './file-options';
+} from '../errors';
+import XmlOptions from './xml-options';
 import FormatOptions from './format-options';
-import { isElement, isText } from './helpers';
+import { isElement, isText, lookup } from '../helpers';
 
 const pd = require('pretty-data').pd;
 
@@ -28,7 +26,6 @@ const pd = require('pretty-data').pd;
  * a `package-lock.json`. `tsc` spills a whole lot of errors on it.
  */
 export default class XmlWrapper {
-  // region Fields
   /**
    * Default encoding to use while reading file
    */
@@ -46,13 +43,6 @@ export default class XmlWrapper {
 
   protected _exceptions: ExceptionBag;
 
-  /**
-   * The file system mock to be used
-   */
-  protected _fsMock?: any;
-  // endregion
-
-  // region Properties
   /**
    * Encoding of the loaded XML document
    */
@@ -97,29 +87,9 @@ export default class XmlWrapper {
     });
   }
 
-  // endregion
-
-  constructor(options: XMLFileOptions = {}) {
+  constructor(options: XmlOptions = {}) {
     this._defaultEncoding = options.defaultEncoding || 'utf-8';
-    this._fsMock = options.fsMock;
     this._exceptions = new ExceptionBag();
-  }
-
-  // region Public Methods
-  /**
-   * Load XML from the given file
-   * @param path
-   */
-  async fromFile(path: string): Promise<XmlWrapper> {
-    return new Promise((resolve, reject) => {
-      if (!existsSync(path)) {
-        reject(new Error(`File doesn't exist: ${path}`));
-        return;
-      }
-      this.loadFile(path)
-        .then(() => resolve(this))
-        .catch(r => reject(r));
-    });
   }
 
   /**
@@ -161,19 +131,15 @@ export default class XmlWrapper {
     if (!node.hasChildNodes()) return this;
     let child: NodeImpl = node.firstChild;
     while (child) {
-      if (isText(child)) {
-        if (child.textContent && child.textContent.trim()) {
-          child = child.nextSibling;
-        } else {
-          const n = child;
-          child = child.nextSibling;
-          node.removeChild(n);
-        }
-        continue;
-      } else if (isElement(child)) {
-        this.removeEmptyTextNodes(child);
-      }
+      const current = child;
       child = child.nextSibling;
+      if (isText(current)) {
+        if (!current.textContent!.trim()) {
+          node.removeChild(current);
+        }
+      } else if (isElement(current)) {
+        this.removeEmptyTextNodes(current);
+      }
     }
     return this;
   }
@@ -208,13 +174,11 @@ export default class XmlWrapper {
         ? node.lookupNamespaceURI('')
         : this.root!.lookupNamespaceURI('');
     }
-    let anchor = node || this.root;
-    while (anchor) {
-      const uri = anchor.lookupNamespaceURI(prefix);
-      if (uri) return uri;
-      anchor = anchor.parentNode;
-    }
-    return null;
+    return lookup(
+      node || this.root!,
+      (anchor, prefix) => anchor.lookupNamespaceURI(prefix),
+      prefix,
+    );
   }
 
   /**
@@ -225,13 +189,11 @@ export default class XmlWrapper {
    */
   lookupPrefix(uri: string | null, node?: NodeImpl): string | null {
     if (!uri) return null;
-    let anchor = node || this.root;
-    while (anchor) {
-      const prefix = anchor.lookupPrefix(uri);
-      if (prefix) return prefix;
-      anchor = anchor.parentNode;
-    }
-    return null;
+    return lookup(
+      node || this.root!,
+      (anchor, uri) => anchor.lookupPrefix(uri),
+      uri,
+    );
   }
 
   /**
@@ -249,90 +211,6 @@ export default class XmlWrapper {
     return this;
   }
 
-  // endregion
-
-  // region Protected Methods
-  /**
-   * Tries to determine the proper encoding of the file, by the first
-   * processing instruction. Uses default encoding if none were found.
-   * @param path
-   */
-  protected async determineEncoding(path: string): Promise<[string, Buffer]> {
-    return new Promise((resolve, reject) => {
-      this.readFile(path)
-        .then(buf => {
-          const len = buf.indexOf('?>', 0, 'latin1');
-          if (len < 0) {
-            this._encoding = this._defaultEncoding;
-            resolve([this._defaultEncoding, buf]);
-            return;
-          }
-
-          const pi = buf.toString(this._defaultEncoding, 0, len + 2);
-          const regex = /<\?xml .*encoding="(.+?)".*\?>/i;
-          const re = regex.exec(pi);
-          if (!re || re.length < 2) {
-            this._encoding = this._defaultEncoding;
-            resolve([this._defaultEncoding, buf]);
-            return;
-          }
-
-          this._encoding = re[1];
-          resolve([re[1], buf]);
-        })
-        .catch(r => reject(r));
-    });
-  }
-
-  /**
-   * Loads the XML from given file.
-   * @param path
-   */
-  protected async loadFile(path: string): Promise<DocumentImpl> {
-    return new Promise((resolve, reject) => {
-      this.determineEncoding(path)
-        .then(([encoding, buf]) => {
-          const xml = iconv.decode(buf, encoding);
-          this._doc = this.parser.parseFromString(xml) as DocumentImpl;
-          if (this.hasError) {
-            reject(this.exception);
-            return;
-          }
-          resolve(this._doc);
-        })
-        .catch(r => reject(r));
-    });
-  }
-
-  /**
-   * Read the given file. If a mock was provided, use the mock instead of `fs`.
-   * @param path
-   */
-  protected async readFile(path: string): Promise<Buffer> {
-    return new Promise((resolve, reject) => {
-      const handle = (err: Error | null, buf: Buffer) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        if (!buf) {
-          reject(new Error(`Failed to read file: ${path}`));
-          return;
-        }
-        if (buf.length < 1) {
-          reject(new Error(`File is empty: ${path}`));
-          return;
-        }
-        resolve(buf);
-      };
-      if (this._fsMock) {
-        this._fsMock.readFile(path, handle);
-      } else {
-        readFile(path, handle);
-      }
-    });
-  }
-
   protected warning(err: string) {
     this._exceptions.push(new InvalidDiffFormat(err));
   }
@@ -348,6 +226,4 @@ export default class XmlWrapper {
   protected fatalError(err: string) {
     this._exceptions.push(new InvalidDiffFormat(err));
   }
-
-  // endregion
 }

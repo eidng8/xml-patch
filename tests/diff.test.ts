@@ -4,8 +4,9 @@
  * Author: eidng8
  */
 
-import { Diff, InvalidAttributeValue, XmlWrapper } from '../src';
+import { Diff, InvalidAttributeValue } from '../src';
 import './helpers';
+import XmlFile from '../src/xml/xml-file';
 
 describe('Diff', () => {
   it('throws if `sel` attribute is missing', () => {
@@ -37,7 +38,7 @@ describe('Diff', () => {
 
   it('will not change expression without namespace', async () => {
     expect.assertions(2);
-    const xml = new XmlWrapper();
+    const xml = new XmlFile();
     await xml.fromFile('tests/data/1A.diff.xml');
     const diff = new Diff(xml);
     expect(diff.actions[0].getAttribute('sel')).toBe('/a/b');
@@ -48,7 +49,7 @@ describe('Diff', () => {
 
   it('mangles diff namespace', async () => {
     expect.assertions(8);
-    const xml = new XmlWrapper();
+    const xml = new XmlFile();
     await xml.fromFile('tests/data/rfc-a18-A.diff.xml');
     const diff = new Diff(xml);
     let action = diff.actions[0];

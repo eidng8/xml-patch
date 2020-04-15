@@ -4,15 +4,12 @@
  * Author: eidng8
  */
 
+import XmlOptions from './xml-options';
+
 /**
  * Options to reading XML file
  */
-export default interface XMLFileOptions {
-  /**
-   * Default encoding to use while reading file
-   */
-  defaultEncoding?: string;
-
+export default interface XmlFileOptions extends XmlOptions {
   /**
    * The file system mock to be used
    */

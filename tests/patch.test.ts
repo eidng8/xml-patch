@@ -10,7 +10,7 @@ import {
   Patch,
   UnlocatedNode,
 } from '../src';
-import XmlWrapper from '../src/xml-wrapper';
+import XmlWrapper from '../src/xml/xml-wrapper';
 
 describe('Patch', () => {
   it('throws error if `sel` were missing', () => {

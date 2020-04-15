@@ -6,10 +6,20 @@
 
 import Diff from './diff';
 import Patch from './patch';
-import XmlWrapper from './xml-wrapper';
-import FormatOptions from './format-options';
-import XMLFileOptions from './file-options';
+import XmlWrapper from './xml/xml-wrapper';
+import XmlFile from './xml/xml-file';
+import XmlFileOptions from './xml/xml-file-options';
+import FormatOptions from './xml/format-options';
+import XmlOptions from './xml/xml-options';
 
-export { Diff, Patch, XmlWrapper, XMLFileOptions, FormatOptions };
+export {
+  Diff,
+  Patch,
+  XmlFile,
+  XmlWrapper,
+  XmlOptions,
+  XmlFileOptions,
+  FormatOptions,
+};
 export * from './helpers';
 export * from './errors';

@@ -4,7 +4,7 @@
  * Author: eidng8
  */
 
-import XmlWrapper from './xml-wrapper';
+import XmlWrapper from './xml/xml-wrapper';
 import { ElementImpl, NodeImpl } from 'xmldom-ts';
 import { XPathParser } from 'xpath-ts';
 import {
