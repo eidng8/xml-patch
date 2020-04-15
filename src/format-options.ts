@@ -11,15 +11,15 @@ export default interface FormatOptions {
   /**
    * Pretty print the XML
    */
-  pretty?: boolean,
+  pretty?: boolean;
 
   /**
    * Minify the XML
    */
-  minify?: boolean,
+  minify?: boolean;
 
   /**
    * Preserve comments in XML
    */
-  preserveComments?: boolean
+  preserveComments?: boolean;
 }

@@ -5,7 +5,7 @@
  */
 
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
+import { NodeImpl } from 'xmldom-ts';
 
 /**
  * Patch failure related to XML prolog nodes.

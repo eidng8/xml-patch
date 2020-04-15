@@ -15,9 +15,10 @@ import XmlWrapper from '../src/xml-wrapper';
 describe('Patch', () => {
   it('throws error if `sel` were missing', () => {
     expect.assertions(1);
-    expect(() => new Patch()
-      .load('<diff><replace><c>y</c></replace></diff>')
-      .patch('<a>x<b>y</b>z</a>'),
+    expect(() =>
+      new Patch()
+        .load('<diff><replace><c>y</c></replace></diff>')
+        .patch('<a>x<b>y</b>z</a>'),
     ).toThrow(InvalidAttributeValue);
   });
 
@@ -49,8 +50,8 @@ describe('Patch', () => {
 
   it('throws if encoding is not same', () => {
     expect.assertions(1);
-    const d = new XmlWrapper({defaultEncoding: 'ascii'}).fromString('<a/>');
-    const x = new XmlWrapper({defaultEncoding: 'utf-8'}).fromString('<a/>');
+    const d = new XmlWrapper({ defaultEncoding: 'ascii' }).fromString('<a/>');
+    const x = new XmlWrapper({ defaultEncoding: 'utf-8' }).fromString('<a/>');
     expect(() => new Patch().load(d).patch(x)).toThrow(InvalidCharacterSet);
   });
 });

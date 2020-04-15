@@ -29,8 +29,9 @@ export default class ExceptionBag extends Exception {
 
   public toString(): string {
     const root = this.createRootNode();
-    this.exceptions.forEach(
-      e => root.appendChild(e.createErrorNode(this.xml.doc)));
-    return this.xml.toString({pretty: true, preserveComments: true});
+    this.exceptions.forEach(e =>
+      root.appendChild(e.createErrorNode(this.xml.doc)),
+    );
+    return this.xml.toString({ pretty: true, preserveComments: true });
   }
 }

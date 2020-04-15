@@ -4,9 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "skipLibCheck": true,
-    "lib": [
-      "esnext"
-    ],
+    "lib": ["esnext"],
     "declaration": true,
     "declarationMap": false,
     "sourceMap": false,
@@ -23,7 +21,14 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "rootDirs": [
-    "src"
-  ]
+  "typedocOptions": {
+    "excludeExternals": true,
+    "excludeNotExported": true,
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "inputFiles": "src",
+    "out": "docs",
+    "theme": "node_modules/eledoc/bin/default/"
+  },
+  "rootDirs": ["src"]
 }

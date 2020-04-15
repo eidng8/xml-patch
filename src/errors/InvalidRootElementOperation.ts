@@ -5,7 +5,7 @@
  */
 
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
+import { NodeImpl } from 'xmldom-ts';
 
 /**
  * The root element of the document cannot be removed or another sibling element
