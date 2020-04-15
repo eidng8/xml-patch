@@ -22,6 +22,22 @@ import {
   UnlocatedNode,
 } from './errors';
 import Exception from './errors/Exception';
+import {
+  allAttributes,
+  childElementCount,
+  firstCDataChild,
+  firstCommentChild,
+  firstElementChild,
+  firstProcessingInstructionChild,
+  isAttribute,
+  isCData,
+  isComment,
+  isElement,
+  isEmptyText,
+  isProcessingInstruction,
+  isText,
+  isXmlWrapper,
+} from './helpers';
 
 /**
  * Patches XML according to
@@ -125,7 +141,7 @@ export default class Patch {
    * @param xml
    */
   public patch(xml: string | XmlWrapper): XmlWrapper {
-    if (XmlWrapper.isXML(xml)) {
+    if (isXmlWrapper(xml)) {
       this.target = xml;
     } else {
       this.target = new XmlWrapper().fromString(xml);
@@ -192,7 +208,7 @@ export default class Patch {
   protected processAdd(target: NodeImpl, action: ElementImpl): void {
     const type = (action.getAttribute(Patch.Type) || '').trim() || '';
     if (type.length) {
-      if (!XmlWrapper.isElement(target)) {
+      if (!isElement(target)) {
         throwException(new InvalidNodeTypes(Exception.ErrType, action));
         return;
       }
@@ -274,10 +290,7 @@ export default class Patch {
     let anchor = target;
     switch (action.getAttribute(Patch.Pos)) {
       case Patch.After:
-        if (
-          XmlWrapper.firstElementChild(action) &&
-          !assertNotRoot(target, action)
-        ) {
+        if (firstElementChild(action) && !assertNotRoot(target, action)) {
           return;
         }
         for (const child of imported) {
@@ -286,10 +299,7 @@ export default class Patch {
         break;
 
       case Patch.Before:
-        if (
-          XmlWrapper.firstElementChild(action) &&
-          !assertNotRoot(target, action)
-        ) {
+        if (firstElementChild(action) && !assertNotRoot(target, action)) {
           return;
         }
         for (const child of imported) {
@@ -323,14 +333,14 @@ export default class Patch {
   protected processRemove(target: NodeImpl, action: ElementImpl): void {
     const ws = action.getAttribute(Patch.Ws);
     // RFC 4.5, 2nd paragraph, `ws` is only not allowed with texts, attributes.
-    if (XmlWrapper.isAttribute(target)) {
+    if (isAttribute(target)) {
       assertNoWsAttr(action, Exception.ErrWsAttribute);
       (target.ownerElement! as ElementImpl).removeAttributeNode(target);
-    } else if (XmlWrapper.isText(target)) {
+    } else if (isText(target)) {
       assertNoWsAttr(action, Exception.ErrWsTextNode);
       target.parentNode!.removeChild(target);
     } else {
-      if (XmlWrapper.isElement(target) && !assertNotRoot(target, action)) {
+      if (isElement(target) && !assertNotRoot(target, action)) {
         // RFC 3, last paragraph
         return;
       }
@@ -356,7 +366,7 @@ export default class Patch {
     const parent = target.parentNode!;
     if (Patch.After == ws || Patch.Both == ws) {
       sibling = target.nextSibling;
-      if (XmlWrapper.isEmptyText(sibling)) {
+      if (isEmptyText(sibling)) {
         parent.removeChild(sibling);
       } else {
         throwException(
@@ -367,7 +377,7 @@ export default class Patch {
     }
     if (Patch.Before == ws || Patch.Both == ws) {
       sibling = target.previousSibling;
-      if (XmlWrapper.isEmptyText(sibling)) {
+      if (isEmptyText(sibling)) {
         parent.removeChild(target.previousSibling);
       } else {
         throwException(
@@ -423,30 +433,30 @@ export default class Patch {
    * @param action
    */
   protected processReplace(target: NodeImpl, action: ElementImpl) {
-    if (XmlWrapper.isAttribute(target)) {
+    if (isAttribute(target)) {
       target.value = action.textContent!;
       return;
-    } else if (XmlWrapper.isText(target)) {
+    } else if (isText(target)) {
       target.data = target.nodeValue = action.textContent!;
       return;
-    } else if (XmlWrapper.isProcessingInstruction(target)) {
-      const child = XmlWrapper.firstProcessingInstructionChild(action);
+    } else if (isProcessingInstruction(target)) {
+      const child = firstProcessingInstructionChild(action);
       if (!child) {
         throwException(
           new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
         );
         // return;
       }
-    } else if (XmlWrapper.isCData(target)) {
-      const child = XmlWrapper.firstCDataChild(action);
+    } else if (isCData(target)) {
+      const child = firstCDataChild(action);
       if (!child) {
         throwException(
           new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
         );
         // return;
       }
-    } else if (XmlWrapper.isComment(target)) {
-      const child = XmlWrapper.firstCommentChild(action);
+    } else if (isComment(target)) {
+      const child = firstCommentChild(action);
       if (!child) {
         throwException(
           new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, action),
@@ -459,8 +469,8 @@ export default class Patch {
         return;
       }
       if (
-        XmlWrapper.childElementCount(action) != 1 ||
-        XmlWrapper.firstElementChild(action)!.nodeType != target.nodeType
+        childElementCount(action) != 1 ||
+        firstElementChild(action)!.nodeType != target.nodeType
       ) {
         // Although RFC doesn't explicitly specify the case, I think replacement
         // are allowed only one to one. Reasons:
@@ -572,7 +582,7 @@ export default class Patch {
         this.mangleNS(child, target, anchor);
       }
     }
-    if (!XmlWrapper.isElement(node) && !XmlWrapper.isAttribute(node)) {
+    if (!isElement(node) && !isAttribute(node)) {
       // we are in the middle of importing nodes that can be all kinds of nodes,
       // don't throw exception here.
       return node;
@@ -587,9 +597,9 @@ export default class Patch {
     } else if (targetNS) {
       this.setPrefix(node, prefix, targetNS);
     }
-    if (XmlWrapper.isAttribute(node)) return node;
+    if (isAttribute(node)) return node;
     if (node.hasAttributes()) {
-      const attrs = XmlWrapper.allAttributes(node);
+      const attrs = allAttributes(node);
       for (const attr of attrs) {
         this.mangleNS(attr, target, anchor);
       }
@@ -613,22 +623,13 @@ export default class Patch {
     if (ns) {
       node.namespaceURI = ns;
     }
-    if (XmlWrapper.isElement(node)) {
-      if (prefix) {
-        node.nodeName = `${prefix}:${node.localName}`;
-        node.tagName = `${prefix}:${node.localName}`;
-      } else {
-        node.nodeName = node.localName;
-        node.tagName = node.localName;
-      }
+    const prop = isElement(node) ? 'tagName' : 'name';
+    if (prefix) {
+      node.nodeName = `${prefix}:${node.localName}`;
+      node[prop] = `${prefix}:${node.localName}`;
     } else {
-      if (prefix) {
-        node.nodeName = `${prefix}:${node.localName}`;
-        node.name = `${prefix}:${node.localName}`;
-      } else {
-        node.nodeName = node.localName;
-        node.name = node.localName;
-      }
+      node.nodeName = node.localName;
+      node[prop] = node.localName;
     }
   }
 
@@ -652,7 +653,7 @@ export default class Patch {
     if (parts.length < 2) {
       // RFC 4.2.3, last "For example" paragraph, last sentence:
       // unprefixed attributes don't inherit the default namespace declaration
-      if (XmlWrapper.isElement(node) && node.namespaceURI && !isAttr) {
+      if (isElement(node) && node.namespaceURI && !isAttr) {
         const prefix = this.target.lookupPrefix(node.namespaceURI, target);
         return ['', name, prefix || '', node.namespaceURI];
       }
@@ -670,7 +671,7 @@ export default class Patch {
    * @param prefix
    */
   protected hasPrefixChildren(anchor: ElementImpl, prefix: string): boolean {
-    let child = XmlWrapper.firstElementChild(anchor);
+    let child = firstElementChild(anchor);
     let found = false;
     while (child && !found) {
       if (prefix == child.prefix) {

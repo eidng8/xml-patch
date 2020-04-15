@@ -5,7 +5,13 @@
  */
 
 import { DocumentImpl } from 'xmldom-ts';
-import { ExceptionBag, XmlWrapper } from '../src';
+import {
+  ExceptionBag,
+  firstCDataChild,
+  firstCommentChild,
+  firstProcessingInstructionChild,
+  XmlWrapper,
+} from '../src';
 import './helpers';
 
 describe('XML Wrapper', () => {
@@ -146,28 +152,22 @@ describe('XML Wrapper', () => {
     const xml = new XmlWrapper().fromString(
       '<a><![CDATA[abc]]><![CDATA[def]]></a>',
     );
-    expect(XmlWrapper.firstCDataChild(xml.root!)!).toEqualXml(
-      '<![CDATA[abc]]>',
-    );
-    expect(XmlWrapper.firstCDataChild(xml.root!.firstChild)).toBeNull();
+    expect(firstCDataChild(xml.root!)!).toEqualXml('<![CDATA[abc]]>');
+    expect(firstCDataChild(xml.root!.firstChild)).toBeNull();
   });
 
   it('returns first comment child', () => {
     expect.assertions(2);
     const xml = new XmlWrapper().fromString('<a><!--abc--><!--def--></a>');
-    expect(XmlWrapper.firstCommentChild(xml.root!)!).toEqualXml('<!--abc-->');
-    expect(XmlWrapper.firstCommentChild(xml.root!.firstChild)).toBeNull();
+    expect(firstCommentChild(xml.root!)!).toEqualXml('<!--abc-->');
+    expect(firstCommentChild(xml.root!.firstChild)).toBeNull();
   });
 
   it('returns first processing instruction child', () => {
     expect.assertions(2);
     const xml = new XmlWrapper().fromString('<a><?pi ?><b/></a>');
-    expect(XmlWrapper.firstProcessingInstructionChild(xml.root!)).toEqualXml(
-      '<?pi ?>',
-    );
-    expect(
-      XmlWrapper.firstProcessingInstructionChild(xml.root!.firstChild),
-    ).toBeNull();
+    expect(firstProcessingInstructionChild(xml.root!)).toEqualXml('<?pi ?>');
+    expect(firstProcessingInstructionChild(xml.root!.firstChild)).toBeNull();
   });
 
   it('looks up default namespace URI on root', () => {

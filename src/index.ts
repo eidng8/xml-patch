@@ -11,5 +11,5 @@ import FormatOptions from './format-options';
 import XMLFileOptions from './file-options';
 
 export { Diff, Patch, XmlWrapper, XMLFileOptions, FormatOptions };
-
+export * from './helpers';
 export * from './errors';

@@ -5,7 +5,7 @@
  */
 
 import { ElementImpl, NodeImpl } from 'xmldom-ts';
-import { Patch, XmlWrapper } from '..';
+import { Patch } from '..';
 import InvalidAttributeValue from './InvalidAttributeValue';
 import InvalidCharacterSet from './InvalidCharacterSet';
 import InvalidDiffFormat from './InvalidDiffFormat';
@@ -22,6 +22,7 @@ import UnsupportedIdFunction from './UnsupportedIdFunction';
 import UnsupportedXmlId from './UnsupportedXmlId';
 import Exception from './Exception';
 import ExceptionBag from './ExceptionBag';
+import { isDocument, isRoot, isText } from '../helpers';
 
 type ExceptionHandler = (exception: Exception) => void;
 
@@ -87,7 +88,7 @@ function throwException<T extends Exception>(exception: T): void {
  */
 function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
   // RFC 3, last paragraph: don't replace/remove root node, or add sibling
-  if (XmlWrapper.isDocument(node) || XmlWrapper.isRoot(node)) {
+  if (isDocument(node) || isRoot(node)) {
     throwException(new InvalidRootElementOperation(action));
     return false;
   }
@@ -100,7 +101,7 @@ function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
  */
 function assertTextChild(action: NodeImpl): boolean {
   if (!action.childNodes.length) return true;
-  if (action.childNodes.length > 1 || !XmlWrapper.isText(action.firstChild)) {
+  if (action.childNodes.length > 1 || !isText(action.firstChild)) {
     throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, action));
     return false;
   }

@@ -5,17 +5,7 @@
  */
 
 import { existsSync, readFile } from 'fs';
-import {
-  AttrImpl,
-  CDATASectionImpl,
-  CommentImpl,
-  DocumentImpl,
-  DOMParserImpl,
-  ElementImpl,
-  NodeImpl,
-  ProcessingInstructionImpl,
-  TextImpl,
-} from 'xmldom-ts';
+import { DocumentImpl, DOMParserImpl, ElementImpl, NodeImpl } from 'xmldom-ts';
 import iconv from 'iconv-lite';
 import {
   ExceptionBag,
@@ -25,6 +15,7 @@ import {
 } from './errors';
 import XMLFileOptions from './file-options';
 import FormatOptions from './format-options';
+import { isElement, isText } from './helpers';
 
 const pd = require('pretty-data').pd;
 
@@ -59,185 +50,6 @@ export default class XmlWrapper {
    * The file system mock to be used
    */
   protected _fsMock?: any;
-  // endregion
-
-  // region Static Methods
-  /**
-   * Type guard
-   * @param subject
-   */
-  static isXML(subject: any): subject is XmlWrapper {
-    return subject instanceof XmlWrapper;
-  }
-
-  /**
-   * Document node type guard
-   * @param subject
-   */
-  static isDocument(subject: any): subject is DocumentImpl {
-    return subject instanceof DocumentImpl;
-  }
-
-  /**
-   * Comment node type guard
-   * @param node
-   */
-  static isComment(node: any): node is CommentImpl {
-    return node instanceof CommentImpl;
-  }
-
-  /**
-   * CData node type guard
-   * @param node
-   */
-  static isCData(node: any): node is CDATASectionImpl {
-    return node instanceof CDATASectionImpl;
-  }
-
-  /**
-   * Text node type guard
-   * @param node
-   */
-  static isText(node: any): node is TextImpl {
-    return node instanceof TextImpl;
-  }
-
-  /**
-   * Processing instruction node type guard
-   * @param node
-   */
-  static isProcessingInstruction(node: any): node is ProcessingInstructionImpl {
-    return node instanceof ProcessingInstructionImpl;
-  }
-
-  /**
-   * Element node type guard
-   * @param node
-   */
-  static isElement(node: any): node is ElementImpl {
-    return node instanceof ElementImpl;
-  }
-
-  /**
-   * Attribute node type guard
-   * @param node
-   */
-  static isAttribute(node: any): node is AttrImpl {
-    return node instanceof AttrImpl;
-  }
-
-  /**
-   * Check if the given node is the root of its document.
-   * @param node
-   */
-  static isRoot(node: NodeImpl): boolean {
-    return XmlWrapper.isDocument(node.parentNode);
-  }
-
-  /**
-   * Retrieves all attribute nodes of the given element.
-   * @param element
-   */
-  static allAttributes(element: ElementImpl) {
-    const attributes = [] as AttrImpl[];
-    for (const a of element.attributes) {
-      attributes.push(a);
-    }
-    return attributes;
-  }
-
-  /**
-   * Check if the given node is a white space text node
-   * @param node
-   */
-  static isEmptyText(node: NodeImpl): boolean {
-    return XmlWrapper.isText(node) && !node.textContent!.trim();
-  }
-
-  /**
-   * Counts all immediate element children
-   * @param node
-   * @param ignoreWhiteSpace
-   */
-  static childElementCount(node: NodeImpl, ignoreWhiteSpace = true): number {
-    let count = 0;
-    let child = node.firstChild;
-    while (child) {
-      const skip = ignoreWhiteSpace && XmlWrapper.isEmptyText(child);
-      child = child.nextSibling;
-      if (skip) continue;
-      count++;
-    }
-    return count;
-  }
-
-  /**
-   * Retrieves the first element child of the given node.
-   * @param node
-   */
-  static firstElementChild(node: NodeImpl): ElementImpl | null {
-    let child = node.firstChild;
-    while (child) {
-      if (XmlWrapper.isElement(child)) return child;
-      child = child.nextSibling;
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the first CData child of the given node.
-   * @param node
-   */
-  static firstCDataChild(node: NodeImpl): CommentImpl | null {
-    let child = node.firstChild;
-    while (child) {
-      if (XmlWrapper.isCData(child)) return child;
-      child = child.nextSibling;
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the first comment child of the given node.
-   * @param node
-   */
-  static firstCommentChild(node: NodeImpl): CommentImpl | null {
-    let child = node.firstChild;
-    while (child) {
-      if (XmlWrapper.isComment(child)) return child;
-      child = child.nextSibling;
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the first processing instruction child of the given node.
-   * @param node
-   */
-  static firstProcessingInstructionChild(
-    node: NodeImpl,
-  ): ProcessingInstructionImpl | null {
-    let child = node.firstChild;
-    while (child) {
-      if (XmlWrapper.isProcessingInstruction(child)) return child;
-      child = child.nextSibling;
-    }
-    return null;
-  }
-
-  /**
-   * Retrieves the next element sibling of the given node.
-   * @param node
-   */
-  static nextElementSibling(node: NodeImpl): ElementImpl | null {
-    let sibling = node.nextSibling;
-    while (sibling) {
-      if (XmlWrapper.isElement(sibling)) return sibling;
-      sibling = sibling.nextSibling;
-    }
-    return null;
-  }
-
   // endregion
 
   // region Properties
@@ -349,7 +161,7 @@ export default class XmlWrapper {
     if (!node.hasChildNodes()) return this;
     let child: NodeImpl = node.firstChild;
     while (child) {
-      if (XmlWrapper.isText(child)) {
+      if (isText(child)) {
         if (child.textContent && child.textContent.trim()) {
           child = child.nextSibling;
         } else {
@@ -358,7 +170,7 @@ export default class XmlWrapper {
           node.removeChild(n);
         }
         continue;
-      } else if (XmlWrapper.isElement(child)) {
+      } else if (isElement(child)) {
         this.removeEmptyTextNodes(child);
       }
       child = child.nextSibling;
@@ -373,11 +185,11 @@ export default class XmlWrapper {
   trimTextContents(node: NodeImpl): XmlWrapper {
     if (!node.hasChildNodes()) return this;
     for (const child of node.childNodes) {
-      if (XmlWrapper.isText(child)) {
+      if (isText(child)) {
         const txt = child.textContent && child.textContent.trim();
         child.textContent = txt;
         child.data = txt!;
-      } else if (XmlWrapper.isElement(child)) {
+      } else if (isElement(child)) {
         this.trimTextContents(child);
       }
     }

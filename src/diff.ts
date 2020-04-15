@@ -14,6 +14,7 @@ import {
   throwException,
 } from './errors';
 import Patch from './patch';
+import { firstElementChild, isXmlWrapper, nextElementSibling } from './helpers';
 
 /**
  * Parse the given XML patch document, according to
@@ -67,7 +68,7 @@ export default class Diff {
    * @return this instance
    */
   load(diff: string | XmlWrapper): Diff {
-    if (XmlWrapper.isXML(diff)) {
+    if (isXmlWrapper(diff)) {
       this.xml = diff;
       return this;
     }
@@ -107,13 +108,13 @@ export default class Diff {
       // Just ignore it for now.
       return this;
     }
-    let action = XmlWrapper.firstElementChild(root);
+    let action = firstElementChild(root);
     while (action) {
       if (!action.hasAttribute(Patch.Selector)) {
         throwException(
           new InvalidAttributeValue(Exception.ErrSelMissing, action),
         );
-        action = XmlWrapper.nextElementSibling(action);
+        action = nextElementSibling(action);
         continue;
       }
       if (!action.getAttribute(Patch.Selector)!.trim()) {
@@ -123,16 +124,16 @@ export default class Diff {
         throwException(
           new InvalidAttributeValue(Exception.ErrSelEmpty, action),
         );
-        action = XmlWrapper.nextElementSibling(action);
+        action = nextElementSibling(action);
         continue;
       }
       if (Diff.SupportedActions.indexOf(action.localName) < 0) {
         throwException(new InvalidPatchDirective(action));
-        action = XmlWrapper.nextElementSibling(action);
+        action = nextElementSibling(action);
         continue;
       }
       this._actions.push(action);
-      action = XmlWrapper.nextElementSibling(action);
+      action = nextElementSibling(action);
     }
     return this;
   }
