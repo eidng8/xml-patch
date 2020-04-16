@@ -5,7 +5,6 @@
  */
 
 import {
-  AttrImpl,
   CommentImpl,
   ElementImpl,
   NodeImpl,
@@ -18,7 +17,6 @@ import {
   isProcessingInstruction,
   isText,
 } from './type-guards';
-import { NodeListOfImpl } from 'xmldom-ts/dist/types/node-list-of';
 
 export type NodeMatcher = (
   node: NodeImpl,
@@ -26,18 +24,6 @@ export type NodeMatcher = (
 ) => any | null | undefined;
 
 export type NodeIterator = (node: NodeImpl) => NodeImpl | null;
-
-/**
- * Retrieves all attribute nodes of the given element.
- * @param element
- */
-export function allAttributes(element: ElementImpl) {
-  const attributes = [] as AttrImpl[];
-  for (const a of element.attributes) {
-    attributes.push(a);
-  }
-  return attributes;
-}
 
 /**
  * Check if the given node is a white space text node
@@ -192,13 +178,11 @@ export function descend(
   match: NodeMatcher,
   ...args: any[]
 ): NodeImpl | null {
-  const nodes: NodeListOfImpl<NodeImpl> = node.childNodes;
-  if (!nodes || !nodes.length) return null;
+  if (!node || !node.childNodes || !node.childNodes.length) return null;
+  const nodes = node.childNodes as NodeImpl[];
   let current = nodes.shift();
   while (current) {
-    if (isElement(current)) {
-      nodes.push(...current.childNodes);
-    }
+    isElement(current) && nodes.push(...current.childNodes);
     if (true === match(current, ...args)) return current;
     current = nodes.shift();
   }
