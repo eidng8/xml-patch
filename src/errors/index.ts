@@ -21,7 +21,7 @@ import UnsupportedXmlId from './UnsupportedXmlId';
 import Exception from './Exception';
 import ExceptionBag from './ExceptionBag';
 
-type ExceptionHandler = (exception: Exception) => void;
+export type ExceptionHandler = (exception: Exception) => void;
 
 let ignoredExceptions = [] as { new (): Exception }[];
 
@@ -30,7 +30,7 @@ let exceptionHandler: (exception: Exception) => void;
 /**
  * Turns on all exceptions
  */
-function dontIgnoreExceptions(): void {
+export function dontIgnoreExceptions(): void {
   ignoredExceptions = [] as { new (): Exception }[];
 }
 
@@ -44,7 +44,7 @@ function dontIgnoreExceptions(): void {
  *   arguments, or combination of both, will be flattened to a one-dimension
  *   array.
  */
-function ignoreExceptions(
+export function ignoreExceptions(
   ...exceptions: { new (): Exception }[] | { new (): Exception }[][]
 ): void {
   ignoredExceptions = exceptions.flat();
@@ -55,37 +55,35 @@ function ignoreExceptions(
  * {@link ignoreExceptions}.
  * @param handler
  */
-function setExceptionHandler(handler: ExceptionHandler): void {
+export function setExceptionHandler(handler: ExceptionHandler): void {
   exceptionHandler = handler;
+}
+
+/**
+ * Checks if the given exception should be ignored.
+ * @param ex
+ */
+export function shouldIgnoreException(ex: Exception): boolean {
+  return ignoredExceptions.some(ignored => ex instanceof ignored);
 }
 
 /**
  * Throws the given exception if it is not ignored by {@link ignoreExceptions}.
  * @param exception
  */
-function throwException<T extends Exception>(exception: T): void {
-  let ignore = false;
-  for (const ignored of ignoredExceptions) {
-    if (exception instanceof ignored) {
-      ignore = true;
-      if (exceptionHandler) {
-        exceptionHandler(exception);
-      }
-      break;
+export function throwException<T extends Exception>(exception: T): void {
+  if (shouldIgnoreException(exception)) {
+    if (exceptionHandler) {
+      exceptionHandler(exception);
     }
+    return;
   }
-  if (ignore) return;
   throw exception;
 }
 
 export {
-  dontIgnoreExceptions,
-  ignoreExceptions,
-  setExceptionHandler,
-  throwException,
   Exception,
   ExceptionBag,
-  ExceptionHandler,
   InvalidWhitespaceDirective,
   InvalidRootElementOperation,
   InvalidPrologOperation,
