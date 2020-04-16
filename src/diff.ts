@@ -110,18 +110,27 @@ export default class Diff {
     }
     let action = firstElementChild(root);
     while (action) {
-      // Although RFC doesn't explicitly define how to deal with empty 'sel'.
-      // Judging by the description of <invalid-attribute-value> error,
-      // this should be an error. Also, don't combine the two attribute asserts
-      // because they raise different exceptions.
-      if (
-        assertKnownAction(action) &&
-        assertHasAttribute(action, Patch.Selector) &&
-        assertAttributeNotEmpty(action, Patch.Selector)
-      ) {
-        this._actions.push(action);
-      }
+      this.loadAction(action);
       action = nextElementSibling(action);
+    }
+    return this;
+  }
+
+  /**
+   * Adds the given action to stack if applicable.
+   * @param action
+   */
+  protected loadAction(action: ElementImpl): Diff {
+    // Although RFC doesn't explicitly define how to deal with empty 'sel'.
+    // Judging by the description of <invalid-attribute-value> error,
+    // this should be an error. Also, don't combine the two attribute asserts
+    // because they raise different exceptions.
+    if (
+      assertKnownAction(action) &&
+      assertHasAttribute(action, Patch.Selector) &&
+      assertAttributeNotEmpty(action, Patch.Selector)
+    ) {
+      this._actions.push(action);
     }
     return this;
   }

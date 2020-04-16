@@ -21,6 +21,7 @@ export {
   XmlFileOptions,
   FormatOptions,
 };
-export * from './utils/type-guards';
-export * from './utils/helpers';
 export * from './errors';
+export * from './utils/asserts';
+export * from './utils/helpers';
+export * from './utils/type-guards';
