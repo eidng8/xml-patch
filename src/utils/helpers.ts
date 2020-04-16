@@ -18,6 +18,7 @@ import {
   isProcessingInstruction,
   isText,
 } from './type-guards';
+import { NodeListOfImpl } from 'xmldom-ts/dist/types/node-list-of';
 
 export type NodeMatcher = (
   node: NodeImpl,
@@ -173,6 +174,33 @@ export function lookupThrough(
     const ret = match(anchor, ...args);
     if (ret !== null && ret !== undefined) return ret;
     anchor = next(anchor);
+  }
+  return null;
+}
+
+/**
+ * Descend the given node (excluding itself) breadth-first. Child nodes of the
+ * current node are pushed to stack before calling the `match` predicate.
+ * If `match()` returns `true`, the loop will break, returning the node at
+ * that point.
+ * @param node
+ * @param match
+ * @param args
+ */
+export function descend(
+  node: NodeImpl,
+  match: NodeMatcher,
+  ...args: any[]
+): NodeImpl | null {
+  const nodes: NodeListOfImpl<NodeImpl> = node.childNodes;
+  if (!nodes || !nodes.length) return null;
+  let current = nodes.shift();
+  while (current) {
+    if (isElement(current)) {
+      nodes.push(...current.childNodes);
+    }
+    if (true === match(current, ...args)) return current;
+    current = nodes.shift();
   }
   return null;
 }

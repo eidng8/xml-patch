@@ -6,16 +6,16 @@
 
 import { ElementImpl, NodeImpl } from 'xmldom-ts';
 import { isDocument, isRoot, isText } from './type-guards';
-import InvalidRootElementOperation from '../errors/InvalidRootElementOperation';
-import InvalidNodeTypes from '../errors/InvalidNodeTypes';
 import {
   Exception,
   InvalidAttributeValue,
+  InvalidNodeTypes,
   InvalidPatchDirective,
+  InvalidRootElementOperation,
+  InvalidWhitespaceDirective,
   throwException,
 } from '../errors';
 import Patch from '../patch';
-import InvalidWhitespaceDirective from '../errors/InvalidWhitespaceDirective';
 import Diff from '../diff';
 
 /**
@@ -80,7 +80,7 @@ export function assertAttributeNotEmpty(
   attr: string,
 ): boolean {
   const a = elem.getAttribute(attr);
-  if (a && a.trim()) return false;
+  if (a && a.trim()) return true;
   const ex = new InvalidAttributeValue(Exception.ErrSelEmpty, elem);
   throwException(ex);
   return false;

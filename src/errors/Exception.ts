@@ -5,7 +5,8 @@
  */
 
 import { DocumentImpl, NodeImpl } from 'xmldom-ts';
-import { Diff, XmlWrapper } from '..';
+import XmlWrapper from '../xml/xml-wrapper';
+import Diff from '../diff';
 
 /**
  * XML patch exception base class

@@ -13,8 +13,8 @@ import {
 } from '../errors';
 import XmlOptions from './xml-options';
 import FormatOptions from './format-options';
-import { lookupAncestor } from '../utils/helpers';
-import { isElement, isText } from '../utils/type-guards';
+import { descend, isEmptyText, lookupAncestor } from '../utils/helpers';
+import { isText } from '../utils/type-guards';
 
 const pd = require('pretty-data').pd;
 
@@ -129,19 +129,11 @@ export default class XmlWrapper {
    * @param node
    */
   removeEmptyTextNodes(node: NodeImpl): XmlWrapper {
-    if (!node.hasChildNodes()) return this;
-    let child: NodeImpl = node.firstChild;
-    while (child) {
-      const current = child;
-      child = child.nextSibling;
-      if (isText(current)) {
-        if (!current.textContent!.trim()) {
-          node.removeChild(current);
-        }
-      } else if (isElement(current)) {
-        this.removeEmptyTextNodes(current);
+    descend(node, current => {
+      if (isEmptyText(current)) {
+        current.parentNode.removeChild(current);
       }
-    }
+    });
     return this;
   }
 
@@ -150,16 +142,13 @@ export default class XmlWrapper {
    * @param node
    */
   trimTextContents(node: NodeImpl): XmlWrapper {
-    if (!node.hasChildNodes()) return this;
-    for (const child of node.childNodes) {
-      if (isText(child)) {
-        const txt = child.textContent && child.textContent.trim();
-        child.textContent = txt;
-        child.data = txt!;
-      } else if (isElement(child)) {
-        this.trimTextContents(child);
+    descend(node, current => {
+      if (isText(current)) {
+        const txt = current.textContent ? current.textContent.trim() : '';
+        current.textContent = txt;
+        current.data = txt!;
       }
-    }
+    });
     return this;
   }
 
