@@ -178,8 +178,7 @@ export function descend(
   match: NodeMatcher,
   ...args: any[]
 ): NodeImpl | null {
-  if (!node || !node.childNodes || !node.childNodes.length) return null;
-  const nodes = node.childNodes as NodeImpl[];
+  const nodes = ((node && node.childNodes) || []) as NodeImpl[];
   let current = nodes.shift();
   while (current) {
     isElement(current) && nodes.push(...current.childNodes);

@@ -20,7 +20,6 @@ import {
 } from './errors';
 import Exception from './errors/Exception';
 import {
-  allAttributes,
   childElementCount,
   firstCDataChild,
   firstCommentChild,
@@ -603,7 +602,7 @@ export default class Patch {
     }
     if (isAttribute(node)) return node;
     if (node.hasAttributes()) {
-      const attrs = allAttributes(node);
+      const attrs = node.attributes;
       for (const attr of attrs) {
         this.mangleNS(attr, target, anchor);
       }
