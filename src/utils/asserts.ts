@@ -8,9 +8,15 @@ import { ElementImpl, NodeImpl } from 'xmldom-ts';
 import { isDocument, isRoot, isText } from './type-guards';
 import InvalidRootElementOperation from '../errors/InvalidRootElementOperation';
 import InvalidNodeTypes from '../errors/InvalidNodeTypes';
-import { Exception, throwException } from '../errors';
+import {
+  Exception,
+  InvalidAttributeValue,
+  InvalidPatchDirective,
+  throwException,
+} from '../errors';
 import Patch from '../patch';
 import InvalidWhitespaceDirective from '../errors/InvalidWhitespaceDirective';
+import Diff from '../diff';
 
 /**
  * Asserts the given node is not the root
@@ -50,4 +56,42 @@ export function assertNoWsAttr(action: ElementImpl, message: string): boolean {
     return false;
   }
   return true;
+}
+
+/**
+ * Asserts element has the given attribute
+ * @param elem
+ * @param attr
+ */
+export function assertHasAttribute(elem: ElementImpl, attr: string): boolean {
+  if (elem.hasAttribute(attr)) return true;
+  const ex = new InvalidAttributeValue(Exception.ErrSelMissing, elem);
+  throwException(ex);
+  return false;
+}
+
+/**
+ * Asserts element has the given attribute with non-empty value
+ * @param elem
+ * @param attr
+ */
+export function assertAttributeNotEmpty(
+  elem: ElementImpl,
+  attr: string,
+): boolean {
+  const a = elem.getAttribute(attr);
+  if (a && a.trim()) return false;
+  const ex = new InvalidAttributeValue(Exception.ErrSelEmpty, elem);
+  throwException(ex);
+  return false;
+}
+
+/**
+ * Asserts the given action tag is supported
+ * @param action
+ */
+export function assertKnownAction(action: ElementImpl): boolean {
+  if (Diff.SupportedActions.indexOf(action.localName) >= 0) return true;
+  throwException(new InvalidPatchDirective(action));
+  return false;
 }

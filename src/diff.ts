@@ -7,15 +7,14 @@
 import XmlWrapper from './xml/xml-wrapper';
 import { ElementImpl, NodeImpl } from 'xmldom-ts';
 import { XPathParser } from 'xpath-ts';
-import {
-  Exception,
-  InvalidAttributeValue,
-  InvalidPatchDirective,
-  throwException,
-} from './errors';
 import Patch from './patch';
 import { firstElementChild, nextElementSibling } from './utils/helpers';
 import { isXmlWrapper } from './utils/type-guards';
+import {
+  assertAttributeNotEmpty,
+  assertHasAttribute,
+  assertKnownAction,
+} from './utils/asserts';
 
 /**
  * Parse the given XML patch document, according to
@@ -111,29 +110,17 @@ export default class Diff {
     }
     let action = firstElementChild(root);
     while (action) {
-      if (!action.hasAttribute(Patch.Selector)) {
-        throwException(
-          new InvalidAttributeValue(Exception.ErrSelMissing, action),
-        );
-        action = nextElementSibling(action);
-        continue;
+      // Although RFC doesn't explicitly define how to deal with empty 'sel'.
+      // Judging by the description of <invalid-attribute-value> error,
+      // this should be an error. Also, don't combine the two attribute asserts
+      // because they raise different exceptions.
+      if (
+        assertKnownAction(action) &&
+        assertHasAttribute(action, Patch.Selector) &&
+        assertAttributeNotEmpty(action, Patch.Selector)
+      ) {
+        this._actions.push(action);
       }
-      if (!action.getAttribute(Patch.Selector)!.trim()) {
-        // Although RFC doesn't explicitly define how to deal with empty 'sel'.
-        // Judging by the description of <invalid-attribute-value> error,
-        // this should be an error.
-        throwException(
-          new InvalidAttributeValue(Exception.ErrSelEmpty, action),
-        );
-        action = nextElementSibling(action);
-        continue;
-      }
-      if (Diff.SupportedActions.indexOf(action.localName) < 0) {
-        throwException(new InvalidPatchDirective(action));
-        action = nextElementSibling(action);
-        continue;
-      }
-      this._actions.push(action);
       action = nextElementSibling(action);
     }
     return this;
