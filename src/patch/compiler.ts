@@ -43,7 +43,7 @@ export default class Compiler {
    * not dealt with either.
    * @param expression
    */
-  protected mangleNamespace(expression: string): string {
+  mangleNamespace(expression: string): string {
     const parser = new XPathParser();
     const [types, tokens] = parser.tokenize(expression);
     for (let idx = 0; idx < types.length; idx++) {
@@ -68,12 +68,12 @@ export default class Compiler {
     return tokens.join('');
   }
 
-  protected compileQName(token: string, isAttr: boolean) {
+  compileQName(token: string, isAttr: boolean) {
     const [prefix, name] = this.tokenizeQName(token);
     return this.mangleQName(prefix, name, isAttr);
   }
 
-  protected compileLiteral(token: string): string {
+  compileLiteral(token: string): string {
     const literal = token.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `'${literal}'`;
   }
@@ -82,7 +82,7 @@ export default class Compiler {
    * Breaks up the qualified name by colon `':'`.
    * @param qname
    */
-  protected tokenizeQName(qname: string): string[] {
+  tokenizeQName(qname: string): string[] {
     let prefix = '';
     const parts = qname.split(':');
     let name = parts[0];
@@ -98,7 +98,7 @@ export default class Compiler {
    * @param name
    * @param isAttr
    */
-  protected mangleQName(prefix: string, name: string, isAttr: boolean): string {
+  mangleQName(prefix: string, name: string, isAttr: boolean): string {
     // RFC 4.2.1, paragraph 3: leave this unqualified.
     if (!prefix && !this.action.namespaceURI) {
       return this.predicate(name);
@@ -111,7 +111,7 @@ export default class Compiler {
    * @param prefix
    * @param isAttr
    */
-  protected getPrefix(prefix: string, isAttr: boolean): string | null {
+  getPrefix(prefix: string, isAttr: boolean): string | null {
     // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
     if (isAttr && !prefix) return '';
     return this.patch.lookupNamespaceURI(prefix || '', this.action);
@@ -122,7 +122,7 @@ export default class Compiler {
    * @param name
    * @param namespace
    */
-  protected predicate(name: string, namespace?: string | null): string {
+  predicate(name: string, namespace?: string | null): string {
     const exp = namespace ? `*[namespace-uri()='${namespace}']` : '*';
     return `${exp}[local-name()='${name}']`;
   }

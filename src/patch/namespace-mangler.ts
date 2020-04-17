@@ -108,11 +108,7 @@ export default class NamespaceMangler {
    * @param prefix
    * @param ns
    */
-  protected setPrefix(
-    node: ElementImpl | AttrImpl,
-    prefix: string,
-    ns?: string,
-  ): void {
+  setPrefix(node: ElementImpl | AttrImpl, prefix: string, ns?: string): void {
     node.prefix = prefix;
     if (ns) {
       node.namespaceURI = ns;

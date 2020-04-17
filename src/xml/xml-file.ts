@@ -50,7 +50,7 @@ export default class XmlFile extends XmlWrapper {
    * processing instruction. Uses default encoding if none were found.
    * @param path
    */
-  protected async determineEncoding(path: string): Promise<[string, Buffer]> {
+  async determineEncoding(path: string): Promise<[string, Buffer]> {
     return new Promise((resolve, reject) => {
       this.readFile(path)
         .then(buf => {
@@ -81,7 +81,7 @@ export default class XmlFile extends XmlWrapper {
    * Loads the XML from given file.
    * @param path
    */
-  protected async loadFile(path: string): Promise<DocumentImpl> {
+  async loadFile(path: string): Promise<DocumentImpl> {
     return new Promise((resolve, reject) => {
       this.determineEncoding(path)
         .then(([encoding, buf]) => {
@@ -101,7 +101,7 @@ export default class XmlFile extends XmlWrapper {
    * Read the given file. If a mock was provided, use the mock instead of `fs`.
    * @param path
    */
-  protected async readFile(path: string): Promise<Buffer> {
+  async readFile(path: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const handle = (err: Error | null, buf: Buffer) => {
         if (err) {
