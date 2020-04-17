@@ -4,7 +4,7 @@
   "description": "XML Patch conforming to RFC 5261.",
   "main": "lib/index.js",
   "scripts": {
-    "build": "webpack && tsc",
+    "build": "webpack",
     "docs": "typedoc",
     "test": "jest",
     "test:cover": "npm test -- --coverage"
