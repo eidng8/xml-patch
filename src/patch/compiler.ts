@@ -101,24 +101,29 @@ export default class Compiler {
   protected mangleQName(prefix: string, name: string, isAttr: boolean): string {
     // RFC 4.2.1, paragraph 3: leave this unqualified.
     if (!prefix && !this.action.namespaceURI) {
-      return `*[local-name()='${name}']`;
+      return this.predicate(name);
     }
-
-    // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
-    const ns = this.getPrefix(prefix, isAttr);
-
-    // use predicates for our convenience
-    let exp = '*';
-    if (ns) {
-      exp += `[namespace-uri()='${ns}']`;
-    }
-    exp += `[local-name()='${name}']`;
-
-    return exp;
+    return this.predicate(name, this.getPrefix(prefix, isAttr));
   }
 
+  /**
+   * Lookup the prefix, falling back to ancestors.
+   * @param prefix
+   * @param isAttr
+   */
   protected getPrefix(prefix: string, isAttr: boolean): string | null {
+    // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
     if (isAttr && !prefix) return '';
     return this.patch.lookupNamespaceURI(prefix || '', this.action);
+  }
+
+  /**
+   * Makes a predicate expression instead of plain names, for our convenience.
+   * @param name
+   * @param namespace
+   */
+  protected predicate(name: string, namespace?: string | null): string {
+    const exp = namespace ? `*[namespace-uri()='${namespace}']` : '*';
+    return `${exp}[local-name()='${name}']`;
   }
 }
