@@ -1,5 +1,4 @@
 {
-  "ignorePatterns": ["coverage/", "lib/", "node_modules/", "typings/"],
   "env": {
     "es6": true,
     "jest/globals": true,

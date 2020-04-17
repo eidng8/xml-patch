@@ -1,5 +1,4 @@
 lib/
-docs/
 *.bak
 *.tgz
 tests/data/*.*patched.xml
