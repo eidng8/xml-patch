@@ -12,7 +12,10 @@ import {
   ignoreExceptions,
   InvalidPatchDirective,
   assertKnownAction,
+  assertEmptyText,
+  setExceptionHandler,
 } from '../../src';
+import InvalidWhitespaceDirective from '../../src/errors/InvalidWhitespaceDirective';
 
 describe('asserts', () => {
   it('throws if not element', () => {
@@ -37,11 +40,22 @@ describe('asserts', () => {
     expect(() => assertKnownAction(elem)).toThrow(InvalidPatchDirective);
   });
 
-  it('ignored InvalidPatchDirective', () => {
+  it('returns false if InvalidPatchDirective is ignored', () => {
     expect.assertions(2);
     ignoreExceptions(InvalidPatchDirective);
     const elem = new ElementImpl();
     elem.localName = 'a';
     expect(() => expect(assertKnownAction(elem)).toBe(false)).not.toThrow();
+  });
+
+  it('has default values', () => {
+    expect.assertions(3);
+    ignoreExceptions(InvalidWhitespaceDirective);
+    const node = new ElementImpl();
+    setExceptionHandler(ex => {
+      expect(ex.message).toBe('Invalid type.');
+      expect(ex.action).toBe(node);
+    });
+    expect(() => assertEmptyText(node)).not.toThrow();
   });
 });
