@@ -16,14 +16,14 @@ import {
   isProcessingInstruction,
   isText,
 } from '../utils/type-guards';
+import { childElementCount, firstElementChild } from '../utils/helpers';
 import {
-  childElementCount,
-  firstCDataChild,
-  firstCommentChild,
-  firstElementChild,
-  firstProcessingInstructionChild,
-} from '../utils/helpers';
-import { assertNotRoot, assertTextChildOrNothing } from '../utils/asserts';
+  assertNotRoot,
+  assertTextChildOrNothing,
+  assertHasProcessingInstructionChild,
+  assertHasCDataChild,
+  assertHasCommentChild,
+} from '../utils/asserts';
 import Action from './action';
 
 /**
@@ -39,64 +39,61 @@ export default class ActionReplace extends Action {
     if (isAttribute(subject)) {
       subject.value = this.action.textContent!;
       return;
-    } else if (isText(subject)) {
+    }
+    if (isText(subject)) {
       subject.data = subject.nodeValue = this.action.textContent!;
       return;
-    } else if (isProcessingInstruction(subject)) {
-      const child = firstProcessingInstructionChild(this.action);
-      if (!child) {
-        throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, this.action),
-        );
-        // return;
-      }
-    } else if (isCData(subject)) {
-      const child = firstCDataChild(this.action);
-      if (!child) {
-        throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, this.action),
-        );
-        // return;
-      }
-    } else if (isComment(subject)) {
-      const child = firstCommentChild(this.action);
-      if (!child) {
-        throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, this.action),
-        );
-        // return;
-      }
-    } else {
-      if (!assertNotRoot(subject, this.action)) {
-        // RFC 3, last paragraph
-        return;
-      }
-      if (
-        childElementCount(this.action) != 1 ||
-        firstElementChild(this.action)!.nodeType != subject.nodeType
-      ) {
-        // Although RFC doesn't explicitly specify the case, I think replacement
-        // are allowed only one to one. Reasons:
-        // 1. Last paragraph of 4.4, it uses `child`, not `children`;
-        // 2. In every explanation and example it give, it is always
-        //    "replacing an element".
-        // 3. While talking about things other than elements or replacement,
-        //    it always uses singular, not plural. And when pluralization is
-        //    intended, it states explicitly, such as "Adding Multiple Nodes".
-        // 4. Lastly, in the last sentence of `<invalid-node-types>`, it states
-        //    somewhat explicitly.
-        throwException(
-          new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, this.action),
-        );
-        // return;
-      }
     }
+    // If any of these errors is ignored, we presume that means intentionally
+    // replacing elements of different types.
+    if (isProcessingInstruction(subject)) {
+      assertHasProcessingInstructionChild(this.action);
+    } else if (isCData(subject)) {
+      assertHasCDataChild(this.action);
+    } else if (isComment(subject)) {
+      assertHasCommentChild(this.action);
+    } else {
+      this.replaceElement(subject);
+      return;
+    }
+    this.replaceElement(subject);
+  }
+
+  protected replace(subject: NodeImpl) {
     const anchor = subject.nextSibling;
     const parent = subject.parentNode!;
     parent.removeChild(subject);
     this.importNodes(this.action.childNodes, subject).forEach(node =>
       parent.insertBefore(node, anchor),
     );
+  }
+
+  protected replaceElement(subject: NodeImpl) {
+    if (!assertNotRoot(subject, this.action)) {
+      // RFC 3, last paragraph
+      return;
+    }
+    if (
+      childElementCount(this.action) != 1 ||
+      firstElementChild(this.action)!.nodeType != subject.nodeType
+    ) {
+      // Although RFC doesn't explicitly specify the case, I think replacement
+      // are allowed only one to one. Reasons:
+      // 1. Last paragraph of 4.4, it uses `child`, not `children`;
+      // 2. In every explanation and example it give, it is always
+      //    "replacing an element".
+      // 3. While talking about things other than elements or replacement,
+      //    it always uses singular, not plural. And when pluralization is
+      //    intended, it states explicitly, such as "Adding Multiple Nodes".
+      // 4. Lastly, in the last sentence of `<invalid-node-types>`, it states
+      //    somewhat explicitly.
+      throwException(
+        new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, this.action),
+      );
+      // If the error is ignored, we assume that means intentionally replacing
+      // multiple elements.
+    }
+    this.replace(subject);
   }
 
   /**

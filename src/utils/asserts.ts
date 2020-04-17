@@ -15,6 +15,11 @@ import { throwException } from '../errors/helpers';
 import { isDocument, isElement, isRoot, isText } from './type-guards';
 import Action from '../patch/action';
 import Patch from '../patch/patch';
+import {
+  firstProcessingInstructionChild,
+  firstCDataChild,
+  firstCommentChild,
+} from './helpers';
 
 /**
  * Asserts the given node is not the root
@@ -130,5 +135,23 @@ export function assertAttributeNotEmpty(
 export function assertKnownAction(action: ElementImpl): boolean {
   if (Patch.SupportedActions.indexOf(action.localName) >= 0) return true;
   throwException(new InvalidPatchDirective(action));
+  return false;
+}
+
+export function assertHasProcessingInstructionChild(node: NodeImpl): boolean {
+  if (firstProcessingInstructionChild(node)) return true;
+  throwException(new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, node));
+  return false;
+}
+
+export function assertHasCDataChild(node: NodeImpl): boolean {
+  if (firstCDataChild(node)) return true;
+  throwException(new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, node));
+  return false;
+}
+
+export function assertHasCommentChild(node: NodeImpl): boolean {
+  if (firstCommentChild(node)) return true;
+  throwException(new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, node));
   return false;
 }
