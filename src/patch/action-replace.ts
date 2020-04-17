@@ -15,6 +15,7 @@ import {
   isComment,
   isProcessingInstruction,
   isText,
+  isElement,
 } from '../utils/type-guards';
 import { childElementCount, firstElementChild } from '../utils/helpers';
 import {
@@ -34,29 +35,15 @@ export default class ActionReplace extends Action {
   protected process(subject: NodeImpl, prefix?: string): void {
     if (prefix) {
       this.replaceNamespace(subject, prefix);
-      return;
-    }
-    if (isAttribute(subject)) {
+    } else if (isAttribute(subject)) {
       subject.value = this.action.textContent!;
-      return;
-    }
-    if (isText(subject)) {
+    } else if (isText(subject)) {
       subject.data = subject.nodeValue = this.action.textContent!;
-      return;
-    }
-    // If any of these errors is ignored, we presume that means intentionally
-    // replacing elements of different types.
-    if (isProcessingInstruction(subject)) {
-      assertHasProcessingInstructionChild(this.action);
-    } else if (isCData(subject)) {
-      assertHasCDataChild(this.action);
-    } else if (isComment(subject)) {
-      assertHasCommentChild(this.action);
-    } else {
+    } else if (isElement(subject)) {
       this.replaceElement(subject);
-      return;
+    } else {
+      this.replaceNode(subject);
     }
-    this.replace(subject);
   }
 
   protected replace(subject: NodeImpl) {
@@ -92,6 +79,21 @@ export default class ActionReplace extends Action {
       );
       // If the error is ignored, we assume that means intentionally replacing
       // multiple elements.
+    }
+    this.replace(subject);
+  }
+
+  protected replaceNode(subject: NodeImpl) {
+    // If any of these errors is ignored, we presume that means intentionally
+    // replacing elements of different types.
+    if (isProcessingInstruction(subject)) {
+      assertHasProcessingInstructionChild(this.action);
+    } else if (isCData(subject)) {
+      assertHasCDataChild(this.action);
+    } else if (isComment(subject)) {
+      assertHasCommentChild(this.action);
+    } else {
+      return;
     }
     this.replace(subject);
   }

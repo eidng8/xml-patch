@@ -60,7 +60,7 @@ export default class ActionRemove extends Action {
   }
 
   /**
-   * Removes white space nodes according to `ws`.
+   * Removes white space siblings according to `ws`.
    * @param subject
    */
   protected removeWhiteSpaceSiblings(subject: NodeImpl): void {
