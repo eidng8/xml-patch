@@ -105,10 +105,7 @@ export default class Compiler {
     }
 
     // RFC 4.2.1, paragraph 1 & 2: lookup namespaces
-    const ns =
-      isAttr && !prefix
-        ? ''
-        : this.patch.lookupNamespaceURI(prefix || '', this.action);
+    const ns = this.getPrefix(prefix, isAttr);
 
     // use predicates for our convenience
     let exp = '*';
@@ -118,5 +115,10 @@ export default class Compiler {
     exp += `[local-name()='${name}']`;
 
     return exp;
+  }
+
+  protected getPrefix(prefix: string, isAttr: boolean): string | null {
+    if (isAttr && !prefix) return '';
+    return this.patch.lookupNamespaceURI(prefix || '', this.action);
   }
 }
