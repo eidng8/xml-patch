@@ -14,8 +14,8 @@ import {
   assertKnownAction,
   assertEmptyText,
   setExceptionHandler,
+  InvalidWhitespaceDirective,
 } from '../../src';
-import InvalidWhitespaceDirective from '../../src/errors/InvalidWhitespaceDirective';
 
 describe('Assertions', () => {
   describe('assertElement', () => {

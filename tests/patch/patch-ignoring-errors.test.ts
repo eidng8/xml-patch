@@ -16,8 +16,8 @@ import {
   Patch,
   setExceptionHandler,
   UnlocatedNode,
+  InvalidRootElementOperation,
 } from '../../src';
-import InvalidRootElementOperation from '../../src/errors/InvalidRootElementOperation';
 import '../helpers';
 
 /**

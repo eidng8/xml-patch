@@ -1,14 +1,11 @@
 {
+  "ignorePatterns": ["coverage/", "lib/", "node_modules/", "typings/"],
   "env": {
     "es6": true,
     "jest/globals": true,
     "node": true
   },
   "extends": ["standard", "plugin:prettier/recommended"],
-  "globals": {
-    "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly"
-  },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2018,

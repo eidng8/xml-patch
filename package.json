@@ -21,7 +21,8 @@
   "files": [
     "src",
     "lib",
-    "typings"
+    "typings",
+    "translations"
   ],
   "devDependencies": {
     "@babel/core": "^7.9.0",

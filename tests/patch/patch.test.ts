@@ -9,9 +9,9 @@ import {
   InvalidCharacterSet,
   Patch,
   UnlocatedNode,
-} from '../../src/index';
-import XmlWrapper from '../../src/xml/xml-wrapper';
-import XmlFile from '../../src/xml/xml-file';
+  XmlWrapper,
+  XmlFile,
+} from '../../src';
 import '../helpers';
 
 describe('Patch', () => {

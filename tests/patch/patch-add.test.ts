@@ -8,8 +8,8 @@ import {
   InvalidAttributeValue,
   InvalidNodeTypes,
   Patch,
-} from '../../src/index';
-import InvalidRootElementOperation from '../../src/errors/InvalidRootElementOperation';
+  InvalidRootElementOperation,
+} from '../../src';
 import '../helpers';
 
 describe('Patch <add>', () => {
