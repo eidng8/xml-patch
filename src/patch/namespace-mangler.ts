@@ -8,6 +8,7 @@ import { AttrImpl, ElementImpl, NodeImpl } from 'xmldom-ts';
 import XmlWrapper from '../xml/xml-wrapper';
 import { isAttribute, isElement } from '../utils/type-guards';
 import Patch from './patch';
+import { descend } from '..';
 
 export default class NamespaceMangler {
   protected xml?: XmlWrapper;
@@ -33,20 +34,19 @@ export default class NamespaceMangler {
    * @param anchor a node in the diff document, mostly likely the node being
    * processed currently.
    */
-  mangle(
-    node: NodeImpl | AttrImpl,
-    target: NodeImpl,
-    anchor: NodeImpl,
-  ): NodeImpl {
-    if (node.hasChildNodes()) {
-      for (const child of node.childNodes) {
-        this.mangle(child, target, anchor);
-      }
-    }
+  mangle(node: NodeImpl, target: NodeImpl, anchor: NodeImpl): NodeImpl {
+    this.mangleNode(node, target, anchor);
+    descend(node, n => {
+      this.mangleNode(n, target, anchor);
+    });
+    return node;
+  }
+
+  mangleNode(node: NodeImpl | AttrImpl, target: NodeImpl, anchor: NodeImpl) {
     if (!isElement(node) && !isAttribute(node)) {
       // we are in the middle of importing nodes that can be all kinds of nodes,
       // don't throw exception here.
-      return node;
+      return;
     }
     const [prefix, , targetPrefix, targetNS] = this.mapNamespace(
       (<ElementImpl>node).tagName || (<AttrImpl>node).name,
@@ -58,14 +58,9 @@ export default class NamespaceMangler {
     } else if (targetNS) {
       this.setPrefix(node, prefix, targetNS);
     }
-    if (isAttribute(node)) return node;
-    if (node.hasAttributes()) {
-      const attrs = node.attributes;
-      for (const attr of attrs) {
-        this.mangle(attr, target, anchor);
-      }
+    if (isElement(node) && node.hasAttributes()) {
+      node.attributes.forEach(a => this.mangleNode(a, target, anchor));
     }
-    return node;
   }
 
   /**
