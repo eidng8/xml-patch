@@ -18,11 +18,19 @@ import {
   isText,
 } from './type-guards';
 
+/**
+ * A predicate used while iterating DOM tree. Whose return value affects the
+ * flow of iteration.
+ */
 export type NodeMatcher = (
   node: NodeImpl,
   ...args: any[]
 ) => any | null | undefined;
 
+/**
+ * A predicate used while iterating DOM tree. See {@link lookupThrough} for more
+ * detail.
+ */
 export type NodeIterator = (node: NodeImpl) => NodeImpl | null;
 
 /**
@@ -144,6 +152,7 @@ export function lookupSibling(
  * The `match` callback should determine whether a given node fulfills criteria.
  * If `match()` returns a value that is not `null` or `undefined`, the loop will
  * return immediately, with the return value from `match()`.
+ *
  * @param node The node to start looking.
  * @param match A callback function to determine if the node matches criteria.
  * @param next A callback that returns the next node to be matched.

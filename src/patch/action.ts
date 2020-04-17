@@ -18,8 +18,7 @@ import NamespaceMangler from './namespace-mangler';
 import Patch from './patch';
 
 /**
- * Patches XML according to
- * {@link https://tools.ietf.org/html/rfc5261|RFC 5261}.
+ * Base class of patch actions (directives).
  */
 export default abstract class Action {
   // region Constants
@@ -101,42 +100,76 @@ export default abstract class Action {
   protected xml!: XmlWrapper;
 
   /**
-   * The diff document to be processed.
+   * The patch document to be processed.
    */
   protected patch: Patch;
 
+  /**
+   * DOM element of the action.
+   */
   protected action: ElementImpl;
 
+  /**
+   * The XPath express to be used in query.
+   */
   protected _query: string;
 
+  /**
+   * The namespace mangler to be used.
+   */
   protected mangler: NamespaceMangler;
 
+  /**
+   * Whether current action is valid.
+   */
   protected _valid: boolean = false;
 
+  /**
+   * The `sel` attribute.
+   */
   get sel(): string | null | undefined {
     return this.action.getAttribute(Action.Selector);
   }
 
+  /**
+   * The `sel` attribute translated into predicates.
+   */
   get predicate(): string | null | undefined {
     return this.action.getAttribute(Action.Predicated);
   }
 
+  /**
+   * The effective expression to be used in query.
+   */
   get query(): string {
     return this._query;
   }
 
+  /**
+   * Name of the action (directive).
+   */
   get directive(): string {
     return this.action.localName;
   }
 
+  /**
+   * DOM element of the action.
+   */
   get element(): ElementImpl {
     return this.action;
   }
 
+  /**
+   * Whether current action is valid.
+   */
   get valid() {
     return this._valid;
   }
 
+  /**
+   * @param patch the {@link Patch} instance where the action is in.
+   * @param action DOM element of the action.
+   */
   constructor(patch: Patch, action: ElementImpl) {
     this.patch = patch;
     this.action = action;
@@ -167,14 +200,16 @@ export default abstract class Action {
   }
 
   /**
-   * The target node to apply the action. The `prefix` is only useful when
-   * processing namespace actions. It will be an empty for actions not
-   * related to namespace.
-   * @param subject
-   * @param prefix
+   * Process the action. The `prefix` is only useful when processing namespace
+   * actions.
+   * @param subject the targeted node in target document
+   * @param prefix a prefix that exists in the target document
    */
   protected abstract process(subject: NodeImpl, prefix?: string);
 
+  /**
+   * Tries to compile the action, and update the validity state.
+   */
   protected compile() {
     // Although RFC doesn't explicitly define how to deal with empty 'sel'.
     // Judging by the description of <invalid-attribute-value> error,

@@ -12,8 +12,14 @@ const pd = require('pretty-data').pd;
  * XML patch exception base class
  */
 export default abstract class Exception extends Error {
+  /**
+   * Error namespace defined by RFC.
+   */
   static readonly ErrorNamespace = 'urn:ietf:params:xml:ns:patch-ops-error';
 
+  /**
+   * Error namespace prefix used by exceptions.
+   */
   static readonly ErrorPrefix = 'err';
 
   // region Messages
@@ -79,12 +85,20 @@ export default abstract class Exception extends Error {
    */
   action?: NodeImpl;
 
-  // The error XML document
+  /**
+   * The error XML document
+   */
   protected xml!: DocumentImpl;
 
-  // tag name of the actual error
+  /**
+   * tag name of the actual error
+   */
   protected abstract tag: string;
 
+  /**
+   * @param message message to be shown
+   * @param action the action that triggered the error
+   */
   constructor(message?: string, action?: NodeImpl) {
     super(message);
     this.action = action;
@@ -124,6 +138,9 @@ export default abstract class Exception extends Error {
     return `${Exception.ErrorPrefix}:${name}`;
   }
 
+  /**
+   * Create the XML error document and its root element.
+   */
   protected createRootNode() {
     this.xml = new DOMParserImpl()
       .parseFromString(`<?xml version="1.0" encoding="utf-8"?>

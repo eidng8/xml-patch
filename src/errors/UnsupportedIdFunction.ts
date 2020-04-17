@@ -12,8 +12,14 @@ import { NodeImpl } from 'xmldom-ts';
  * type are not known.
  */
 export default class UnsupportedIdFunction extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'unsupported-id-function';
 
+  /**
+   * @inheritDoc
+   */
   constructor(action?: NodeImpl) {
     super(Exception.ErrFunction, action);
   }

@@ -18,39 +18,55 @@ import {
 import Action from './action';
 
 /**
- * Patches XML according to
- * {@link https://tools.ietf.org/html/rfc5261|RFC 5261}.
+ * Handles the `<add>` directive.
  */
 export default class ActionAdd extends Action {
+  /**
+   * The `pos` attribute.
+   */
   get pos(): string | null {
     return this.action.getAttribute(Action.Pos);
   }
 
+  /**
+   * The `type` attribute.
+   */
   get type(): string {
     return (this.action.getAttribute(Action.Type) || '').trim() || '';
   }
 
+  /**
+   * Whether the action is targeting an attribute.
+   */
   get isAttributeAction(): boolean {
     return '@' == this.type[0] || this.type.startsWith(Action.AxisAttribute);
   }
 
+  /**
+   * Whether the action is targeting an namespace.
+   */
   get isNamespaceAction(): boolean {
     return this.type.startsWith(Action.AxisNamespace);
   }
 
+  /**
+   * Returns the targeted attribute name of an attribute action.
+   */
   get typeAttributeName(): string {
     return this.type
       .substr('@' == this.type[0] ? 1 : Action.AxisAttribute.length)
       .trim();
   }
 
+  /**
+   * Returns the targeted namespace name of a namespace action.
+   */
   get typeNamespacePrefix(): string {
     return this.type.substr(Action.AxisNamespace.length).trim();
   }
 
   /**
-   * Process the directive.
-   * @param subject
+   * @inheritDoc
    */
   protected process(subject: NodeImpl): void {
     if (this.type.length) {
@@ -60,6 +76,10 @@ export default class ActionAdd extends Action {
     }
   }
 
+  /**
+   * Process the action according the `type`
+   * @param subject the targeted node in target document
+   */
   protected processActionType(subject: ElementImpl) {
     // RFC 4.3, 4th paragraph: The value of the optional 'type' attribute is
     // only used when adding attributes and namespaces.
@@ -77,9 +97,11 @@ export default class ActionAdd extends Action {
   }
 
   /**
-   * Adds the given attribute to the target node.
-   * @param subject
-   * @param name
+   * Adds the given attribute to the target node. The given `name` will be
+   * mapped to target document's namespace via
+   * {@link NamespaceMangler.mapNamespace}.
+   * @param subject the targeted node in target document
+   * @param name the qualified name from patch document
    */
   protected addAttribute(subject: ElementImpl, name: string): void {
     // RFC 4.3, 4th paragraph, child node of attribute action must be
@@ -102,6 +124,11 @@ export default class ActionAdd extends Action {
     }
   }
 
+  /**
+   * Adds namespace to target document node. The namespace and prefix will be
+   * added as is.
+   * @param subject the targeted node in target document
+   */
   protected addNamespace(subject: ElementImpl) {
     // Empty namespace isn't valid. More detail:
     // https://stackoverflow.com/a/44278867/1353368
@@ -115,7 +142,7 @@ export default class ActionAdd extends Action {
 
   /**
    * Adds all children of action to target node.
-   * @param subject
+   * @param subject the targeted node in target document
    */
   protected addNode(subject: NodeImpl): void {
     const imported = this.importNodes(this.action.childNodes, subject);
@@ -137,6 +164,12 @@ export default class ActionAdd extends Action {
     }
   }
 
+  /**
+   * Inserts nodes after target node.
+   * @param subject the targeted node in target document
+   * @param imported nodes to be added to target position, which are already
+   * imported into target document.
+   */
   protected after(subject: NodeImpl, imported: NodeImpl[]) {
     if (this.cantAddElement(subject)) return;
     let anchor = subject;
@@ -146,21 +179,43 @@ export default class ActionAdd extends Action {
     });
   }
 
+  /**
+   * Inserts nodes before target node.
+   * @param subject the targeted node in target document
+   * @param imported nodes to be added to target position, which are already
+   * imported into target document.
+   */
   protected before(subject: NodeImpl, imported: NodeImpl[]) {
     if (this.cantAddElement(subject)) return;
     const parent = subject.parentNode!;
     imported.forEach(child => parent.insertBefore(child, subject));
   }
 
+  /**
+   * Prepends nodes as target node's first child.
+   * @param subject the targeted node in target document
+   * @param imported nodes to be added to target position, which are already
+   * imported into target document.
+   */
   protected prepend(subject: NodeImpl, imported: NodeImpl[]) {
     const anchor = subject.firstChild;
     imported.forEach(child => subject.insertBefore(child, anchor));
   }
 
+  /**
+   * Appends nodes as target node's last child.
+   * @param subject the targeted node in target document
+   * @param imported nodes to be added to target position, which are already
+   * imported into target document.
+   */
   protected append(subject: NodeImpl, imported: NodeImpl[]) {
     imported.forEach(child => subject.appendChild(child));
   }
 
+  /**
+   * Determines whether new element can be added as target node's sibling.
+   * @param subject the targeted node in target document
+   */
   protected cantAddElement(subject: NodeImpl): boolean {
     // Everything can be added, except adding elements to root level.
     return (

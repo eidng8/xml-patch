@@ -12,5 +12,8 @@ import Exception from './Exception';
  * error.
  */
 export default class UnlocatedNode extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'unlocated-node';
 }

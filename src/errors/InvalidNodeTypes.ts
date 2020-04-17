@@ -13,5 +13,8 @@ import Exception from './Exception';
  * replaceable content had multiple nodes.
  */
 export default class InvalidNodeTypes extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-node-types';
 }

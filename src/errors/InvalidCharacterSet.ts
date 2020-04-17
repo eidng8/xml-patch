@@ -11,8 +11,14 @@ import Exception from './Exception';
  * different character sets.
  */
 export default class InvalidCharacterSet extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-character-set';
 
+  /**
+   * @inheritDoc
+   */
   constructor() {
     super(Exception.ErrEncoding);
   }

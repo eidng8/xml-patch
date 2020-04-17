@@ -21,10 +21,16 @@ import Action from './action';
  * {@link https://tools.ietf.org/html/rfc5261|RFC 5261}.
  */
 export default class ActionRemove extends Action {
+  /**
+   * The `ws` attribute.
+   */
   get ws() {
     return this.action.getAttribute(Action.Ws);
   }
 
+  /**
+   * @inheritDoc
+   */
   protected process(subject: NodeImpl, prefix?: string): void {
     if (prefix) {
       this.removeNamespace(subject as ElementImpl, prefix);
@@ -40,16 +46,28 @@ export default class ActionRemove extends Action {
     }
   }
 
+  /**
+   * Removes the targeted attribute.
+   * @param subject the targeted node in target document
+   */
   protected removeAttribute(subject: AttrImpl) {
     assertNoWsAttr(this.action, Exception.ErrWsAttribute);
     (subject.ownerElement! as ElementImpl).removeAttributeNode(subject);
   }
 
+  /**
+   * Removes the targeted text node.
+   * @param subject the targeted node in target document
+   */
   protected removeTextNode(subject: TextImpl) {
     assertNoWsAttr(this.action, Exception.ErrWsTextNode);
     subject.parentNode!.removeChild(subject);
   }
 
+  /**
+   * Removes the targeted node.
+   * @param subject the targeted node in target document
+   */
   protected removeNode(subject: NodeImpl) {
     if (isElement(subject) && !assertNotRoot(subject, this.action)) {
       // RFC 3, last paragraph
@@ -61,7 +79,7 @@ export default class ActionRemove extends Action {
 
   /**
    * Removes white space siblings according to `ws`.
-   * @param subject
+   * @param subject the targeted node in target document
    */
   protected removeWhiteSpaceSiblings(subject: NodeImpl): void {
     if (Action.After == this.ws || Action.Both == this.ws) {
@@ -76,20 +94,20 @@ export default class ActionRemove extends Action {
   }
 
   /**
-   * Removes white space nodes if applicable.
-   * @param sibling
+   * Removes white space node if applicable.
+   * @param subject the targeted node in target document
    * @param msg error message when occurred
    */
-  protected removeWhiteSpaceNode(sibling: NodeImpl, msg: string): void {
-    if (assertEmptyText(sibling, this.action, msg)) {
-      sibling.parentNode.removeChild(sibling);
+  protected removeWhiteSpaceNode(subject: NodeImpl, msg: string): void {
+    if (assertEmptyText(subject, this.action, msg)) {
+      subject.parentNode.removeChild(subject);
     }
   }
 
   /**
    * Removes the specified namespace declaration.
-   * @param subject
-   * @param prefix
+   * @param subject the targeted node in target document
+   * @param prefix a prefix that exists in the target document
    */
   protected removeNamespace(subject: ElementImpl, prefix: string): void {
     // RFC 4.5, 2nd paragraph: specifically prohibits namespace nodes

@@ -12,5 +12,8 @@ import Exception from './Exception';
  * missing from the target document.
  */
 export default class InvalidNamespacePrefix extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-namespace-prefix';
 }

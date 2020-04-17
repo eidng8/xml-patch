@@ -11,5 +11,8 @@ import Exception from './Exception';
  * exist in the target document.
  */
 export default class InvalidWhitespaceDirective extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-whitespace-directive';
 }

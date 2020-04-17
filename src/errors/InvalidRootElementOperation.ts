@@ -11,5 +11,8 @@ import Exception from './Exception';
  * for the document root element cannot be added.
  */
 export default class InvalidRootElementOperation extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-root-element-operation';
 }

@@ -12,8 +12,14 @@ import { NodeImpl } from 'xmldom-ts';
  * declaration.
  */
 export default class InvalidNamespaceURI extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-namespace-uri';
 
+  /**
+   * @inheritDoc
+   */
   constructor(action?: NodeImpl) {
     super(Exception.ErrNamespaceURI, action);
   }

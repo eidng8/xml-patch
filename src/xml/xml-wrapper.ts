@@ -17,11 +17,12 @@ const pd = require('pretty-data').pd;
 
 /**
  * A wrapper over {@link https://www.npmjs.com/package/xmldom-ts|xmldom-ts}.
- * This class handles encoding while reading from files.
- * There are some convenient methods and polyfills. There are many gaps between
- * the standard DOM feature set provided by browsers. I've tried to modify the
- * original `xmldom-ts` package but failed. The original project doesn't provide
- * a `package-lock.json`. `tsc` spills a whole lot of errors on it.
+ * There are some convenient methods.
+ *
+ * There are many gaps between the standard DOM feature set provided by
+ * browsers. I've tried to modify the original `xmldom-ts` package but failed.
+ * The original project doesn't provide a `package-lock.json`. `tsc` spills a
+ * whole lot of errors on it.
  */
 export default class XmlWrapper {
   /**
@@ -39,6 +40,9 @@ export default class XmlWrapper {
    */
   protected _encoding!: string;
 
+  /**
+   * List of errors occurred.
+   */
   protected _exceptions: ExceptionBag;
 
   /**
@@ -62,10 +66,16 @@ export default class XmlWrapper {
     return this.doc.documentElement as ElementImpl | null;
   }
 
+  /**
+   * Whether there were error occurred while loading the XML document.
+   */
   get hasError(): boolean {
     return this._exceptions.hasException;
   }
 
+  /**
+   * List of errors occurred.
+   */
   get exception(): ExceptionBag {
     return this._exceptions;
   }
@@ -170,10 +180,18 @@ export default class XmlWrapper {
     return this;
   }
 
+  /**
+   * Error handler to {@link DOMParserImpl} constructor.
+   * @param err
+   */
   protected warning(err: string) {
     this._exceptions.push(new InvalidDiffFormat(err));
   }
 
+  /**
+   * Error handler to {@link DOMParserImpl} constructor.
+   * @param err
+   */
   protected error(err: string) {
     if (err.indexOf('entity not found:') > -1) {
       this._exceptions.push(new InvalidEntityDeclaration(err));
@@ -182,6 +200,10 @@ export default class XmlWrapper {
     }
   }
 
+  /**
+   * Error handler to {@link DOMParserImpl} constructor.
+   * @param err
+   */
   protected fatalError(err: string) {
     this._exceptions.push(new InvalidDiffFormat(err));
   }

@@ -6,10 +6,19 @@
 
 import Exception from './Exception';
 
+/**
+ * A global handler to process ignored exceptions.
+ */
 export type ExceptionHandler = (exception: Exception) => void;
 
+/**
+ * List of ignored exceptions.
+ */
 let ignoredExceptions = [] as { new (): Exception }[];
 
+/**
+ * The global exception handler that was registered.
+ */
 let exceptionHandler: (exception: Exception) => void;
 
 /**

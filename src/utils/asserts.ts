@@ -170,6 +170,11 @@ export function assertKnownAction(
   return false;
 }
 
+/**
+ * Asserts the given node has processing instruction child node.
+ * @param node
+ * @param message
+ */
 export function assertHasProcessingInstructionChild(
   node: NodeImpl,
   message?: string,
@@ -181,6 +186,11 @@ export function assertHasProcessingInstructionChild(
   return false;
 }
 
+/**
+ * Asserts the given node has CData child node.
+ * @param node
+ * @param message
+ */
 export function assertHasCDataChild(node: NodeImpl, message?: string): boolean {
   if (firstCDataChild(node)) return true;
   throwException(
@@ -189,6 +199,11 @@ export function assertHasCDataChild(node: NodeImpl, message?: string): boolean {
   return false;
 }
 
+/**
+ * Asserts the given node has comment child node.
+ * @param node
+ * @param message
+ */
 export function assertHasCommentChild(
   node: NodeImpl,
   message?: string,

@@ -13,10 +13,6 @@ import XmlFileOptions from './xml-file-options';
 /**
  * A wrapper over {@link https://www.npmjs.com/package/xmldom-ts|xmldom-ts}.
  * This class handles encoding while reading from files.
- * There are some convenient methods and polyfills. There are many gaps between
- * the standard DOM feature set provided by browsers. I've tried to modify the
- * original `xmldom-ts` package but failed. The original project doesn't provide
- * a `package-lock.json`. `tsc` spills a whole lot of errors on it.
  */
 export default class XmlFile extends XmlWrapper {
   /**

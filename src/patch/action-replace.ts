@@ -31,6 +31,9 @@ import Action from './action';
  * {@link https://tools.ietf.org/html/rfc5261|RFC 5261}.
  */
 export default class ActionReplace extends Action {
+  /**
+   * @inheritDoc
+   */
   protected process(subject: NodeImpl, prefix?: string): void {
     if (prefix) {
       this.replaceNamespace(subject, prefix);
@@ -45,15 +48,10 @@ export default class ActionReplace extends Action {
     }
   }
 
-  protected replace(subject: NodeImpl) {
-    const anchor = subject.nextSibling;
-    const parent = subject.parentNode!;
-    parent.removeChild(subject);
-    this.importNodes(this.action.childNodes, subject).forEach(node =>
-      parent.insertBefore(node, anchor),
-    );
-  }
-
+  /**
+   * Replaces the targeted element.
+   * @param subject the targeted node in target document
+   */
   protected replaceElement(subject: NodeImpl) {
     if (!assertNotRoot(subject, this.action)) {
       // RFC 3, last paragraph
@@ -82,6 +80,10 @@ export default class ActionReplace extends Action {
     this.replace(subject);
   }
 
+  /**
+   * Replaces targeted node that is not element, text, attribute, or namespace.
+   * @param subject the targeted node in target document
+   */
   protected replaceNode(subject: NodeImpl) {
     // If any of these errors is ignored, we presume that means intentionally
     // replacing elements of different types.
@@ -96,24 +98,37 @@ export default class ActionReplace extends Action {
   }
 
   /**
+   * Replaces the targeted node.
+   * @param subject the targeted node in target document
+   */
+  protected replace(subject: NodeImpl) {
+    const anchor = subject.nextSibling;
+    const parent = subject.parentNode!;
+    parent.removeChild(subject);
+    this.importNodes(this.action.childNodes, subject).forEach(node =>
+      parent.insertBefore(node, anchor),
+    );
+  }
+
+  /**
    * Replaces the namespace Declaration URI of the given prefix. Please note
    * that the prefix isn't changed. RFC doesn't provide a way to change prefix.
-   * @param target
-   * @param prefix
+   * @param subject the targeted node in target document
+   * @param prefix a prefix that exists in the target document
    */
-  protected replaceNamespace(target: any, prefix: string): void {
+  protected replaceNamespace(subject: any, prefix: string): void {
     let uri = '';
     if (this.action.hasChildNodes() && assertTextChildOrNothing(this.action)) {
       uri = this.action.textContent!.trim();
     }
-    if (!target.lookupNamespaceURI(prefix)) {
+    if (!subject.lookupNamespaceURI(prefix)) {
       // RFC 4.4.3
       throwException(
         new InvalidNamespacePrefix(Exception.ErrPrefix, this.action),
       );
       return;
     }
-    target.setAttribute(`xmlns:${prefix}`, uri);
-    target._nsMap[prefix] = uri;
+    subject.setAttribute(`xmlns:${prefix}`, uri);
+    subject._nsMap[prefix] = uri;
   }
 }

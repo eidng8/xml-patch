@@ -32,6 +32,9 @@ export default class Patch {
    */
   protected patch!: XmlWrapper;
 
+  /**
+   * The target XML document.
+   */
   protected target!: XmlWrapper;
 
   /**
@@ -75,6 +78,10 @@ export default class Patch {
     return this;
   }
 
+  /**
+   * Applies the patch to target document.
+   * @param xml the target XML document
+   */
   apply(xml: string | XmlWrapper): Patch {
     this.target = isXmlWrapper(xml) ? xml : new XmlWrapper().fromString(xml);
     if (this.target.encoding != this.encoding) {
@@ -149,7 +156,7 @@ export default class Patch {
         break;
 
       default:
-        throwException(new InvalidPatchDirective(action));
+        throwException(new InvalidPatchDirective('', action));
     }
     return this;
   }

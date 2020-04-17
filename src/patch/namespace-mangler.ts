@@ -11,27 +11,45 @@ import Patch from './patch';
 import { descend } from '..';
 
 export default class NamespaceMangler {
+  /**
+   * The XML document.
+   */
   protected xml?: XmlWrapper;
 
+  /**
+   * The patch document.
+   */
   protected patch: Patch;
 
+  /**
+   * @param patch the XML document
+   * @param xml the patch document
+   */
   constructor(patch: Patch, xml?: XmlWrapper) {
     this.patch = patch;
     this.xml = xml;
   }
 
+  /**
+   * Sets the target XML document (not the patch).
+   * @param xml the XML document
+   */
   setTarget(xml: XmlWrapper) {
     this.xml = xml;
   }
 
   /**
-   * Default namespace has been translated into the XPath expressions, we just
-   * need to handle prefixes here.
+   * Maps namespace of the given node to target document. If the given node is
+   * an element, all its attributes will be mapped too. Also, all descendants
+   * of the given node will be mapped.
+   *
+   * An `anchor` is needed because this method descends into all descendants.
+   * Namespace lookup happens on the `anchor` and the `target` nodes.
    *
    * @param node a imported node that will be put to target, please note that
-   * this node *may* not be in the diff document.
+   * this node *may* not be in the patch document.
    * @param target a node in the target document.
-   * @param anchor a node in the diff document, mostly likely the node being
+   * @param anchor a node in the patch document, mostly likely the node being
    * processed currently.
    */
   mangle(node: NodeImpl, target: NodeImpl, anchor: NodeImpl): NodeImpl {
@@ -40,7 +58,17 @@ export default class NamespaceMangler {
     return node;
   }
 
+  /**
+   * Maps namespace of the given node to target document. If the given node is
+   * an element, all its attributes will be mapped too.
+   * Namespace lookup happens on the `anchor` and the `target` nodes.
+   * @param node a node from patch document
+   * @param target a node in the target document
+   * @param anchor a node in the patch document, mostly likely the node being
+   * processed currently.
+   */
   mangleNode(node: NodeImpl | AttrImpl, target: NodeImpl, anchor: NodeImpl) {
+    // namespaces can only attached to elements and attributes
     if (!isElement(node) && !isAttribute(node)) {
       // we are in the middle of importing nodes that can be all kinds of nodes,
       // don't throw exception here.
@@ -59,6 +87,14 @@ export default class NamespaceMangler {
     this.mangleAttributes(node, target, anchor);
   }
 
+  /**
+   * Maps namespace of the given attribute to target document.
+   * Namespace lookup happens on the `anchor` and the `target` nodes.
+   * @param node a node from patch document
+   * @param target a node in the target document
+   * @param anchor a node in the patch document, mostly likely the node being
+   * processed currently.
+   */
   mangleAttributes(
     node: NodeImpl | AttrImpl,
     target: NodeImpl,
@@ -71,10 +107,10 @@ export default class NamespaceMangler {
 
   /**
    * Map the given namespace to target document's namespaces.
-   * @param name
-   * @param target
-   * @param node
-   * @param isAttr
+   * @param name a qualified name from patch document
+   * @param target a node in the target document
+   * @param node a node from patch document
+   * @param isAttr whether it's an attribute node
    */
   mapNamespace(
     name: string,

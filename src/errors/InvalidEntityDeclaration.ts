@@ -11,5 +11,8 @@ import Exception from './Exception';
  * located or resolved.
  */
 export default class InvalidEntityDeclaration extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-entity-declaration';
 }

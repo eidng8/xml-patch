@@ -11,13 +11,21 @@ import Action from './action';
 import Patch from './patch';
 
 export default class Compiler {
+  /**
+   * The patch document.
+   */
   protected patch!: Patch;
 
+  /**
+   * The action to be compiled.
+   */
   protected action!: ElementImpl;
 
   /**
    * Goes through all extracted actions, performs checking and namespace
    * mangling.
+   * @param patch the patch document
+   * @param action the action to be compiled
    */
   compile(patch: Patch, action: ElementImpl): boolean {
     if (!assertAttributeNotEmpty(action, Action.Selector)) return false;
@@ -36,12 +44,12 @@ export default class Compiler {
   }
 
   /**
-   * This is a *simple* process. It's not supposed to work on complex XPath
+   * This is a ***simple*** process. It's not supposed to work on complex XPath
    * expressions. Currently it expands *qualified names* in simple expressions
    * of form `a/b/c` to expressions with predicates
    * `*[namespace-uri()='uuu'][local-name()='nnn']`. Also, quotation marks are
    * not dealt with either.
-   * @param expression
+   * @param expression the XPath expression to be mangled
    */
   mangleNamespace(expression: string): string {
     const parser = new XPathParser();
@@ -68,11 +76,20 @@ export default class Compiler {
     return tokens.join('');
   }
 
+  /**
+   * Compiles a QName token.
+   * @param token the token to be compiled
+   * @param isAttr whether the token is an attribute
+   */
   compileQName(token: string, isAttr: boolean) {
     const [prefix, name] = this.tokenizeQName(token);
     return this.mangleQName(prefix, name, isAttr);
   }
 
+  /**
+   * Compiles a literal token.
+   * @param token the token to be compiled
+   */
   compileLiteral(token: string): string {
     const literal = token.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `'${literal}'`;
