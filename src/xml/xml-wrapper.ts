@@ -114,6 +114,11 @@ export default class XmlWrapper {
     return this;
   }
 
+  /**
+   * Converts the XML document to string according to given options. Defaults to
+   * pretty print and keeps comment.
+   * @param options
+   */
   toString(options?: FormatOptions): string {
     const xml = this.doc.toString();
     const opts = Object.assign(

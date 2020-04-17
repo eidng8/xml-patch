@@ -150,3 +150,7 @@ There are some XML files in the `tests/data` directory, which are used for unit 
 
 1. Samples from the [RFC 5261](https://tools.ietf.org/html/rfc5261) document.
 2. Samples from the [diffxml](http://diffxml.sourceforge.net/) project.
+
+## Building
+
+This package uses webpack. Just in case anyone gets curious, don't use fire up `tsc`. I couldn't get it working yet. `tsc` keeps complaining about `xmldom-ts`.
