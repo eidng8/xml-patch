@@ -8,6 +8,8 @@ While filing issues, please kindly provide a small data set so that tests can be
 
 ## Contributing Code
 
+Please submit PR against the `dev` branch. Any PR to `master` will be rejected. Also, please make sure to update/rebase your branch before submitting PR.
+
 This library uses [prettier](https://www.npmjs.com/package/prettier) to control coding style. It is hooked to pre-commit script.
 
 The library requires 100% test coverage. Any new pieces of codes must have corresponding tests.
