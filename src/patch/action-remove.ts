@@ -55,7 +55,7 @@ export default class ActionRemove extends Action {
       // RFC 3, last paragraph
       return;
     }
-    this.removeWhiteSpaceNode(subject);
+    this.removeWhiteSpaceSiblings(subject);
     subject.parentNode!.removeChild(subject);
   }
 
@@ -63,20 +63,26 @@ export default class ActionRemove extends Action {
    * Removes white space nodes according to `ws`.
    * @param subject
    */
-  protected removeWhiteSpaceNode(subject: NodeImpl): void {
-    let sibling;
-    const parent = subject.parentNode!;
+  protected removeWhiteSpaceSiblings(subject: NodeImpl): void {
     if (Action.After == this.ws || Action.Both == this.ws) {
-      sibling = subject.nextSibling;
-      if (assertEmptyText(sibling, this.action, Exception.ErrWsAfter)) {
-        parent.removeChild(sibling);
-      }
+      this.removeWhiteSpaceNode(subject.nextSibling, Exception.ErrWsAfter);
     }
     if (Action.Before == this.ws || Action.Both == this.ws) {
-      sibling = subject.previousSibling;
-      if (assertEmptyText(sibling, this.action, Exception.ErrWsBefore)) {
-        parent.removeChild(sibling);
-      }
+      this.removeWhiteSpaceNode(
+        subject.previousSibling as NodeImpl,
+        Exception.ErrWsBefore,
+      );
+    }
+  }
+
+  /**
+   * Removes white space nodes if applicable.
+   * @param sibling
+   * @param msg error message when occurred
+   */
+  protected removeWhiteSpaceNode(sibling: NodeImpl, msg: string): void {
+    if (assertEmptyText(sibling, this.action, msg)) {
+      sibling.parentNode.removeChild(sibling);
     }
   }
 
