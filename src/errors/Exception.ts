@@ -4,9 +4,9 @@
  * Author: eidng8
  */
 
-import { DocumentImpl, NodeImpl } from 'xmldom-ts';
-import XmlWrapper from '../xml/xml-wrapper';
-import Diff from '../diff';
+import { DocumentImpl, NodeImpl, DOMParserImpl, ElementImpl } from 'xmldom-ts';
+
+const pd = require('pretty-data').pd;
 
 /**
  * XML patch exception base class
@@ -57,7 +57,7 @@ export default abstract class Exception extends Error {
     ' another sibling element for the document root' +
     ' element cannot be added.';
 
-  static ErrSelEmpty = '`sel` cannot be empty.';
+  static ErrSelEmpty = '`sel` must be provided and not empty.';
 
   static ErrSelMissing = 'Missing `sel` attribute.';
 
@@ -80,7 +80,7 @@ export default abstract class Exception extends Error {
   action?: NodeImpl;
 
   // The error XML document
-  protected xml!: XmlWrapper;
+  protected xml!: DocumentImpl;
 
   // tag name of the actual error
   protected abstract tag: string;
@@ -91,9 +91,8 @@ export default abstract class Exception extends Error {
   }
 
   public toString(): string {
-    this.createRootNode();
-    this.xml.root!.appendChild(this.createErrorNode());
-    return this.xml.toString({ pretty: true, preserveComments: true });
+    this.createRootNode().appendChild(this.createErrorNode());
+    return pd.xml(this.xml.toString());
   }
 
   public toLocaleString(): string {
@@ -104,7 +103,7 @@ export default abstract class Exception extends Error {
    * Creates the actual error node
    */
   public createErrorNode(doc?: DocumentImpl) {
-    const elem = (doc || this.xml.doc).createElementNS(
+    const elem = (doc || this.xml).createElementNS(
       Exception.ErrorNamespace,
       this.qualifyName(`${this.tag}`),
     );
@@ -112,7 +111,7 @@ export default abstract class Exception extends Error {
       elem.setAttribute('phrase', this.message);
     }
     if (this.action) {
-      elem.appendChild(this.xml.doc.importNode(this.action, true));
+      elem.appendChild(this.xml.importNode(this.action, true));
     }
     return elem;
   }
@@ -126,11 +125,11 @@ export default abstract class Exception extends Error {
   }
 
   protected createRootNode() {
-    this.xml = new XmlWrapper()
-      .fromString(`<?xml version="1.0" encoding="utf-8"?>
+    this.xml = new DOMParserImpl()
+      .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <${Exception.ErrorPrefix}:patch-ops-error
     xmlns:${Exception.ErrorPrefix}="${Exception.ErrorNamespace}"
-    xmlns="${Diff.DiffNamespace}"/>`);
-    return this.xml.root!;
+    xmlns="urn:ietf:params:xml:ns:pidf-diff"/>`) as DocumentImpl;
+    return this.xml.documentElement as ElementImpl;
   }
 }

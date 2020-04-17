@@ -4,7 +4,6 @@
  * Author: eidng8
  */
 
-import XmlWrapper from '../xml/xml-wrapper';
 import {
   AttrImpl,
   CDATASectionImpl,
@@ -15,6 +14,7 @@ import {
   ProcessingInstructionImpl,
   TextImpl,
 } from 'xmldom-ts';
+import XmlWrapper from '../xml/xml-wrapper';
 
 /**
  * XmlWrapper Type guard

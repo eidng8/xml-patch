@@ -9,7 +9,7 @@ const path = require('path');
 module.exports = {
   mode: 'production',
   entry: {
-    index: './src/index.ts',
+    index: './src/helpers.ts',
   },
   output: {
     path: path.resolve(__dirname, 'lib'),

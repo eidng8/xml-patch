@@ -32,7 +32,7 @@ describe('Patch ignoring errors', () => {
   it('does not throw on empty patch document', () => {
     expect.assertions(2);
     expect(() => {
-      expect(new Patch().load('<diff/>').patch('<a>x<b>y</b>z</a>')).toEqualXml(
+      expect(new Patch('<diff/>').apply('<a>x<b>y</b>z</a>')).toEqualXml(
         '<a>x<b>y</b>z</a>',
       );
     }).not.toThrow();
@@ -48,9 +48,7 @@ describe('Patch ignoring errors', () => {
     });
     expect(() => {
       expect(
-        new Patch()
-          .load('<diff><add sel="c"/></diff>')
-          .patch('<a>x<b>y</b>z</a>'),
+        new Patch('<diff><add sel="c"/></diff>').apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -66,7 +64,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><replace><c>y</c></replace></diff>')
-          .patch('<a>x<b>y</b>z</a>'),
+          .apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
   });
@@ -81,7 +79,7 @@ describe('Patch ignoring errors', () => {
     });
     expect(() => {
       expect(
-        new Patch().load('<diff><add/></diff>').patch('<a>x<b>y</b>z</a>'),
+        new Patch('<diff><add/></diff>').apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -99,7 +97,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><add sel="  "/></diff>')
-          .patch('<a>x<b>y</b>z</a>'),
+          .apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -117,7 +115,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><wrong sel="a"/></diff>')
-          .patch('<a>x<b>y</b>z</a>'),
+          .apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -135,7 +133,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><add sel="a" type="@c"><c>ccc</c></add></diff>')
-          .patch('<a>x<b>y</b>z</a>')
+          .apply('<a>x<b>y</b>z</a>')
           .toString({ minify: true }),
       ).toBe('<a>x<b>y</b>z</a>');
     }).not.toThrow();
@@ -145,19 +143,19 @@ describe('Patch ignoring errors', () => {
           .load(
             '<diff><add sel="a" type="attribute::c"><c>ccc</c></add></diff>',
           )
-          .patch('<a>x<b>y</b>z</a>'),
+          .apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
     expect(raised).toBe(2);
   });
 
   it('ignores non-text namespace action', () => {
-    expect.assertions(5);
-    ignoreExceptions([InvalidNodeTypes, InvalidPatchDirective]);
+    expect.assertions(4);
+    ignoreExceptions(InvalidNodeTypes);
     let raised = 0;
-    const exceptions = [InvalidNodeTypes, InvalidPatchDirective];
     setExceptionHandler(ex => {
-      expect(ex).toBeInstanceOf(exceptions[raised++]);
+      raised++;
+      expect(ex).toBeInstanceOf(InvalidNodeTypes);
     });
     expect(() => {
       expect(
@@ -165,10 +163,10 @@ describe('Patch ignoring errors', () => {
           .load(
             '<diff><add sel="a" type="namespace::c"><c>ccc</c></add></diff>',
           )
-          .patch('<a>x<b>y</b>z</a>'),
+          .apply('<a>x<b>y</b>z</a>'),
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
-    expect(raised).toBe(2);
+    expect(raised).toBe(1);
   });
 
   it('ignores invalid target for attribute action', () => {
@@ -183,7 +181,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><add sel="a/text()" type="@c"/></diff>')
-          .patch('<a>x</a>'),
+          .apply('<a>x</a>'),
       ).toEqualXml('<a>x</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -201,7 +199,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><add sel="a" pos="before"><c/></add></diff>')
-          .patch('<a>x</a>')
+          .apply('<a>x</a>')
           .toString({ minify: true }),
       ).toBe('<a>x</a>');
     }).not.toThrow();
@@ -209,7 +207,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><add sel="a" pos="after"><c/></add></diff>')
-          .patch('<a>x</a>'),
+          .apply('<a>x</a>'),
       ).toEqualXml('<a>x</a>');
     }).not.toThrow();
     expect(raised).toBe(2);
@@ -225,7 +223,7 @@ describe('Patch ignoring errors', () => {
     });
     expect(() => {
       expect(
-        new Patch().load('<diff><remove sel="a"/></diff>').patch('<a>x</a>'),
+        new Patch('<diff><remove sel="a"/></diff>').apply('<a>x</a>'),
       ).toEqualXml('<a>x</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -243,7 +241,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><replace sel="a"><b/></replace></diff>')
-          .patch('<a/>'),
+          .apply('<a/>'),
       ).toEqualXml('<a/>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -261,7 +259,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><remove sel="a/namespace::p"/></diff>')
-          .patch('<p:a xmlns:p="urn:xxx"><p:b/>x</p:a>'),
+          .apply('<p:a xmlns:p="urn:xxx"><p:b/>x</p:a>'),
       ).toEqualXml('<p:a xmlns:p="urn:xxx"><p:b/>x</p:a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -279,7 +277,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><remove sel="a/namespace::p"/></diff>')
-          .patch('<a>x</a>'),
+          .apply('<a>x</a>'),
       ).toEqualXml('<a>x</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -297,7 +295,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><replace sel="a/namespace::p"/>urn:yyy</diff>')
-          .patch('<a xmlns="urn:xxx">x</a>'),
+          .apply('<a xmlns="urn:xxx">x</a>'),
       ).toEqualXml('<a xmlns="urn:xxx">x</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -313,7 +311,7 @@ describe('Patch ignoring errors', () => {
     expect(
       new Patch()
         .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
-        .patch('<a>x<b>y</b>z</a>'),
+        .apply('<a>x<b>y</b>z</a>'),
     ).toEqualXml('<a>x<c/><d/><e/>z</a>');
   });
 
@@ -328,7 +326,7 @@ describe('Patch ignoring errors', () => {
     expect(
       new Patch()
         .load('<diff><add sel="/a/b"><c/><d/><e/></add></diff>')
-        .patch('<a>x<b>y</b>z<b/></a>'),
+        .apply('<a>x<b>y</b>z<b/></a>'),
     ).toEqualXml('<a>x<b>y<c/><d/><e/></b>z<b><c/><d/><e/></b></a>');
     expect(raised).toBe(1);
   });
@@ -344,7 +342,7 @@ describe('Patch ignoring errors', () => {
     expect(
       new Patch()
         .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
-        .patch('<a>x<b>y</b>z<b/></a>'),
+        .apply('<a>x<b>y</b>z<b/></a>'),
     ).toEqualXml('<a>x<c/><d/><e/>z<c/><d/><e/></a>');
     expect(raised).toBe(3);
   });
@@ -360,7 +358,7 @@ describe('Patch ignoring errors', () => {
     expect(
       new Patch()
         .load('<diff><remove sel="/a/b"/></diff>')
-        .patch('<a>x<b>y</b>z<b/></a>'),
+        .apply('<a>x<b>y</b>z<b/></a>'),
     ).toEqualXml('<a>xz</a>');
     expect(raised).toBe(1);
   });
@@ -377,7 +375,7 @@ describe('Patch ignoring errors', () => {
       expect(
         new Patch()
           .load('<diff><remove sel="/a/@b" ws="before"/></diff>')
-          .patch('<a b=""/>'),
+          .apply('<a b=""/>'),
       ).toEqualXml('<a/>');
     }).not.toThrow();
     expect(raised).toBe(1);
@@ -397,21 +395,21 @@ describe('Patch ignoring errors', () => {
           .load(
             '<diff><replace sel="a/processing-instruction()"><b/></replace></diff>',
           )
-          .patch('<a><?pi ?></a>'),
+          .apply('<a><?pi ?></a>'),
       ).toEqualXml('<a><b/></a>');
     }).not.toThrow();
     expect(() => {
       expect(
         new Patch()
           .load('<diff><replace sel="a/comment()"><b/></replace></diff>')
-          .patch('<a><!--b--></a>'),
+          .apply('<a><!--b--></a>'),
       ).toEqualXml('<a><b/></a>');
     }).not.toThrow();
     expect(() => {
       expect(
         new Patch()
           .load('<diff><replace sel="a/text()"><b/></replace></diff>')
-          .patch('<a><![CDATA[cdata]]></a>'),
+          .apply('<a><![CDATA[cdata]]></a>'),
       ).toEqualXml('<a><b/></a>');
     }).not.toThrow();
     expect(raised).toBe(3);

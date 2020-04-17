@@ -5,14 +5,12 @@
  */
 
 import { DocumentImpl, DOMParserImpl, ElementImpl, NodeImpl } from 'xmldom-ts';
-import {
-  ExceptionBag,
-  InvalidDiffFormat,
-  InvalidEntityDeclaration,
-  throwException,
-} from '../errors';
 import XmlOptions from './xml-options';
 import FormatOptions from './format-options';
+import ExceptionBag from '../errors/ExceptionBag';
+import InvalidDiffFormat from '../errors/InvalidDiffFormat';
+import InvalidEntityDeclaration from '../errors/InvalidEntityDeclaration';
+import { throwException } from '../errors/helpers';
 import { descend, isEmptyText, lookupAncestor } from '../utils/helpers';
 import { isText } from '../utils/type-guards';
 

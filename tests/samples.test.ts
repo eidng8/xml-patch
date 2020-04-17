@@ -21,7 +21,7 @@ describe('Sample XML', () => {
       const xml = readFileSync(source, { encoding: 'utf-8' });
       const diff = readFileSync(patch, { encoding: 'utf-8' });
       try {
-        const patched = new Patch().load(diff).patch(xml);
+        const patched = new Patch(diff).apply(xml);
         writeFileSync(patchedFiles[idx], format(patched.toString()));
         expect(patched).toEqualXml(
           readFileSync(fixture, { encoding: 'utf-8' }),

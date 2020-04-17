@@ -5,18 +5,16 @@
  */
 
 import { ElementImpl, NodeImpl } from 'xmldom-ts';
-import { isDocument, isRoot, isText } from './type-guards';
-import {
-  Exception,
-  InvalidAttributeValue,
-  InvalidNodeTypes,
-  InvalidPatchDirective,
-  InvalidRootElementOperation,
-  InvalidWhitespaceDirective,
-  throwException,
-} from '../errors';
-import Patch from '../patch';
-import Diff from '../diff';
+import Exception from '../errors/Exception';
+import InvalidNodeTypes from '../errors/InvalidNodeTypes';
+import InvalidWhitespaceDirective from '../errors/InvalidWhitespaceDirective';
+import InvalidRootElementOperation from '../errors/InvalidRootElementOperation';
+import InvalidAttributeValue from '../errors/InvalidAttributeValue';
+import InvalidPatchDirective from '../errors/InvalidPatchDirective';
+import { throwException } from '../errors/helpers';
+import { isDocument, isElement, isRoot, isText } from './type-guards';
+import Action from '../patch/action';
+import Patch from '../patch/patch';
 
 /**
  * Asserts the given node is not the root
@@ -33,13 +31,61 @@ export function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
 }
 
 /**
- * Asserts the given action has one text node child or no child at all
+ * Asserts the given node is an element node
+ * @param node
  * @param action
  */
-export function assertTextChild(action: NodeImpl): boolean {
-  if (!action.childNodes.length) return true;
-  if (action.childNodes.length > 1 || !isText(action.firstChild)) {
-    throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, action));
+export function assertElement(node: NodeImpl, action?: NodeImpl): boolean {
+  if (isElement(node)) return true;
+  throwException(new InvalidNodeTypes(Exception.ErrType, action || node));
+  return false;
+}
+
+/**
+ * Asserts the given node is an empty text node
+ * @param node
+ * @param action
+ * @param message
+ */
+export function assertEmptyText(
+  node: NodeImpl,
+  action?: NodeImpl,
+  message?: string,
+): boolean {
+  if (isText(node) && !node.textContent!.trim()) return true;
+  throwException(
+    new InvalidWhitespaceDirective(
+      message || Exception.ErrType,
+      action || node,
+    ),
+  );
+  return false;
+}
+
+/**
+ * Asserts the given action has one text node child or no child at all
+ * @param node
+ */
+export function assertTextChildOrNothing(node: NodeImpl): boolean {
+  if (!node.childNodes.length) return true;
+  if (node.childNodes.length > 1 || !isText(node.firstChild)) {
+    throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, node));
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Asserts the given action has one text node child or no child at all
+ * @param node
+ */
+export function assertTextChildNotEmpty(node: NodeImpl): boolean {
+  if (
+    node.childNodes.length != 1 ||
+    !isText(node.firstChild) ||
+    !node.firstChild.textContent!.trim()
+  ) {
+    throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, node));
     return false;
   }
   return true;
@@ -51,7 +97,7 @@ export function assertTextChild(action: NodeImpl): boolean {
  * @param message
  */
 export function assertNoWsAttr(action: ElementImpl, message: string): boolean {
-  if (action.hasAttribute(Patch.Ws)) {
+  if (action.hasAttribute(Action.Ws)) {
     throwException(new InvalidWhitespaceDirective(message, action));
     return false;
   }
@@ -59,30 +105,21 @@ export function assertNoWsAttr(action: ElementImpl, message: string): boolean {
 }
 
 /**
- * Asserts element has the given attribute
- * @param elem
- * @param attr
- */
-export function assertHasAttribute(elem: ElementImpl, attr: string): boolean {
-  if (elem.hasAttribute(attr)) return true;
-  const ex = new InvalidAttributeValue(Exception.ErrSelMissing, elem);
-  throwException(ex);
-  return false;
-}
-
-/**
  * Asserts element has the given attribute with non-empty value
  * @param elem
  * @param attr
+ * @param message
  */
 export function assertAttributeNotEmpty(
   elem: ElementImpl,
   attr: string,
+  message?: string,
 ): boolean {
   const a = elem.getAttribute(attr);
   if (a && a.trim()) return true;
-  const ex = new InvalidAttributeValue(Exception.ErrSelEmpty, elem);
-  throwException(ex);
+  throwException(
+    new InvalidAttributeValue(message || Exception.ErrSelEmpty, elem),
+  );
   return false;
 }
 
@@ -91,7 +128,7 @@ export function assertAttributeNotEmpty(
  * @param action
  */
 export function assertKnownAction(action: ElementImpl): boolean {
-  if (Diff.SupportedActions.indexOf(action.localName) >= 0) return true;
+  if (Patch.SupportedActions.indexOf(action.localName) >= 0) return true;
   throwException(new InvalidPatchDirective(action));
   return false;
 }
