@@ -333,118 +333,118 @@ describe('Patch ignoring errors', () => {
     expect(raised).toBe(1);
   });
 
-  // region Side Effects
-  it('replaces target element with multiple elements', () => {
-    expect.assertions(2);
-    ignoreExceptions(InvalidNodeTypes);
-    setExceptionHandler(ex => {
-      expect(ex).toBeInstanceOf(InvalidNodeTypes);
-    });
-    expect(
-      new Patch()
-        .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
-        .apply('<a>x<b>y</b>z</a>'),
-    ).toEqualXml('<a>x<c/><d/><e/>z</a>');
-  });
-
-  it('adds to multiple targets', () => {
-    expect.assertions(3);
-    ignoreExceptions(UnlocatedNode);
-    let raised = 0;
-    setExceptionHandler(ex => {
-      raised++;
-      expect(ex).toBeInstanceOf(UnlocatedNode);
-    });
-    expect(
-      new Patch()
-        .load('<diff><add sel="/a/b"><c/><d/><e/></add></diff>')
-        .apply('<a>x<b>y</b>z<b/></a>'),
-    ).toEqualXml('<a>x<b>y<c/><d/><e/></b>z<b><c/><d/><e/></b></a>');
-    expect(raised).toBe(1);
-  });
-
-  it('replaces multiple targets', () => {
-    expect.assertions(5);
-    ignoreExceptions([UnlocatedNode, InvalidNodeTypes]);
-    let raised = 0;
-    const exceptions = [UnlocatedNode, InvalidNodeTypes, InvalidNodeTypes];
-    setExceptionHandler(ex => {
-      expect(ex).toBeInstanceOf(exceptions[raised++]);
-    });
-    expect(
-      new Patch()
-        .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
-        .apply('<a>x<b>y</b>z<b/></a>'),
-    ).toEqualXml('<a>x<c/><d/><e/>z<c/><d/><e/></a>');
-    expect(raised).toBe(3);
-  });
-
-  it('removes multiple targets', () => {
-    expect.assertions(3);
-    ignoreExceptions(UnlocatedNode);
-    let raised = 0;
-    setExceptionHandler(ex => {
-      raised++;
-      expect(ex).toBeInstanceOf(UnlocatedNode);
-    });
-    expect(
-      new Patch()
-        .load('<diff><remove sel="/a/b"/></diff>')
-        .apply('<a>x<b>y</b>z<b/></a>'),
-    ).toEqualXml('<a>xz</a>');
-    expect(raised).toBe(1);
-  });
-
-  it('removes attribute with `ws`', () => {
-    expect.assertions(4);
-    ignoreExceptions(InvalidWhitespaceDirective);
-    let raised = 0;
-    setExceptionHandler(ex => {
-      raised++;
-      expect(ex).toBeInstanceOf(InvalidWhitespaceDirective);
-    });
-    expect(() => {
+  describe('Side Effects', () => {
+    it('replaces target element with multiple elements', () => {
+      expect.assertions(2);
+      ignoreExceptions(InvalidNodeTypes);
+      setExceptionHandler(ex => {
+        expect(ex).toBeInstanceOf(InvalidNodeTypes);
+      });
       expect(
         new Patch()
-          .load('<diff><remove sel="/a/@b" ws="before"/></diff>')
-          .apply('<a b=""/>'),
-      ).toEqualXml('<a/>');
-    }).not.toThrow();
-    expect(raised).toBe(1);
-  });
-
-  it('replaces mismatched node types', () => {
-    expect.assertions(10);
-    ignoreExceptions(InvalidNodeTypes);
-    let raised = 0;
-    setExceptionHandler(ex => {
-      expect(ex).toBeInstanceOf(InvalidNodeTypes);
-      raised++;
+          .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
+          .apply('<a>x<b>y</b>z</a>'),
+      ).toEqualXml('<a>x<c/><d/><e/>z</a>');
     });
-    expect(() => {
+
+    it('adds to multiple targets', () => {
+      expect.assertions(3);
+      ignoreExceptions(UnlocatedNode);
+      let raised = 0;
+      setExceptionHandler(ex => {
+        raised++;
+        expect(ex).toBeInstanceOf(UnlocatedNode);
+      });
       expect(
         new Patch()
-          .load(
-            '<diff><replace sel="a/processing-instruction()"><b/></replace></diff>',
-          )
-          .apply('<a><?pi ?></a>'),
-      ).toEqualXml('<a><b/></a>');
-    }).not.toThrow();
-    expect(() => {
+          .load('<diff><add sel="/a/b"><c/><d/><e/></add></diff>')
+          .apply('<a>x<b>y</b>z<b/></a>'),
+      ).toEqualXml('<a>x<b>y<c/><d/><e/></b>z<b><c/><d/><e/></b></a>');
+      expect(raised).toBe(1);
+    });
+
+    it('replaces multiple targets', () => {
+      expect.assertions(5);
+      ignoreExceptions([UnlocatedNode, InvalidNodeTypes]);
+      let raised = 0;
+      const exceptions = [UnlocatedNode, InvalidNodeTypes, InvalidNodeTypes];
+      setExceptionHandler(ex => {
+        expect(ex).toBeInstanceOf(exceptions[raised++]);
+      });
       expect(
         new Patch()
-          .load('<diff><replace sel="a/comment()"><b/></replace></diff>')
-          .apply('<a><!--b--></a>'),
-      ).toEqualXml('<a><b/></a>');
-    }).not.toThrow();
-    expect(() => {
+          .load('<diff><replace sel="/a/b"><c/><d/><e/></replace></diff>')
+          .apply('<a>x<b>y</b>z<b/></a>'),
+      ).toEqualXml('<a>x<c/><d/><e/>z<c/><d/><e/></a>');
+      expect(raised).toBe(3);
+    });
+
+    it('removes multiple targets', () => {
+      expect.assertions(3);
+      ignoreExceptions(UnlocatedNode);
+      let raised = 0;
+      setExceptionHandler(ex => {
+        raised++;
+        expect(ex).toBeInstanceOf(UnlocatedNode);
+      });
       expect(
         new Patch()
-          .load('<diff><replace sel="a/text()"><b/></replace></diff>')
-          .apply('<a><![CDATA[cdata]]></a>'),
-      ).toEqualXml('<a><b/></a>');
-    }).not.toThrow();
-    expect(raised).toBe(3);
+          .load('<diff><remove sel="/a/b"/></diff>')
+          .apply('<a>x<b>y</b>z<b/></a>'),
+      ).toEqualXml('<a>xz</a>');
+      expect(raised).toBe(1);
+    });
+
+    it('removes attribute with `ws`', () => {
+      expect.assertions(4);
+      ignoreExceptions(InvalidWhitespaceDirective);
+      let raised = 0;
+      setExceptionHandler(ex => {
+        raised++;
+        expect(ex).toBeInstanceOf(InvalidWhitespaceDirective);
+      });
+      expect(() => {
+        expect(
+          new Patch()
+            .load('<diff><remove sel="/a/@b" ws="before"/></diff>')
+            .apply('<a b=""/>'),
+        ).toEqualXml('<a/>');
+      }).not.toThrow();
+      expect(raised).toBe(1);
+    });
+
+    it('replaces mismatched node types', () => {
+      expect.assertions(10);
+      ignoreExceptions(InvalidNodeTypes);
+      let raised = 0;
+      setExceptionHandler(ex => {
+        expect(ex).toBeInstanceOf(InvalidNodeTypes);
+        raised++;
+      });
+      expect(() => {
+        expect(
+          new Patch()
+            .load(
+              '<diff><replace sel="a/processing-instruction()"><b/></replace></diff>',
+            )
+            .apply('<a><?pi ?></a>'),
+        ).toEqualXml('<a><b/></a>');
+      }).not.toThrow();
+      expect(() => {
+        expect(
+          new Patch()
+            .load('<diff><replace sel="a/comment()"><b/></replace></diff>')
+            .apply('<a><!--b--></a>'),
+        ).toEqualXml('<a><b/></a>');
+      }).not.toThrow();
+      expect(() => {
+        expect(
+          new Patch()
+            .load('<diff><replace sel="a/text()"><b/></replace></diff>')
+            .apply('<a><![CDATA[cdata]]></a>'),
+        ).toEqualXml('<a><b/></a>');
+      }).not.toThrow();
+      expect(raised).toBe(3);
+    });
   });
-  // endregion
 });
