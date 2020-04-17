@@ -92,8 +92,6 @@ export default class ActionReplace extends Action {
       assertHasCDataChild(this.action);
     } else if (isComment(subject)) {
       assertHasCommentChild(this.action);
-    } else {
-      return;
     }
     this.replace(subject);
   }
