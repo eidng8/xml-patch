@@ -36,9 +36,7 @@ export default class NamespaceMangler {
    */
   mangle(node: NodeImpl, target: NodeImpl, anchor: NodeImpl): NodeImpl {
     this.mangleNode(node, target, anchor);
-    descend(node, n => {
-      this.mangleNode(n, target, anchor);
-    });
+    descend(node, n => this.mangleNode(n, target, anchor));
     return node;
   }
 
@@ -58,6 +56,14 @@ export default class NamespaceMangler {
     } else if (targetNS) {
       this.setPrefix(node, prefix, targetNS);
     }
+    this.mangleAttributes(node, target, anchor);
+  }
+
+  mangleAttributes(
+    node: NodeImpl | AttrImpl,
+    target: NodeImpl,
+    anchor: NodeImpl,
+  ) {
     if (isElement(node) && node.hasAttributes()) {
       node.attributes.forEach(a => this.mangleNode(a, target, anchor));
     }
