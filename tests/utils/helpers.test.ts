@@ -4,14 +4,14 @@
  * Author: eidng8
  */
 
-import XmlWrapper from '../../src/xml/xml-wrapper';
-import { descend } from '../../src';
-import { NodeImpl } from 'xmldom-ts';
+import { NodeImpl, DOMParserImpl, DocumentImpl } from 'xmldom-ts';
+import { descend, removeEmptyTextNodes, trimTextContents } from '../../src';
+import '../helpers';
 
 describe('Helpers', () => {
   it('descends breadth-first', () => {
     expect.assertions(1);
-    const xml = new XmlWrapper().fromString(
+    const xml = new DOMParserImpl().parseFromString(
       `
 <a1>
     <b1>
@@ -30,9 +30,9 @@ describe('Helpers', () => {
     <b3/>
 </a1>
 `.replace(/\s/g, ''),
-    );
+    ) as DocumentImpl;
     const actual = [] as string[];
-    descend(xml.root!, n => actual.push(n.nodeName));
+    descend(xml.documentElement, n => actual.push(n.nodeName));
     expect(actual).toEqual([
       'b1',
       'b2',
@@ -48,20 +48,40 @@ describe('Helpers', () => {
 
   it('descending breaks out early', () => {
     expect.assertions(2);
-    const xml = new XmlWrapper().fromString('<a><b/><c/><d/></a>');
+    const xml = new DOMParserImpl().parseFromString(
+      '<a><b/><c/><d/></a>',
+    ) as DocumentImpl;
     const actual = [] as string[];
-    const node = descend(xml.root!, n => {
+    const node = descend(xml.documentElement, n => {
       actual.push(n.nodeName);
       return true;
     });
     expect(actual).toEqual(['b']);
-    expect(node).toBe(xml.root!.firstChild);
+    expect(node).toBe(xml.documentElement.firstChild);
   });
 
-  it('return null from nothing', () => {
+  it('returns null from nothing', () => {
     let r = 0;
     // @ts-ignore
     expect(descend(<NodeImpl>null, () => r++)).toBeNull();
     expect(r).toBe(0);
+  });
+
+  it('removes empty text nodes', () => {
+    expect.assertions(1);
+    const xml = new DOMParserImpl().parseFromString(
+      '<a> <b/></a>',
+    ) as DocumentImpl;
+    removeEmptyTextNodes(xml.documentElement);
+    expect(xml).toEqualXml('<a><b/></a>');
+  });
+
+  it('trims text nodes', () => {
+    expect.assertions(1);
+    const xml = new DOMParserImpl().parseFromString(
+      '<a> a<b/></a>',
+    ) as DocumentImpl;
+    trimTextContents(xml.documentElement);
+    expect(xml).toEqualXml('<a>a<b/></a>');
   });
 });

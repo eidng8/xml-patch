@@ -11,8 +11,7 @@ import ExceptionBag from '../errors/ExceptionBag';
 import InvalidDiffFormat from '../errors/InvalidDiffFormat';
 import InvalidEntityDeclaration from '../errors/InvalidEntityDeclaration';
 import { throwException } from '../errors/helpers';
-import { descend, isEmptyText, lookupAncestor } from '../utils/helpers';
-import { isText } from '../utils/type-guards';
+import { lookupAncestor } from '../utils/helpers';
 
 const pd = require('pretty-data').pd;
 
@@ -120,34 +119,6 @@ export default class XmlWrapper {
     }
     // noinspection TypeScriptValidateJSTypes
     return pd.xml(xml);
-  }
-
-  /**
-   * Remove all empty text nodes from descendants of the given node.
-   * @param node
-   */
-  removeEmptyTextNodes(node: NodeImpl): XmlWrapper {
-    descend(node, current => {
-      if (isEmptyText(current)) {
-        current.parentNode.removeChild(current);
-      }
-    });
-    return this;
-  }
-
-  /**
-   * {@link String.trim} all descendants' text nodes.
-   * @param node
-   */
-  trimTextContents(node: NodeImpl): XmlWrapper {
-    descend(node, current => {
-      if (isText(current)) {
-        const txt = current.textContent ? current.textContent.trim() : '';
-        current.textContent = txt;
-        current.data = txt!;
-      }
-    });
-    return this;
   }
 
   /**

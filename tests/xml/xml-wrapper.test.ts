@@ -59,24 +59,6 @@ describe('XML Wrapper', () => {
     expect(() => xml.fromString('<a>')).toThrow(ExceptionBag);
   });
 
-  it('removes empty text nodes', () => {
-    expect.assertions(1);
-    const xml = new XmlWrapper().fromString(
-      '<a>\n\n<b>\n</b> \n<c>a\n<d/></c> <!--f--></a>\n',
-    );
-    xml.removeEmptyTextNodes(xml.doc.firstChild);
-    expect(xml.doc).toEqualXml('<a><b/><c>a\n<d/></c><!--f--></a>');
-  });
-
-  it('trims text nodes', () => {
-    expect.assertions(1);
-    const xml = new XmlWrapper().fromString(
-      '<a>\na a\n<b>\n b \n<c/></b> c\n<?pi ?></a>\n',
-    );
-    xml.trimTextContents(xml.doc.firstChild);
-    expect(xml.doc).toEqualXml('<a>a a<b>b<c/></b>c<?pi ?></a>');
-  });
-
   it('returns first CData child', () => {
     expect.assertions(2);
     const xml = new XmlWrapper().fromString(

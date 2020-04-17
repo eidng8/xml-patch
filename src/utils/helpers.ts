@@ -187,3 +187,29 @@ export function descend(
   }
   return null;
 }
+
+/**
+ * Remove all empty text nodes from descendants of the given node.
+ * @param node
+ */
+export function removeEmptyTextNodes(node: NodeImpl): void {
+  descend(node, current => {
+    if (isEmptyText(current)) {
+      current.parentNode.removeChild(current);
+    }
+  });
+}
+
+/**
+ * {@link String.trim} all descendants' text nodes.
+ * @param node
+ */
+export function trimTextContents(node: NodeImpl): void {
+  descend(node, current => {
+    if (isText(current)) {
+      const txt = current.textContent!.trim();
+      current.textContent = txt;
+      current.data = txt!;
+    }
+  });
+}
