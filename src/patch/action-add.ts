@@ -6,15 +6,14 @@
 
 import { ElementImpl, NodeImpl } from 'xmldom-ts';
 import Exception from '../errors/Exception';
-import InvalidNodeTypes from '../errors/InvalidNodeTypes';
 import InvalidAttributeValue from '../errors/InvalidAttributeValue';
 import { throwException } from '../errors/helpers';
-import { isElement } from '../utils/type-guards';
 import { firstElementChild } from '../utils/helpers';
 import {
   assertNotRoot,
   assertTextChildNotEmpty,
   assertTextChildOrNothing,
+  assertElement,
 } from '../utils/asserts';
 import Action from './action';
 
@@ -62,26 +61,16 @@ export default class ActionAdd extends Action {
   }
 
   protected processActionType(subject: ElementImpl) {
-    if (!isElement(subject)) {
-      throwException(new InvalidNodeTypes(Exception.ErrType, this.action));
+    // RFC 4.3, 4th paragraph: The value of the optional 'type' attribute is
+    // only used when adding attributes and namespaces.
+    // Only elements can be these 2 pieces.
+    if (!assertElement(subject, this.action)) {
       return;
     }
     if (this.isAttributeAction) {
-      if (!assertTextChildOrNothing(this.action)) return;
-      // RFC 4.3, 4th paragraph, child node of attribute action must be
-      // text node. However, it doesn't mention about empty action node
-      // in such case. Considering that XML allows attribute values to be
-      // empty, this case should be considered valid.
       this.addAttribute(subject, this.typeAttributeName);
     } else if (this.isNamespaceAction) {
-      // Empty namespace isn't valid. More detail:
-      // https://stackoverflow.com/a/44278867/1353368
-      if (!assertTextChildNotEmpty(this.action)) return;
-      this.xml.addNamespace(
-        this.typeNamespacePrefix,
-        this.action.textContent!.trim(),
-        subject,
-      );
+      this.addNamespace(subject);
     } else {
       throwException(new InvalidAttributeValue(Exception.ErrType, this.action));
     }
@@ -93,6 +82,11 @@ export default class ActionAdd extends Action {
    * @param name
    */
   protected addAttribute(subject: ElementImpl, name: string): void {
+    // RFC 4.3, 4th paragraph, child node of attribute action must be
+    // text node. However, it doesn't mention about empty action node
+    // in such case. Considering that XML allows attribute values to be
+    // empty, this case should be considered valid.
+    if (!assertTextChildOrNothing(this.action)) return;
     const value = this.action.textContent!.trim();
     const [
       prefix,
@@ -106,6 +100,17 @@ export default class ActionAdd extends Action {
     } else {
       subject.setAttribute(name, value || '');
     }
+  }
+
+  protected addNamespace(subject: ElementImpl) {
+    // Empty namespace isn't valid. More detail:
+    // https://stackoverflow.com/a/44278867/1353368
+    if (!assertTextChildNotEmpty(this.action)) return;
+    this.xml.addNamespace(
+      this.typeNamespacePrefix,
+      this.action.textContent!.trim(),
+      subject,
+    );
   }
 
   /**
