@@ -15,7 +15,7 @@ import {
   throwException,
   UnsupportedIdFunction,
   UnsupportedXmlId,
-} from '../src';
+} from '../../src';
 
 describe('Exception', () => {
   it('generates empty error tag', () => {

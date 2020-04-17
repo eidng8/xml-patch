@@ -8,8 +8,8 @@ import {
   InvalidNamespacePrefix,
   InvalidWhitespaceDirective,
   Patch,
-} from '../src';
-import './helpers';
+} from '../../src';
+import '../helpers';
 
 describe('Patch <remove>', () => {
   it('removes target element', () => {

@@ -13,7 +13,6 @@ import {
   isAttribute,
   isCData,
   isComment,
-  isElement,
   isProcessingInstruction,
   isText,
 } from '../utils/type-guards';
@@ -34,9 +33,7 @@ import Action from './action';
 export default class ActionReplace extends Action {
   protected process(subject: NodeImpl, prefix?: string): void {
     if (prefix) {
-      if (isElement(subject)) {
-        this.replaceNamespace(subject, prefix);
-      }
+      this.replaceNamespace(subject, prefix);
       return;
     }
     if (isAttribute(subject)) {

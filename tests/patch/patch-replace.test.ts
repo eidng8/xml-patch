@@ -4,8 +4,12 @@
  * Author: eidng8
  */
 
-import { InvalidNamespacePrefix, InvalidNodeTypes, Patch } from '../src';
-import './helpers';
+import {
+  InvalidNamespacePrefix,
+  InvalidNodeTypes,
+  Patch,
+} from '../../src/index';
+import '../helpers';
 
 describe('Patch <replace>', () => {
   it('replaces target element', () => {

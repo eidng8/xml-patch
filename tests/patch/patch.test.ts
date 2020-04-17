@@ -9,10 +9,10 @@ import {
   InvalidCharacterSet,
   Patch,
   UnlocatedNode,
-} from '../src';
-import XmlWrapper from '../src/xml/xml-wrapper';
-import XmlFile from '../src/xml/xml-file';
-import './helpers';
+} from '../../src/index';
+import XmlWrapper from '../../src/xml/xml-wrapper';
+import XmlFile from '../../src/xml/xml-file';
+import '../helpers';
 
 describe('Patch', () => {
   it('throws if `sel` attribute is missing', () => {
@@ -133,7 +133,7 @@ describe('Patch', () => {
   });
 
   it('throws if `sel` matches no target', () => {
-    require('../src/translations/zh_chs');
+    require('../../src/translations/zh_chs');
     expect.assertions(2);
     try {
       new Patch('<diff><replace sel="b/c"><c>y</c></replace></diff>').apply(
@@ -146,7 +146,7 @@ describe('Patch', () => {
   });
 
   it('throws if matched multiple target', () => {
-    require('../src/translations/zh_cht');
+    require('../../src/translations/zh_cht');
     expect.assertions(2);
     try {
       new Patch('<diff><add sel="a/b"><c>y</c></add></diff>').apply(

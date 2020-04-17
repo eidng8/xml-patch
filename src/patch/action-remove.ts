@@ -27,9 +27,7 @@ export default class ActionRemove extends Action {
 
   protected process(subject: NodeImpl, prefix?: string): void {
     if (prefix) {
-      if (isElement(subject)) {
-        this.removeNamespace(subject, prefix);
-      }
+      this.removeNamespace(subject as ElementImpl, prefix);
       return;
     }
     // RFC 4.5, 2nd paragraph, `ws` is only not allowed with texts, attributes.
@@ -77,7 +75,7 @@ export default class ActionRemove extends Action {
     if (Action.Before == this.ws || Action.Both == this.ws) {
       sibling = subject.previousSibling;
       if (assertEmptyText(sibling, this.action, Exception.ErrWsBefore)) {
-        parent.removeChild(subject.previousSibling);
+        parent.removeChild(sibling);
       }
     }
   }

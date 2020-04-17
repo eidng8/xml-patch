@@ -6,6 +6,7 @@
 
 import XmlWrapper from '../../src/xml/xml-wrapper';
 import { descend } from '../../src';
+import { NodeImpl } from 'xmldom-ts';
 
 describe('Helpers', () => {
   it('descends breadth-first', () => {
@@ -55,5 +56,12 @@ describe('Helpers', () => {
     });
     expect(actual).toEqual(['b']);
     expect(node).toBe(xml.root!.firstChild);
+  });
+
+  it('return null from nothing', () => {
+    let r = 0;
+    // @ts-ignore
+    expect(descend(<NodeImpl>null, () => r++)).toBeNull();
+    expect(r).toBe(0);
   });
 });

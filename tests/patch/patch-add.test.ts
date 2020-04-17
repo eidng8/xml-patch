@@ -4,9 +4,13 @@
  * Author: eidng8
  */
 
-import { InvalidAttributeValue, InvalidNodeTypes, Patch } from '../src';
-import InvalidRootElementOperation from '../src/errors/InvalidRootElementOperation';
-import './helpers';
+import {
+  InvalidAttributeValue,
+  InvalidNodeTypes,
+  Patch,
+} from '../../src/index';
+import InvalidRootElementOperation from '../../src/errors/InvalidRootElementOperation';
+import '../helpers';
 
 describe('Patch <add>', () => {
   // region Elements

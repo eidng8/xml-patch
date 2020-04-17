@@ -16,9 +16,9 @@ import {
   Patch,
   setExceptionHandler,
   UnlocatedNode,
-} from '../src';
-import InvalidRootElementOperation from '../src/errors/InvalidRootElementOperation';
-import './helpers';
+} from '../../src';
+import InvalidRootElementOperation from '../../src/errors/InvalidRootElementOperation';
+import '../helpers';
 
 /**
  * All tests here must check the target document is not changed
@@ -167,6 +167,38 @@ describe('Patch ignoring errors', () => {
       ).toEqualXml('<a>x<b>y</b>z</a>');
     }).not.toThrow();
     expect(raised).toBe(1);
+  });
+
+  it('ignores non white space text node', () => {
+    expect.assertions(11);
+    ignoreExceptions(InvalidWhitespaceDirective);
+    let raised = 0;
+    setExceptionHandler(ex => {
+      raised++;
+      expect(ex).toBeInstanceOf(InvalidWhitespaceDirective);
+    });
+    expect(() =>
+      expect(
+        new Patch()
+          .load('<diff><remove sel="/a/b" ws="before"/></diff>')
+          .apply('<a>\nx\n<b>y</b>\nz\n</a>'),
+      ).toEqualXml('<a>\nx\n\nz\n</a>'),
+    ).not.toThrow();
+    expect(() =>
+      expect(
+        new Patch()
+          .load('<diff><remove sel="/a/b" ws="after"/></diff>')
+          .apply('<a>\nx\n<b>y</b>\nz\n</a>'),
+      ).toEqualXml('<a>\nx\n\nz\n</a>'),
+    ).not.toThrow();
+    expect(() =>
+      expect(
+        new Patch()
+          .load('<diff><remove sel="/a/b" ws="both"/></diff>')
+          .apply('<a><d/><b>y</b><c/></a>'),
+      ).toEqualXml('<a><d/><c/></a>'),
+    ).not.toThrow();
+    expect(raised).toBe(4);
   });
 
   it('ignores invalid target for attribute action', () => {
