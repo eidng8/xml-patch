@@ -17,9 +17,8 @@ const XmlPatch = require('xml-patch');
 
 console.log(
   'This document: <a><b/></a> will be patched to:\n',
-  new XmlPatch.Patch()
-    .load('<diff><add sel="a/b"><c/></add></diff>')
-    .patch('<a><b/></a>')
+  new XmlPatch.Patch('<diff><add sel="a/b"><c/></add></diff>')
+    .apply('<a><b/></a>')
     .toString(),
 );
 
@@ -39,12 +38,12 @@ console.log(
   'This document: <a><b/></a> will be patched to:\n',
   new Patch()
     .load('<diff><add sel="a/b"><c/></add></diff>')
-    .patch('<a><b/></a>')
+    .apply('<a><b/></a>')
     .toString(),
 );
 
 try {
-  new Patch().load('<diff><b/></diff>');
+  new Patch('<diff><b/></diff>');
 } catch (ex) {
   console.log('\nAnd here comes the expected error:\n', ex.toString());
 }
