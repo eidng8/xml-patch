@@ -10,8 +10,9 @@ import XmlWrapper from '../xml/xml-wrapper';
 import Exception from '../errors/Exception';
 import UnlocatedNode from '../errors/UnlocatedNode';
 import { throwException } from '../errors/helpers';
+import { isElement } from '../utils/type-guards';
 import { assertElement, assertKnownAction } from '../utils/asserts';
-import { firstElementChild } from '../utils/helpers';
+import { descend } from '../utils/helpers';
 import Compiler from './compiler';
 import NamespaceMangler from './namespace-mangler';
 import Patch from './patch';
@@ -223,18 +224,11 @@ export default abstract class Action {
    * @param prefix
    */
   protected hasPrefixChildren(anchor: ElementImpl, prefix: string): boolean {
-    let child = firstElementChild(anchor);
     let found = false;
-    while (child && !found) {
-      if (prefix == child.prefix) {
-        return true;
-      }
-      if (child.hasChildNodes()) {
-        found = this.hasPrefixChildren(child, prefix);
-        if (found) return true;
-      }
-      child = child.nextSibling;
-    }
+    descend(
+      anchor,
+      current => (found = isElement(current) && prefix == current.prefix),
+    );
     return found;
   }
 }
