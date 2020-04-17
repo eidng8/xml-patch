@@ -56,7 +56,7 @@ export default class ActionReplace extends Action {
       this.replaceElement(subject);
       return;
     }
-    this.replaceElement(subject);
+    this.replace(subject);
   }
 
   protected replace(subject: NodeImpl) {
