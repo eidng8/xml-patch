@@ -14,5 +14,8 @@ import Exception from './Exception';
  * attribute was intended to be added.
  */
 export default class InvalidAttributeValue extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-attribute-value';
 }

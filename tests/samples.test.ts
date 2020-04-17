@@ -4,10 +4,10 @@
  * Author: eidng8
  */
 
-import {existsSync, readdirSync, readFileSync, writeFileSync} from 'fs';
-import {join} from 'path';
-import {Patch} from '../src';
-import {format} from './helpers';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { Patch } from '../src';
+import { format } from './helpers';
 
 describe('Sample XML', () => {
   const [sources, fixtures, patches, patchedFiles] = findSamples();
@@ -18,12 +18,14 @@ describe('Sample XML', () => {
 
     it(`patches ${source}`, () => {
       expect.assertions(1);
-      const xml = readFileSync(source, {encoding: 'utf-8'});
-      const diff = readFileSync(patch, {encoding: 'utf-8'});
+      const xml = readFileSync(source, { encoding: 'utf-8' });
+      const diff = readFileSync(patch, { encoding: 'utf-8' });
       try {
-        const patched = new Patch().load(diff).patch(xml);
+        const patched = new Patch(diff).apply(xml);
         writeFileSync(patchedFiles[idx], format(patched.toString()));
-        expect(patched).toEqualXml(readFileSync(fixture, {encoding: 'utf-8'}));
+        expect(patched).toEqualXml(
+          readFileSync(fixture, { encoding: 'utf-8' }),
+        );
       } catch (ex) {
         throw new Error(ex.toString());
       }
@@ -38,7 +40,7 @@ function findSamples() {
   const patches = [] as string[];
   const patched = [] as string[];
   const regex = /^.+A.xml$/;
-  const files = readdirSync(dir, {withFileTypes: true});
+  const files = readdirSync(dir, { withFileTypes: true });
   for (const file of files) {
     if (!file.isFile() || !regex.test(file.name)) {
       continue;

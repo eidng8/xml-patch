@@ -5,15 +5,21 @@
  */
 
 import Exception from './Exception';
-import {NodeImpl} from 'xmldom-ts';
+import { NodeImpl } from 'xmldom-ts';
 
 /**
  * The namespace URI value is not valid or the target document did not have this
  * declaration.
  */
 export default class InvalidNamespaceURI extends Exception {
+  /**
+   * @inheritDoc
+   */
   protected tag: string = 'invalid-namespace-uri';
 
+  /**
+   * @inheritDoc
+   */
   constructor(action?: NodeImpl) {
     super(Exception.ErrNamespaceURI, action);
   }

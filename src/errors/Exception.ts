@@ -4,34 +4,45 @@
  * Author: eidng8
  */
 
-import {DocumentImpl, NodeImpl} from 'xmldom-ts';
-import {Diff, XmlWrapper} from '..';
+import { DocumentImpl, NodeImpl, DOMParserImpl, ElementImpl } from 'xmldom-ts';
+
+const pd = require('pretty-data').pd;
 
 /**
  * XML patch exception base class
  */
 export default abstract class Exception extends Error {
+  /**
+   * Error namespace defined by RFC.
+   */
   static readonly ErrorNamespace = 'urn:ietf:params:xml:ns:patch-ops-error';
 
+  /**
+   * Error namespace prefix used by exceptions.
+   */
   static readonly ErrorPrefix = 'err';
 
   // region Messages
-  static ErrDirective = 'A patch directive could not be fulfilled'
-                        + ' because the given directives were not'
-                        + ' understood.';
+  static ErrDirective =
+    'A patch directive could not be fulfilled' +
+    ' because the given directives were not' +
+    ' understood.';
 
   static ErrEncoding = 'Encodings of the two documents do not match.';
 
-  static ErrFunction = 'The nodeset function id() is not supported, and thus'
-                       + ' attributes with the ID type are not known.';
+  static ErrFunction =
+    'The nodeset function id() is not supported, and thus' +
+    ' attributes with the ID type are not known.';
 
-  static ErrID = 'The attribute xml:id as an ID attribute in XML documents is'
-                 + ' not supported.';
+  static ErrID =
+    'The attribute xml:id as an ID attribute in XML documents is' +
+    ' not supported.';
 
   static ErrMultipleMatches = 'Multiple matches found.';
 
-  static ErrNamespaceURI = 'The namespace URI value is not valid or the'
-                           + ' target document did not have this declaration.';
+  static ErrNamespaceURI =
+    'The namespace URI value is not valid or the' +
+    ' target document did not have this declaration.';
 
   static ErrNodeTypeText = 'This is expected to be a text node';
 
@@ -39,18 +50,20 @@ export default abstract class Exception extends Error {
 
   static ErrNoMatch = 'No match found.';
 
-  static ErrPrefix = 'The namespace URI for the given prefix could not be'
-                     + ' located or resolved.';
+  static ErrPrefix =
+    'The namespace URI for the given prefix could not be' +
+    ' located or resolved.';
 
   static ErrPrefixUsed = 'The given prefix is being used.';
 
   static ErrProlog = 'Patch failure related to XML prolog nodes.';
 
-  static ErrRoot = 'The root element of the document cannot be removed or'
-                   + ' another sibling element for the document root'
-                   + ' element cannot be added.';
+  static ErrRoot =
+    'The root element of the document cannot be removed or' +
+    ' another sibling element for the document root' +
+    ' element cannot be added.';
 
-  static ErrSelEmpty = '`sel` cannot be empty.';
+  static ErrSelEmpty = '`sel` must be provided and not empty.';
 
   static ErrSelMissing = 'Missing `sel` attribute.';
 
@@ -72,21 +85,28 @@ export default abstract class Exception extends Error {
    */
   action?: NodeImpl;
 
-  // The error XML document
-  protected xml!: XmlWrapper;
+  /**
+   * The error XML document
+   */
+  protected xml!: DocumentImpl;
 
-  // tag name of the actual error
+  /**
+   * tag name of the actual error
+   */
   protected abstract tag: string;
 
+  /**
+   * @param message message to be shown
+   * @param action the action that triggered the error
+   */
   constructor(message?: string, action?: NodeImpl) {
     super(message);
     this.action = action;
   }
 
   public toString(): string {
-    this.createRootNode();
-    this.xml.root!.appendChild(this.createErrorNode());
-    return this.xml.toString({pretty: true, preserveComments: true});
+    this.createRootNode().appendChild(this.createErrorNode());
+    return pd.xml(this.xml.toString());
   }
 
   public toLocaleString(): string {
@@ -97,7 +117,7 @@ export default abstract class Exception extends Error {
    * Creates the actual error node
    */
   public createErrorNode(doc?: DocumentImpl) {
-    const elem = (doc || this.xml.doc).createElementNS(
+    const elem = (doc || this.xml).createElementNS(
       Exception.ErrorNamespace,
       this.qualifyName(`${this.tag}`),
     );
@@ -105,7 +125,7 @@ export default abstract class Exception extends Error {
       elem.setAttribute('phrase', this.message);
     }
     if (this.action) {
-      elem.appendChild((this.xml.doc.importNode(this.action, true)));
+      elem.appendChild(this.xml.importNode(this.action, true));
     }
     return elem;
   }
@@ -118,11 +138,15 @@ export default abstract class Exception extends Error {
     return `${Exception.ErrorPrefix}:${name}`;
   }
 
+  /**
+   * Create the XML error document and its root element.
+   */
   protected createRootNode() {
-    this.xml = new XmlWrapper().fromString(`<?xml version="1.0" encoding="utf-8"?>
+    this.xml = new DOMParserImpl()
+      .parseFromString(`<?xml version="1.0" encoding="utf-8"?>
 <${Exception.ErrorPrefix}:patch-ops-error
     xmlns:${Exception.ErrorPrefix}="${Exception.ErrorNamespace}"
-    xmlns="${Diff.DiffNamespace}"/>`);
-    return this.xml.root!;
+    xmlns="urn:ietf:params:xml:ns:pidf-diff"/>`) as DocumentImpl;
+    return this.xml.documentElement as ElementImpl;
   }
 }
