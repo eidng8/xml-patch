@@ -25,11 +25,18 @@ import {
  * Asserts the given node is not the root
  * @param node
  * @param action
+ * @param message
  */
-export function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
+export function assertNotRoot(
+  node: NodeImpl,
+  action: NodeImpl,
+  message?: string,
+): boolean {
   // RFC 3, last paragraph: don't replace/remove root node, or add sibling
   if (isDocument(node) || isRoot(node)) {
-    throwException(new InvalidRootElementOperation(action));
+    throwException(
+      new InvalidRootElementOperation(message || Exception.ErrRoot, action),
+    );
     return false;
   }
   return true;
@@ -39,10 +46,17 @@ export function assertNotRoot(node: NodeImpl, action: NodeImpl): boolean {
  * Asserts the given node is an element node
  * @param node
  * @param action
+ * @param message
  */
-export function assertElement(node: NodeImpl, action?: NodeImpl): boolean {
+export function assertElement(
+  node: NodeImpl,
+  action?: NodeImpl,
+  message?: string,
+): boolean {
   if (isElement(node)) return true;
-  throwException(new InvalidNodeTypes(Exception.ErrType, action || node));
+  throwException(
+    new InvalidNodeTypes(message || Exception.ErrType, action || node),
+  );
   return false;
 }
 
@@ -70,11 +84,17 @@ export function assertEmptyText(
 /**
  * Asserts the given action has one text node child or no child at all
  * @param node
+ * @param message
  */
-export function assertTextChildOrNothing(node: NodeImpl): boolean {
+export function assertTextChildOrNothing(
+  node: NodeImpl,
+  message?: string,
+): boolean {
   if (!node.childNodes.length) return true;
   if (node.childNodes.length > 1 || !isText(node.firstChild)) {
-    throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, node));
+    throwException(
+      new InvalidNodeTypes(message || Exception.ErrNodeTypeText, node),
+    );
     return false;
   }
   return true;
@@ -83,14 +103,20 @@ export function assertTextChildOrNothing(node: NodeImpl): boolean {
 /**
  * Asserts the given action has one text node child or no child at all
  * @param node
+ * @param message
  */
-export function assertTextChildNotEmpty(node: NodeImpl): boolean {
+export function assertTextChildNotEmpty(
+  node: NodeImpl,
+  message?: string,
+): boolean {
   if (
     node.childNodes.length != 1 ||
     !isText(node.firstChild) ||
     !node.firstChild.textContent!.trim()
   ) {
-    throwException(new InvalidNodeTypes(Exception.ErrNodeTypeText, node));
+    throwException(
+      new InvalidNodeTypes(message || Exception.ErrNodeTypeText, node),
+    );
     return false;
   }
   return true;
@@ -131,27 +157,45 @@ export function assertAttributeNotEmpty(
 /**
  * Asserts the given action tag is supported
  * @param action
+ * @param message
  */
-export function assertKnownAction(action: ElementImpl): boolean {
+export function assertKnownAction(
+  action: ElementImpl,
+  message?: string,
+): boolean {
   if (Patch.SupportedActions.indexOf(action.localName) >= 0) return true;
-  throwException(new InvalidPatchDirective(action));
+  throwException(
+    new InvalidPatchDirective(message || Exception.ErrDirective, action),
+  );
   return false;
 }
 
-export function assertHasProcessingInstructionChild(node: NodeImpl): boolean {
+export function assertHasProcessingInstructionChild(
+  node: NodeImpl,
+  message?: string,
+): boolean {
   if (firstProcessingInstructionChild(node)) return true;
-  throwException(new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, node));
+  throwException(
+    new InvalidNodeTypes(message || Exception.ErrNodeTypeMismatch, node),
+  );
   return false;
 }
 
-export function assertHasCDataChild(node: NodeImpl): boolean {
+export function assertHasCDataChild(node: NodeImpl, message?: string): boolean {
   if (firstCDataChild(node)) return true;
-  throwException(new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, node));
+  throwException(
+    new InvalidNodeTypes(message || Exception.ErrNodeTypeMismatch, node),
+  );
   return false;
 }
 
-export function assertHasCommentChild(node: NodeImpl): boolean {
+export function assertHasCommentChild(
+  node: NodeImpl,
+  message?: string,
+): boolean {
   if (firstCommentChild(node)) return true;
-  throwException(new InvalidNodeTypes(Exception.ErrNodeTypeMismatch, node));
+  throwException(
+    new InvalidNodeTypes(message || Exception.ErrNodeTypeMismatch, node),
+  );
   return false;
 }

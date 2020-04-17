@@ -12,7 +12,6 @@ import { throwException } from '../errors/helpers';
 import {
   isAttribute,
   isCData,
-  isComment,
   isProcessingInstruction,
   isText,
   isElement,
@@ -90,7 +89,7 @@ export default class ActionReplace extends Action {
       assertHasProcessingInstructionChild(this.action);
     } else if (isCData(subject)) {
       assertHasCDataChild(this.action);
-    } else if (isComment(subject)) {
+    } else {
       assertHasCommentChild(this.action);
     }
     this.replace(subject);

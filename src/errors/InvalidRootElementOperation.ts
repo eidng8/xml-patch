@@ -5,7 +5,6 @@
  */
 
 import Exception from './Exception';
-import { NodeImpl } from 'xmldom-ts';
 
 /**
  * The root element of the document cannot be removed or another sibling element
@@ -13,8 +12,4 @@ import { NodeImpl } from 'xmldom-ts';
  */
 export default class InvalidRootElementOperation extends Exception {
   protected tag: string = 'invalid-root-element-operation';
-
-  constructor(action?: NodeImpl) {
-    super(Exception.ErrRoot, action);
-  }
 }
