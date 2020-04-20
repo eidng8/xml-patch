@@ -1,6 +1,6 @@
 lib/
+docs/
 *.bak
-*.tgz
 tests/data/*.*patched.xml
 
 # Created by .ignore support plugin (hsz.mobi)

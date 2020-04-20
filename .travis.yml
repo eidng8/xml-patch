@@ -28,7 +28,7 @@ after_script:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 before_deploy:
-  - export TRAVIS_TAG=${TRAVIS_TAG:-$(node -p "require('./package.json').version")-$(date +'%Y.%m.%d')-$(git log --format=%h -1)}
+  - export TRAVIS_TAG=$(node -p "require('./package.json').version")
   - echo ${TRAVIS_TAG}
   - 'if [[ ${TAGGED} != 1 ]]; then git tag ${TRAVIS_TAG} && export TAGGED=1; fi'
   - 'if [[ ! -e lib ]]; then npm run build && export PACKAGE=$(npm pack --silent); fi'
