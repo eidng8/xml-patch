@@ -2,7 +2,7 @@
 
 [![master build](https://img.shields.io/travis/com/eidng8/xml-patch?color=333&logo=travis)](https://travis-ci.com/eidng8/xml-patch) [![vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/eidng8/xml-patch?color=333&logo=snyk)](https://snyk.io/test/github/eidng8/xml-patch?targetFile=package.json) [![maintainability](https://img.shields.io/codeclimate/maintainability/eidng8/xml-patch?color=333&logo=code-climate)](https://codeclimate.com/github/eidng8/xml-patch/maintainability) [![master coverage](https://img.shields.io/coveralls/github/eidng8/xml-patch/master?color=333&logo=coveralls)](https://coveralls.io/github/eidng8/xml-patch?branch=master) [![dev build](https://img.shields.io/travis/com/eidng8/xml-patch/dev?color=333&label=dev%20build&logo=travis)](https://travis-ci.com/eidng8/xml-patch/tree/dev) [![dev coverage](https://img.shields.io/coveralls/github/eidng8/xml-patch/dev?color=333&label=dev%20coverage&logo=coveralls)](https://coveralls.io/github/eidng8/xml-patch?branch=dev)
 
-This library provides functionalities to apply XML patch. It is supposed to be [RFC 5261](https://tools.ietf.org/html/rfc5261) compliant.
+This library provides functionalities to apply XML patch. It is supposed to be [RFC 5261](https://tools.ietf.org/html/rfc5261) compliant. Documentation can be found in source code, and [online](https://eidng8.github.io/xml-patch/index.html).
 
 ## How to use
 
