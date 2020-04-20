@@ -1,5 +1,6 @@
 lib/
 docs/
+typings/
 *.bak
 tests/data/*.*patched.xml
 
