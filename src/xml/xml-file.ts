@@ -29,7 +29,7 @@ export default class XmlFile extends XmlWrapper {
    * Load XML from the given file
    * @param path
    */
-  async fromFile(path: string): Promise<XmlWrapper> {
+  async fromFile(path: string): Promise<XmlFile> {
     return new Promise((resolve, reject) => {
       if (!existsSync(path)) {
         reject(new Error(`File doesn't exist: ${path}`));
