@@ -4,6 +4,14 @@
 
 This library provides functionalities to apply XML patch. It is supposed to be [RFC 5261](https://tools.ietf.org/html/rfc5261) compliant. Documentation can be found in source code, and [online](https://eidng8.github.io/xml-patch/index.html).
 
+## Known issues
+
+1. It is tested with some commonly used XPath queries. However, XPath could be written in complexity beyond the capability of this library. In such circumstances, this library could raise error, or in worse scenarios it may behave unexpected.
+
+2. Due to various reasons, there are a few errors defined in the RFC document, which will not be thrown at all. It doesn't mean those errors won't exist in XML documents, it's just they couldn't be detected by this library, or is interpreted differently and translated into other errors. These errors are: _ InvalidNamespaceURI (<invalid-namespace-uri>) _ InvalidPrologOperation (<invalid-prolog-operation>) _ UnsupportedIdFunction (<unsupported-id-function>) _ UnsupportedXmlId (<unsupported-xml-id>)
+
+3. This package uses webpack. Just in case anyone gets curious, don't fire up `tsc`. It keeps complaining about `xmldom-ts`.
+
 ## How to use
 
 ```bash
@@ -13,7 +21,7 @@ npm i -S g8-xml-patch
 #### JavaScript
 
 ```js
-const XmlPatch = require('xml-patch');
+const XmlPatch = require('g8-xml-patch');
 
 console.log(
   'This document: <a><b/></a> will be patched to:\n',
@@ -32,7 +40,7 @@ try {
 #### TypeScript
 
 ```ts
-import { Patch } from 'xml-patch';
+import { Patch } from 'g8-xml-patch';
 
 console.log(
   'This document: <a><b/></a> will be patched to:\n',
@@ -48,12 +56,6 @@ try {
   console.log('\nAnd here comes the expected error:\n', ex.toString());
 }
 ```
-
-## Known issues
-
-1. It is tested with some commonly used XPath queries. However, XPath could be written in complexity beyond the capability of this library. In such circumstances, this library could raise error, or in worse scenarios it may behave unexpected.
-
-2. Due to various reasons, there are a few errors defined in the RFC document, which will not be thrown at all. It doesn't mean those errors won't exist in XML documents, it's just they couldn't be detected by this library, or is interpreted differently and translated into other errors. These errors are: _ InvalidNamespaceURI (<invalid-namespace-uri>) _ InvalidPrologOperation (<invalid-prolog-operation>) _ UnsupportedIdFunction (<unsupported-id-function>) _ UnsupportedXmlId (<unsupported-xml-id>)
 
 ## Deviations from RFC 5261
 
@@ -103,10 +105,10 @@ There are samples of translations of two written scripts of Chinese. These sampl
 The two translations here are to demonstrate the final form that will be part of this library's distribution. So in case any of you are interested in contributing to this library, this is the place to submit your translations. To use these translations, simply require it after the main import.
 
 ```js
-const XmlPatch = require('xml-patch');
+const XmlPatch = require('g8-xml-patch');
 
 // must load after xml-patch
-require('xml-patch/translations/zh_chs');
+require('g8-xml-patch/translations/zh_chs');
 
 // or load your own translation .js file
 require('./path/to/your/translation');
@@ -121,10 +123,10 @@ The two translations here are to demonstrate how you can write your own ad-hoc t
 To use these translations, simply:
 
 ```ts
-import { Patch } from 'xml-patch';
+import { Patch } from 'g8-xml-patch';
 
 // you can use the js version just the same way
-require('xml-patch/translations/zh_cht');
+require('g8-xml-patch/translations/zh_cht');
 
 // or make and load your own translation .ts file
 import './path/to/your/translation';
@@ -135,7 +137,7 @@ import './path/to/your/translation';
 Here's a snipped version of source code:
 
 ```ts
-import { Exception } from 'xml-patch';
+import { Exception } from 'g8-xml-patch';
 
 Exception.ErrDirective = 'Your take on this';
 
@@ -150,7 +152,3 @@ There are some XML files in the `tests/data` directory, which are used for unit 
 
 1. Samples from the [RFC 5261](https://tools.ietf.org/html/rfc5261) document.
 2. Samples from the [diffxml](http://diffxml.sourceforge.net/) project.
-
-## Building
-
-This package uses webpack. Just in case anyone gets curious, don't use fire up `tsc`. I couldn't get it working yet. `tsc` keeps complaining about `xmldom-ts`.
