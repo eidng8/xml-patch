@@ -4,6 +4,8 @@
 
 This library provides functionalities to apply XML patch. It is supposed to be [RFC 5261](https://tools.ietf.org/html/rfc5261) compliant. Documentation can be found in source code, and [online](https://eidng8.github.io/xml-patch/index.html).
 
+Command line tool can be found [here](https://github.com/eidng8/xml-patch-cli).
+
 ## Known issues
 
 1. It is tested with some commonly used XPath queries. However, XPath could be written in complexity beyond the capability of this library. In such circumstances, this library could raise error, or in worse scenarios it may behave unexpected.
