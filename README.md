@@ -10,7 +10,12 @@ Command line tool can be found [here](https://github.com/eidng8/xml-patch-cli).
 
 1. It is tested with some commonly used XPath queries. However, XPath could be written in complexity beyond the capability of this library. In such circumstances, this library could raise error, or in worse scenarios it may behave unexpected.
 
-2. Due to various reasons, there are a few errors defined in the RFC document, which will not be thrown at all. It doesn't mean those errors won't exist in XML documents, it's just they couldn't be detected by this library, or is interpreted differently and translated into other errors. These errors are: _ InvalidNamespaceURI (<invalid-namespace-uri>) _ InvalidPrologOperation (<invalid-prolog-operation>) _ UnsupportedIdFunction (<unsupported-id-function>) _ UnsupportedXmlId (<unsupported-xml-id>)
+2. Due to various reasons, there are a few errors defined in the RFC document, which will not be thrown at all. It doesn't mean those errors won't exist in XML documents, it's just they couldn't be detected by this library, or is interpreted differently and translated into other errors. These errors are:
+
+   - InvalidNamespaceURI (<invalid-namespace-uri>)
+   - InvalidPrologOperation (<invalid-prolog-operation>)
+   - UnsupportedIdFunction (<unsupported-id-function>)
+   - UnsupportedXmlId (<unsupported-xml-id>)
 
 3. This package uses webpack. Just in case anyone gets curious, don't fire up `tsc`. It keeps complaining about `xmldom-ts`.
 
