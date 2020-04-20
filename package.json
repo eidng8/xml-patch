@@ -1,6 +1,6 @@
 {
   "name": "g8-xml-patch",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "XML Patch conforming to RFC 5261.",
   "main": "lib/index.js",
   "typings": "typings/index.d.ts",
