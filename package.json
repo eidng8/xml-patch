@@ -59,6 +59,7 @@
     "typedoc": "^0.17.4",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
+    "webpack-bundle-analyzer": "^3.7.0",
     "webpack-cli": "^3.3.11",
     "xml-formatter": "^1.2.0",
     "xmldom-ts": "^0.3.1",

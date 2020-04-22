@@ -5,6 +5,7 @@
  */
 
 const path = require('path');
+const WBA = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 module.exports = {
   mode: 'production',
@@ -29,4 +30,5 @@ module.exports = {
       },
     ],
   },
+  plugins: [new WBA({ analyzerMode: 'static', openAnalyzer: false })],
 };
