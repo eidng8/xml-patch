@@ -7,6 +7,11 @@
 const path = require('path');
 const WBA = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
+const plugins = [];
+if (process.env.WBA) {
+  plugins.push(new WBA({ analyzerMode: 'static' }));
+}
+
 module.exports = {
   mode: 'production',
   entry: {
@@ -20,7 +25,7 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
   },
-  externals: ['fs', 'iconv-lite', 'xmldom-ts', 'xpath-ts'],
+  externals: ['fs', 'iconv-lite', 'pretty-data', 'xmldom-ts', 'xpath-ts'],
   module: {
     rules: [
       {
@@ -30,5 +35,5 @@ module.exports = {
       },
     ],
   },
-  plugins: [new WBA({ analyzerMode: 'static', openAnalyzer: false })],
+  plugins,
 };

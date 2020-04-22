@@ -5,10 +5,11 @@
   "main": "lib/index.js",
   "typings": "typings/index.d.ts",
   "scripts": {
-    "build": "webpack && tsc",
+    "build": "cross-env NODE_ENV=production webpack && tsc",
     "build:docs": "typedoc",
     "test": "jest",
-    "test:cover": "npm test -- --coverage"
+    "test:cover": "npm test -- --coverage",
+    "wba": "cross-env WBA=1 npm run build"
   },
   "keywords": [
     "typescript",
@@ -39,6 +40,7 @@
     "babel-eslint": "^10.1.0",
     "babel-jest": "^25.1.0",
     "babel-loader": "^8.1.0",
+    "cross-env": "^7.0.2",
     "eledoc": "^0.2.1",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
