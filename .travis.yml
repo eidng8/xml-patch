@@ -39,6 +39,7 @@ jobs:
         edge: true
         provider: releases
         file: ${PACKAGE}
+        release_notes_file: RELEASE.md
         token:
           secure: ddcX6LWvpcOjF8aiZgTN6QSmN8SIJidSC7K2MO34f1YwL4JSbFSl77QczhhLQt5N/Iplu3cFfCXuxBeDicxROv3LDNWrJTG94bNClO8MR1fyBxftCuFlVSfOLllpGhkkQ4LcBFdZjv6leGJuTcPWRds1Fa2xN7aJMxmVwoCXirkPxtHrMZbiCTyVh8ODquMcdtLJV8+KRMO+t+c6JNWoSK8a26sKY71KI31kj4Ffb2ape3aZ2fLJCpONMWktPJCrRuvUApGTzthVmYa/DcRbkAVna3XGMUKmkTD6DdT4YXnwgV+YLe4plCbwqqE7lGTwpIg7CzKSKUlAX9JtKtyNHGAfG8/GK4RqLRpRsFDw+kNmXuwrhrHZHeomCnf/ZpLq2ihK1GGpGyV5uVoLajoizBAlD+/d0vWYjNj5A0sAj8953/kevl/Kp+tgkE+pLOcjd9h+PzYTQVfqCPH0QPK0KgGH1w66ZCrHCyw1aaRF788MyDRNfKxGF+T6H37o6fp96lkVrq+qkTXZnKd8af9y0T4jxEfWoWhFHGj1G/MXkfb1Yeg2A3AM51o0JB0m9X2neEle7GE6mtdS34eX8+BbGbfFeZFam/Sut4+oosNy/WBWrNyMZXKDz1tTPVF44mhUAu9gglwbQixknAvpB+KYBtsD7/bzinGd8cCtxb+m7o0=
         on:
