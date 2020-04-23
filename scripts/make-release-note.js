@@ -48,7 +48,7 @@ function updateReleaseNotes(log) {
   // extract current version log to release notes
   const match = /## \[.+?## \[/ms.exec(log)[0];
   const note = path.resolve(path.join(__dirname, '../RELEASE.md'));
-  const text = `# Vue-Tree v${version}
+  const text = `# XML-patch v${version}
 
 An RFC 5261 compliant XML patch library.
 Released under [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html).
@@ -68,7 +68,7 @@ ${match.substr(0, match.length - 4)}`;
 function linkRepo(path) {
   path = path.trim();
   while ('/' == path[0]) path = path.slice(1);
-  return `https://github.com/eidng8/vue-tree/${path}`;
+  return `https://github.com/eidng8/xml-patch/${path}`;
 }
 
 /**
