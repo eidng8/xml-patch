@@ -10,7 +10,7 @@ if exist release rd /s /q release
 mkdir release
 cd release
 git clone --branch master "https://github.com/eidng8/xml-patch.git"
-cd vue-tree
+cd xml-patch
 git config user.email "cheung.jackey@gmail.com"
 git config user.name eidng8
 
