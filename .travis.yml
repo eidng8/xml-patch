@@ -2,54 +2,58 @@ branches:
   only:
     - master
     - dev
-os:
-  - linux
+    - /Release-v\d+\.\d+\.\d+/
+os: linux
+dist: bionic
 language: node_js
-node_js:
-  - 12
-addons:
-  chrome: stable
+node_js: 12
 cache:
   directories:
     - node_modules
-install:
-  - npm install
-
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
-script:
-  - if [[ ${BUNDLE_ANALYZER_TOKEN} != "" ]]; then npm install --no-save @bundle-analyzer/webpack-plugin; fi
-  - npm run test:cover
-  - npm install coveralls
-  - cat ./coverage/lcov.info | coveralls
-after_script:
-  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-
-before_deploy:
-  - export TRAVIS_TAG=$(node -p "require('./package.json').version")
-  - echo ${TRAVIS_TAG}
-  - 'if [[ ${TAGGED} != 1 ]]; then git tag ${TRAVIS_TAG} && export TAGGED=1; fi'
-  - 'if [[ ! -e lib ]]; then npm run build && export PACKAGE=$(npm pack --silent); fi'
-deploy:
-  - provider: releases
-    skip_cleanup: true
-    file: $PACKAGE
-    api_key:
-      secure: ddcX6LWvpcOjF8aiZgTN6QSmN8SIJidSC7K2MO34f1YwL4JSbFSl77QczhhLQt5N/Iplu3cFfCXuxBeDicxROv3LDNWrJTG94bNClO8MR1fyBxftCuFlVSfOLllpGhkkQ4LcBFdZjv6leGJuTcPWRds1Fa2xN7aJMxmVwoCXirkPxtHrMZbiCTyVh8ODquMcdtLJV8+KRMO+t+c6JNWoSK8a26sKY71KI31kj4Ffb2ape3aZ2fLJCpONMWktPJCrRuvUApGTzthVmYa/DcRbkAVna3XGMUKmkTD6DdT4YXnwgV+YLe4plCbwqqE7lGTwpIg7CzKSKUlAX9JtKtyNHGAfG8/GK4RqLRpRsFDw+kNmXuwrhrHZHeomCnf/ZpLq2ihK1GGpGyV5uVoLajoizBAlD+/d0vWYjNj5A0sAj8953/kevl/Kp+tgkE+pLOcjd9h+PzYTQVfqCPH0QPK0KgGH1w66ZCrHCyw1aaRF788MyDRNfKxGF+T6H37o6fp96lkVrq+qkTXZnKd8af9y0T4jxEfWoWhFHGj1G/MXkfb1Yeg2A3AM51o0JB0m9X2neEle7GE6mtdS34eX8+BbGbfFeZFam/Sut4+oosNy/WBWrNyMZXKDz1tTPVF44mhUAu9gglwbQixknAvpB+KYBtsD7/bzinGd8cCtxb+m7o0=
-    on:
-      repo: eidng8/xml-patch
-      branch: master
-      #tags: true
-      condition: ${TRAVIS_EVENT_TYPE} == push
-  - provider: npm
-    skip_cleanup: true
-    email: cheung.jackey@gmail.com
-    api_key:
-      secure: vLLc2vmkvfBh5KU+3rsuctrnMJTMICYsk6CAISZ+H3eMBwsSF2gQiUZMADcCbmnOaYbb388CcLuncrjrdQ6ECV6f4fzcu/Y8pZObp83y1klafscJYOSlvhHjIq4CvrDJ6/8LU7H3pE8EeixezLXvCOxfrmA19PZxh5g+RQY/OFASVgM7mMx9Rpm3z9PD+wl7OH9aa+WZ7TK8Xw9pB6FeBtLSD6Z3Ufs9XL5WWhipWoD13X63KF6yXI8ppJh/Swz29pt8wjGwIrS1r9FbuYT6NFulYX2zJfhoQs/GojtS/hV3L6QaITpBL50RrtlgRgup4nEn4saMK9bbuFDSjfpqhS11U6XyFZ8TdSoUUY9OA8MyemhC182GNsShhpRTsOoEuow3AvcIbxPWwfdWb7L6HSNOdxom33Vot4RZ77nVgBldGp683tHDE9i2Ye2k0rAuxszGDw/kfOyldYVU2Jk1/ZI3iA06+p9MLl1jMcTZrglGJM6KDYZtQqOTPusgJjd8+OWrVmTA9ellZ5cVvlgcZpEAyK9fRdBFro53q3zyrDu6LV3RaICjRawl/Y1XKs3jhkGM1SoilTQJw0q6v6qFHkO+TlHuKveGYDG2OCeIQQroyy/Rj78hCeCEiKP4w1idcuPiTUxv6FJ7Zw/c/we5yVLV66tot9oK1d31QH9f9io=
-    on:
-      repo: eidng8/xml-patch
-      branch: master
-      condition: ${TRAVIS_EVENT_TYPE} == push
-      #tags: true
+jobs:
+  include:
+    - stage: test
+      env:
+        - secure: Rtl3O5UzqlG5utBSbAm4lCaKC3gpH98nVLZl1f+NQGq1IJXSDHEJX4BAh7AJONbr16FLskxGYJKqiZr+5ZKOmiZrWludc7B9N99TNceaYhSnt9q7z3eiFGdGJxsmkTGqHnIMG5C/B0FFaZ6alrNwAGZmBZTYAr3dzahRL0f3nne/Uk8AGn3Bk2vcaAZ4fscsZKhFTMhGI6cX1vPqP1qFgRHxLMmDLaB34/JSQN4P3Iqc/Fe6V4ii94P8BigMMpgX+ZyRUC2qarbxXkN/o9/qoinmGc/T17/9E70rysqICKIrRrYrxFY9rvB+aPMcI4tUfLoR13UP32rVHGhGTLh9VTMhgrX368379cHfO15JtOnN5N92SpvDiKX6a5kOsiRvarbUS3H56y0oVxeuj2vFGdt8jqb/AqJdZd2lDBweeJqzuf6YaLwrWXJWDePPtTh61VyB6pQ2IfebVqQJfyVuHvLEeZbjwZabTU03+Hep/gzcf+X4fdfPEVxuThxUTa2slpRHpm2zhZ3YxAhiDJncLoWDj6qg5DlpbWZn/vrCiJq+YPDiq6OAFK/Tu7R9f+o5XSJtPKwowvgCFUMmonMYWNh2vPCc6zwbW/JMMlvKytwP54hG2Ir2hzrH2i9X4Podr9LPljJBTjir1nz1NFhI9yHqgKRl2e6uMdI/izjbXUs=
+        - secure: iMWFVukHOjaw2oMGN2wt5LIF7VmDU4oW9ve9vkpJHZ1PFlCmebRX0VXh6IdwtpXA7k3a2GZygmgYI+CdQyAO1FPb+957sFi2MqbTGP5Zms+I2Dh7vj/ioEGheiNTQFM6z78hNpllBPyvk/Mqzg9YtqhFZbb8rEnZjS9kZp4m84ndJmgbiBBfhmzLCGzluwBrjR1Kz35CymkZCfdzCLV064vpPQ9D8gsHInw5AXDuZ1ex/ws1pj9cuJlhTiM2PcYYt57zxSI4rrHyc2sQaU/d0sVX1AxJ+/KGzMpszTA3rdqgLxMvFAFuSga6LOG2h3jg6Gu49QgLZfEJslzzVMn/EkB7QBb4YMtSGOr77ScbYdMjK0sXjlGjPW0QPLkhDVb74092WzjXmtbQvlUhfYSaX+wbjlAOjA134c0VIo4Ui4naDJU9tZhcgW6nmClzwXld76U0gWjnqQzXwIf6U5yIgelAk4h+CcSNp1MiePYBnkWVR3Pv7oPvFSVvqFAriIzGGsRITYlTH5gYjC1HI9VYeH698majTnSsWHZtys5KajkD7HRQS4ZGvRdInhD3ckk6GPivu2fc1BlMUdT/bACvVdZd7Wf0RGMVrwSuFLHTzSzvnEpPOi7HSdDFm8FtAU27hbZK7+j+yKPOGYlLpUtALW0Ml6SKqNeA96VNBC/y7ZM=
+      install:
+        - npm install
+        - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        - chmod +x ./cc-test-reporter
+      before_script:
+        - ./cc-test-reporter before-build
+      script:
+        - npm run test:cover
+      after_script:
+        - npm install coveralls
+        - cat ./coverage/lcov.info | coveralls
+        - ./cc-test-reporter after-build --exit-code ${TRAVIS_TEST_RESULT}
+    - stage: deploy
+      script: skip
+      before_deploy:
+        - npm install
+        - npm install --no-save @bundle-analyzer/webpack-plugin
+        - npm run build
+        - export PACKAGE=$(npm pack --silent)
+      deploy:
+        edge: true
+        provider: releases
+        file: ${PACKAGE}
+        token:
+          secure: ddcX6LWvpcOjF8aiZgTN6QSmN8SIJidSC7K2MO34f1YwL4JSbFSl77QczhhLQt5N/Iplu3cFfCXuxBeDicxROv3LDNWrJTG94bNClO8MR1fyBxftCuFlVSfOLllpGhkkQ4LcBFdZjv6leGJuTcPWRds1Fa2xN7aJMxmVwoCXirkPxtHrMZbiCTyVh8ODquMcdtLJV8+KRMO+t+c6JNWoSK8a26sKY71KI31kj4Ffb2ape3aZ2fLJCpONMWktPJCrRuvUApGTzthVmYa/DcRbkAVna3XGMUKmkTD6DdT4YXnwgV+YLe4plCbwqqE7lGTwpIg7CzKSKUlAX9JtKtyNHGAfG8/GK4RqLRpRsFDw+kNmXuwrhrHZHeomCnf/ZpLq2ihK1GGpGyV5uVoLajoizBAlD+/d0vWYjNj5A0sAj8953/kevl/Kp+tgkE+pLOcjd9h+PzYTQVfqCPH0QPK0KgGH1w66ZCrHCyw1aaRF788MyDRNfKxGF+T6H37o6fp96lkVrq+qkTXZnKd8af9y0T4jxEfWoWhFHGj1G/MXkfb1Yeg2A3AM51o0JB0m9X2neEle7GE6mtdS34eX8+BbGbfFeZFam/Sut4+oosNy/WBWrNyMZXKDz1tTPVF44mhUAu9gglwbQixknAvpB+KYBtsD7/bzinGd8cCtxb+m7o0=
+        on:
+          repo: eidng8/xml-patch
+          branch: /Release-v\d+\.\d+\.\d+/
+          tags: true
+    - stage: deploy
+      script: skip
+      deploy:
+        edge: true
+        provider: npm
+        email: cheung.jackey@gmail.com
+        api_token:
+          secure: vLLc2vmkvfBh5KU+3rsuctrnMJTMICYsk6CAISZ+H3eMBwsSF2gQiUZMADcCbmnOaYbb388CcLuncrjrdQ6ECV6f4fzcu/Y8pZObp83y1klafscJYOSlvhHjIq4CvrDJ6/8LU7H3pE8EeixezLXvCOxfrmA19PZxh5g+RQY/OFASVgM7mMx9Rpm3z9PD+wl7OH9aa+WZ7TK8Xw9pB6FeBtLSD6Z3Ufs9XL5WWhipWoD13X63KF6yXI8ppJh/Swz29pt8wjGwIrS1r9FbuYT6NFulYX2zJfhoQs/GojtS/hV3L6QaITpBL50RrtlgRgup4nEn4saMK9bbuFDSjfpqhS11U6XyFZ8TdSoUUY9OA8MyemhC182GNsShhpRTsOoEuow3AvcIbxPWwfdWb7L6HSNOdxom33Vot4RZ77nVgBldGp683tHDE9i2Ye2k0rAuxszGDw/kfOyldYVU2Jk1/ZI3iA06+p9MLl1jMcTZrglGJM6KDYZtQqOTPusgJjd8+OWrVmTA9ellZ5cVvlgcZpEAyK9fRdBFro53q3zyrDu6LV3RaICjRawl/Y1XKs3jhkGM1SoilTQJw0q6v6qFHkO+TlHuKveGYDG2OCeIQQroyy/Rj78hCeCEiKP4w1idcuPiTUxv6FJ7Zw/c/we5yVLV66tot9oK1d31QH9f9io=
+        on:
+          repo: eidng8/xml-patch
+          branch: /Release-v\d+\.\d+\.\d+/
+          tags: true
