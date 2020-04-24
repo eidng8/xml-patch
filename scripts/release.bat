@@ -22,14 +22,14 @@ bash.exe -lc github_changelog_generator || goto ERR
 for /f "tokens=*" %%v in ('node scripts\make-release-note.js') do set VERSION=%%v
 
 git add . || goto ERR
-git commit -m "Release %VERSION%" || goto ERR
-git push || goto ERR
+git commit --no-verify -m "Release %VERSION%" || goto ERR
+git push --no-verify || goto ERR
 git tag --sign -m "%date%" "Release-v%VERSION%"
-git push --tags || goto ERR
+git push --no-verify --tags || goto ERR
 
 git checkout dev
 git merge master
-git push
+git push --no-verify
 
 
 goto END
