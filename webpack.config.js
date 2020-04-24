@@ -6,10 +6,16 @@
 
 const path = require('path');
 const WBA = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require('@bundle-analyzer/webpack-plugin');
 
 const plugins = [];
 if (process.env.WBA) {
   plugins.push(new WBA({ analyzerMode: 'static' }));
+}
+if (process.env.BUNDLE_ANALYZER_TOKEN) {
+  plugins.push(
+    new BundleAnalyzerPlugin({ token: process.env.BUNDLE_ANALYZER_TOKEN }),
+  );
 }
 
 module.exports = {

@@ -35,12 +35,6 @@ module.exports = {
     },
     {
       files: ['*.ts?(x)'],
-      extends: [
-        'plugin:vue/essential',
-        '@vue/standard',
-        '@vue/typescript/recommended',
-        'plugin:prettier/recommended',
-      ],
       rules: Object.assign({}, rules, {
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': [
