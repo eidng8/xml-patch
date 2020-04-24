@@ -1,8 +1,12 @@
 # Changelog
 
-## [0.1.4](https://github.com/eidng8/xml-patch/tree/0.1.4) (2020-04-23 UTC)
+## [0.1.5](https://github.com/eidng8/xml-patch/tree/0.1.5) (2020-04-24 UTC)
 
-[Full Changelog](https://github.com/eidng8/xml-patch/compare/0.1.2...0.1.4)
+[Full Changelog](https://github.com/eidng8/xml-patch/compare/Release-v0.1.3...0.1.5)
+
+## [Release-v0.1.3](https://github.com/eidng8/xml-patch/tree/Release-v0.1.3) (2020-04-23)
+
+[Full Changelog](https://github.com/eidng8/xml-patch/compare/0.1.2...Release-v0.1.3)
 
 ## [0.1.2](https://github.com/eidng8/xml-patch/tree/0.1.2) (2020-04-20)
 
