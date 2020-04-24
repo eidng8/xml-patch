@@ -23,11 +23,14 @@ for /f "tokens=*" %%v in ('node scripts\make-release-note.js') do set VERSION=%%
 
 git add . || goto ERR
 git commit -m "Release %VERSION%" || goto ERR
-git tag --sign -m "%date%" "Release-v%VERSION%"
-rem Make sure the tag is pushed after the branch so Travis won't miss it
-rem even when auto cancel build is enabled
 git push || goto ERR
+git tag --sign -m "%date%" "Release-v%VERSION%"
 git push --tags || goto ERR
+
+git checkout dev
+git merge master
+git push
+
 
 goto END
 
@@ -43,4 +46,5 @@ exit 1
 :END
 cd ..\..
 rd /s /q release
+git pull
 cd "%CWD%"
