@@ -14,8 +14,7 @@ jobs:
   include:
     - stage: test
       env:
-        - secure: Rtl3O5UzqlG5utBSbAm4lCaKC3gpH98nVLZl1f+NQGq1IJXSDHEJX4BAh7AJONbr16FLskxGYJKqiZr+5ZKOmiZrWludc7B9N99TNceaYhSnt9q7z3eiFGdGJxsmkTGqHnIMG5C/B0FFaZ6alrNwAGZmBZTYAr3dzahRL0f3nne/Uk8AGn3Bk2vcaAZ4fscsZKhFTMhGI6cX1vPqP1qFgRHxLMmDLaB34/JSQN4P3Iqc/Fe6V4ii94P8BigMMpgX+ZyRUC2qarbxXkN/o9/qoinmGc/T17/9E70rysqICKIrRrYrxFY9rvB+aPMcI4tUfLoR13UP32rVHGhGTLh9VTMhgrX368379cHfO15JtOnN5N92SpvDiKX6a5kOsiRvarbUS3H56y0oVxeuj2vFGdt8jqb/AqJdZd2lDBweeJqzuf6YaLwrWXJWDePPtTh61VyB6pQ2IfebVqQJfyVuHvLEeZbjwZabTU03+Hep/gzcf+X4fdfPEVxuThxUTa2slpRHpm2zhZ3YxAhiDJncLoWDj6qg5DlpbWZn/vrCiJq+YPDiq6OAFK/Tu7R9f+o5XSJtPKwowvgCFUMmonMYWNh2vPCc6zwbW/JMMlvKytwP54hG2Ir2hzrH2i9X4Podr9LPljJBTjir1nz1NFhI9yHqgKRl2e6uMdI/izjbXUs=
-        - secure: iMWFVukHOjaw2oMGN2wt5LIF7VmDU4oW9ve9vkpJHZ1PFlCmebRX0VXh6IdwtpXA7k3a2GZygmgYI+CdQyAO1FPb+957sFi2MqbTGP5Zms+I2Dh7vj/ioEGheiNTQFM6z78hNpllBPyvk/Mqzg9YtqhFZbb8rEnZjS9kZp4m84ndJmgbiBBfhmzLCGzluwBrjR1Kz35CymkZCfdzCLV064vpPQ9D8gsHInw5AXDuZ1ex/ws1pj9cuJlhTiM2PcYYt57zxSI4rrHyc2sQaU/d0sVX1AxJ+/KGzMpszTA3rdqgLxMvFAFuSga6LOG2h3jg6Gu49QgLZfEJslzzVMn/EkB7QBb4YMtSGOr77ScbYdMjK0sXjlGjPW0QPLkhDVb74092WzjXmtbQvlUhfYSaX+wbjlAOjA134c0VIo4Ui4naDJU9tZhcgW6nmClzwXld76U0gWjnqQzXwIf6U5yIgelAk4h+CcSNp1MiePYBnkWVR3Pv7oPvFSVvqFAriIzGGsRITYlTH5gYjC1HI9VYeH698majTnSsWHZtys5KajkD7HRQS4ZGvRdInhD3ckk6GPivu2fc1BlMUdT/bACvVdZd7Wf0RGMVrwSuFLHTzSzvnEpPOi7HSdDFm8FtAU27hbZK7+j+yKPOGYlLpUtALW0Ml6SKqNeA96VNBC/y7ZM=
+        secure: Rtl3O5UzqlG5utBSbAm4lCaKC3gpH98nVLZl1f+NQGq1IJXSDHEJX4BAh7AJONbr16FLskxGYJKqiZr+5ZKOmiZrWludc7B9N99TNceaYhSnt9q7z3eiFGdGJxsmkTGqHnIMG5C/B0FFaZ6alrNwAGZmBZTYAr3dzahRL0f3nne/Uk8AGn3Bk2vcaAZ4fscsZKhFTMhGI6cX1vPqP1qFgRHxLMmDLaB34/JSQN4P3Iqc/Fe6V4ii94P8BigMMpgX+ZyRUC2qarbxXkN/o9/qoinmGc/T17/9E70rysqICKIrRrYrxFY9rvB+aPMcI4tUfLoR13UP32rVHGhGTLh9VTMhgrX368379cHfO15JtOnN5N92SpvDiKX6a5kOsiRvarbUS3H56y0oVxeuj2vFGdt8jqb/AqJdZd2lDBweeJqzuf6YaLwrWXJWDePPtTh61VyB6pQ2IfebVqQJfyVuHvLEeZbjwZabTU03+Hep/gzcf+X4fdfPEVxuThxUTa2slpRHpm2zhZ3YxAhiDJncLoWDj6qg5DlpbWZn/vrCiJq+YPDiq6OAFK/Tu7R9f+o5XSJtPKwowvgCFUMmonMYWNh2vPCc6zwbW/JMMlvKytwP54hG2Ir2hzrH2i9X4Podr9LPljJBTjir1nz1NFhI9yHqgKRl2e6uMdI/izjbXUs=
       install:
         - npm install
         - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
@@ -30,6 +29,8 @@ jobs:
         - ./cc-test-reporter after-build --exit-code ${TRAVIS_TEST_RESULT}
     - stage: deploy
       script: skip
+      env:
+        secure: iMWFVukHOjaw2oMGN2wt5LIF7VmDU4oW9ve9vkpJHZ1PFlCmebRX0VXh6IdwtpXA7k3a2GZygmgYI+CdQyAO1FPb+957sFi2MqbTGP5Zms+I2Dh7vj/ioEGheiNTQFM6z78hNpllBPyvk/Mqzg9YtqhFZbb8rEnZjS9kZp4m84ndJmgbiBBfhmzLCGzluwBrjR1Kz35CymkZCfdzCLV064vpPQ9D8gsHInw5AXDuZ1ex/ws1pj9cuJlhTiM2PcYYt57zxSI4rrHyc2sQaU/d0sVX1AxJ+/KGzMpszTA3rdqgLxMvFAFuSga6LOG2h3jg6Gu49QgLZfEJslzzVMn/EkB7QBb4YMtSGOr77ScbYdMjK0sXjlGjPW0QPLkhDVb74092WzjXmtbQvlUhfYSaX+wbjlAOjA134c0VIo4Ui4naDJU9tZhcgW6nmClzwXld76U0gWjnqQzXwIf6U5yIgelAk4h+CcSNp1MiePYBnkWVR3Pv7oPvFSVvqFAriIzGGsRITYlTH5gYjC1HI9VYeH698majTnSsWHZtys5KajkD7HRQS4ZGvRdInhD3ckk6GPivu2fc1BlMUdT/bACvVdZd7Wf0RGMVrwSuFLHTzSzvnEpPOi7HSdDFm8FtAU27hbZK7+j+yKPOGYlLpUtALW0Ml6SKqNeA96VNBC/y7ZM=
       before_deploy:
         - npm install
         - npm install --no-save @bundle-analyzer/webpack-plugin
@@ -48,6 +49,9 @@ jobs:
           tags: true
     - stage: deploy
       script: skip
+      before_deploy:
+        - npm install
+        - npm run build
       deploy:
         edge: true
         provider: npm
