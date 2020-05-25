@@ -1,0 +1,12 @@
+###################################################
+# normalize line endings
+###################################################
+*	text=lf
+
+# source files
+*.ts    eol=lf
+*.vue   eol=lf
+
+# windows files
+*.bat   eol=crlf
+*.cmd   eol=crlf

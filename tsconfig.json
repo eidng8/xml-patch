@@ -28,7 +28,7 @@
     "excludeProtected": true,
     "inputFiles": "src",
     "out": "docs",
-    "theme": "node_modules/eledoc/bin/default/"
+    "theme": "node_modules/g8-typedoc-dark/default/"
   },
   "include": ["src"],
   "exclude": ["node_modules", "tests"]
