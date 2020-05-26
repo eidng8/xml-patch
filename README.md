@@ -21,9 +21,13 @@ Command line tool can be found [here](https://github.com/eidng8/xml-patch-cli).
 
 ## How to use
 
+#### Installation
+
 ```bash
 npm i -S g8-xml-patch
 ```
+
+> There is a companion CLI package too: [xml-patch-cli](https://github.com/eidng8/xml-patch-cli)
 
 #### JavaScript
 
